@@ -15,6 +15,9 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+fun requireKeystoreProperty(key: String): String =
+    requireNotNull(keystoreProperties[key] as String?) { "Missing '$key' in key.properties file." }
+
 android {
     namespace = "com.sarthak.quiz"
     compileSdk = flutter.compileSdkVersion
@@ -31,7 +34,7 @@ android {
 
     defaultConfig {
         applicationId = "com.sarthak.quiz"
-        minSdk = 23 // 🔧 Updated manually to meet Firebase requirement
+        minSdk = 23 // Updated for Firebase requirement
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -39,10 +42,13 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
+            if (keystorePropertiesFile.exists()) {
+                storeFile=your-release-key.jks
+storePassword=123456
+keyAlias=yourKeyAlias
+keyPassword=123456
+
+            }
         }
     }
 

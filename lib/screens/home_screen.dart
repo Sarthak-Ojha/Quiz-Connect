@@ -17,6 +17,14 @@ class QuizCategory {
   });
 }
 
+Future<void> _startQuiz(BuildContext context, QuizCategory category) async {
+  List<Question> questions = await DatabaseService().getQuestionsByCategory(
+    category.name,
+    limit: 10,
+  );
+  // Pass `questions` to your QuizScreen
+}
+
 class UserData {
   final String displayName;
   final String email;

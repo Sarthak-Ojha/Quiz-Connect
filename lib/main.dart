@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-// Import all screens
+// Import screens and services
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
@@ -9,17 +9,28 @@ import 'screens/home_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'widgets/auth_wrapper.dart';
 import 'services/database_service.dart';
+import 'utils/seed_questions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Optional: Improved error reporting
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
   };
 
   try {
     await Firebase.initializeApp();
-    await DatabaseService().initializeDatabase();
+    final dbService = DatabaseService();
+    await dbService.initializeDatabase();
+
+    // Prevent duplicate question inserts
+    final seeded = await dbService.getSetting('questionsSeeded');
+    if (seeded != 'true') {
+      await seedQuestionsFromAsset();
+      await dbService.insertSetting('questionsSeeded', 'true');
+    }
+
     runApp(const MyApp());
   } catch (e) {
     runApp(ErrorApp(error: e.toString()));
@@ -37,11 +48,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1976D2), // Material Blue
+          seedColor: const Color(0xFF1976D2),
           brightness: Brightness.light,
         ),
-
-        // App Bar Theme
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
@@ -54,28 +63,20 @@ class MyApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-
-        // Card Theme
         cardTheme: CardThemeData(
           elevation: 8,
-          shadowColor: Colors.black.withValues(
-            alpha: 25,
-          ), // replaces withOpacity(0.1)
+          shadowColor: Colors.black.withAlpha(25),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
           color: Colors.white,
         ),
-
-        // Elevated Button Theme
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
             elevation: 2,
-            shadowColor: Colors.blue.withValues(
-              alpha: 77,
-            ), // replaces withOpacity(0.3)
+            shadowColor: Colors.blue.withAlpha(77),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -86,8 +87,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-
-        // Outlined Button Theme
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF1976D2),
@@ -102,8 +101,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-
-        // Text Button Theme
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: const Color(0xFF1976D2),
@@ -117,8 +114,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-
-        // Input Decoration Theme
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFFF5F7FA),
@@ -149,16 +144,12 @@ class MyApp extends StatelessWidget {
           labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
           hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
         ),
-
-        // SnackBar Theme
         snackBarTheme: SnackBarThemeData(
           behavior: SnackBarBehavior.floating,
           backgroundColor: const Color(0xFF1976D2),
           contentTextStyle: const TextStyle(color: Colors.white),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-
-        // Bottom Navigation Bar Theme
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           type: BottomNavigationBarType.fixed,
           selectedItemColor: Color(0xFF1976D2),
@@ -167,8 +158,6 @@ class MyApp extends StatelessWidget {
           elevation: 8,
         ),
       ),
-
-      // Dark Theme
       darkTheme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -176,7 +165,6 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-
       themeMode: ThemeMode.system,
       home: const AuthWrapper(),
       routes: {
@@ -193,15 +181,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// The rest of your file remains unchanged...
-// [ErrorApp, ErrorScreen, NotFoundScreen definitions stay the same]
-
 // Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {
   final String error;
-
   const ErrorApp({super.key, required this.error});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -215,95 +198,15 @@ class ErrorApp extends StatelessWidget {
         message: 'Failed to initialize the app. Please try restarting.',
         error: error,
         onRetry: () {
-          // Restart logic would go here
+          // Optionally add restart logic here
         },
       ),
     );
   }
 }
 
-// Enhanced Error Screen
-class ErrorScreen extends StatelessWidget {
-  final String title;
-  final String message;
-  final String error;
-  final VoidCallback? onRetry;
-
-  const ErrorScreen({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.error,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.error_outline,
-                        size: 40,
-                        color: Colors.red.shade400,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      message,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    if (onRetry != null)
-                      ElevatedButton.icon(
-                        onPressed: onRetry,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Try Again'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
+// 404 Not Found Screen and ErrorScreen should also be included as before
+// ... (Keep your previous NotFoundScreen and ErrorScreen implementations here)
 // 404 Not Found Screen
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});

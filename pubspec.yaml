@@ -42,3 +42,4 @@ flutter:
   # Add assets section to fix the google_logo.png error
   assets:
     - assets/google_logo.png
+    - assets/questions.json

@@ -58,6 +58,49 @@ class DatabaseService {
       )
     ''');
 
+    await db.execute('''
+  CREATE TABLE questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL,
+    question TEXT NOT NULL,
+    options TEXT NOT NULL,   -- store options as JSON string
+    correctIndex INTEGER NOT NULL
+  );
+''');
+    Future<void> onUpgrade(Database db, int oldVersion, int newVersion) async {
+      if (oldVersion < 2) {
+        await db.execute('''
+      CREATE TABLE questions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category TEXT NOT NULL,
+        question TEXT NOT NULL,
+        options TEXT NOT NULL,
+        correctIndex INTEGER NOT NULL
+      );
+    ''');
+      }
+    } // Insert a question
+
+    Future<int> insertQuestion(Question question) async {
+      final db = await database;
+      return await db.insert('questions', question.toMap());
+    }
+
+    // Retrieve questions by category with optional limit
+    Future<List<Question>> getQuestionsByCategory(
+      String category, {
+      int limit = 10,
+    }) async {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'questions',
+        where: 'category = ?',
+        whereArgs: [category],
+        limit: limit,
+      );
+      return maps.map((map) => Question.fromMap(map)).toList();
+    }
+
     // Insert default settings
     await db.insert(_settingsTable, {'key': 'theme', 'value': 'light'});
 

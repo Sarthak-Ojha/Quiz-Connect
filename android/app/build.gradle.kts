@@ -39,18 +39,20 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-
-    signingConfigs {
-        create("release") {
-            if (keystorePropertiesFile.exists()) {
-                storeFile=your-release-key.jks
-storePassword=123456
-keyAlias=yourKeyAlias
-keyPassword=123456
-
-            }
+signingConfigs {
+    create("release") {
+        // Temporarily disabled for debug builds
+        /*
+        if (keystorePropertiesFile.exists()) {
+            storeFile = file(requireKeystoreProperty("storeFile"))
+            storePassword = requireKeystoreProperty("storePassword")
+            keyAlias = requireKeystoreProperty("keyAlias")
+            keyPassword = requireKeystoreProperty("keyPassword")
         }
+        */
     }
+}
+
 
     buildTypes {
         release {

@@ -1,0 +1,3055 @@
+[
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for gold?",
+    "options": ["Go", "Gd", "Au", "Ag"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "How many bones are in the adult human body?",
+    "options": ["206", "208", "204", "210"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "What is the speed of light in a vacuum?",
+    "options": ["299,792,458 m/s", "300,000,000 m/s", "299,792,458 km/s", "186,282 miles/s"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which planet is known as the Red Planet?",
+    "options": ["Venus", "Jupiter", "Mars", "Saturn"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the hardest natural substance on Earth?",
+    "options": ["Quartz", "Diamond", "Graphite", "Steel"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the atomic number of carbon?",
+    "options": ["4", "6", "8", "12"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which organ produces insulin?",
+    "options": ["Liver", "Kidney", "Pancreas", "Heart"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the most abundant gas in Earth's atmosphere?",
+    "options": ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "How many chambers does a human heart have?",
+    "options": ["2", "3", "4", "5"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the pH of pure water?",
+    "options": ["6", "7", "8", "9"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which blood type is known as the universal donor?",
+    "options": ["A", "B", "AB", "O"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Science",
+    "question": "What is the smallest unit of matter?",
+    "options": ["Atom", "Molecule", "Proton", "Electron"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which force keeps planets in orbit around the Sun?",
+    "options": ["Magnetic force", "Gravity", "Nuclear force", "Electric force"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for water?",
+    "options": ["H2O", "CO2", "NaCl", "CH4"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which vitamin is produced when skin is exposed to sunlight?",
+    "options": ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Science",
+    "question": "What is the largest organ in the human body?",
+    "options": ["Brain", "Liver", "Skin", "Lungs"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "How many teeth does an adult human typically have?",
+    "options": ["28", "30", "32", "34"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What gas do plants absorb from the atmosphere during photosynthesis?",
+    "options": ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which planet is closest to the Sun?",
+    "options": ["Venus", "Mercury", "Earth", "Mars"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the freezing point of water in Celsius?",
+    "options": ["0°C", "-1°C", "1°C", "32°C"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which element has the chemical symbol 'Fe'?",
+    "options": ["Fluorine", "Iron", "Francium", "Fermium"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of earthquakes called?",
+    "options": ["Geology", "Meteorology", "Seismology", "Astronomy"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "How many pairs of chromosomes do humans have?",
+    "options": ["21", "22", "23", "24"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for sodium?",
+    "options": ["S", "So", "Na", "N"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which organ filters blood in the human body?",
+    "options": ["Liver", "Kidney", "Heart", "Lungs"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the powerhouse of the cell?",
+    "options": ["Nucleus", "Mitochondria", "Ribosome", "Cytoplasm"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which gas is most abundant in the Sun?",
+    "options": ["Helium", "Hydrogen", "Oxygen", "Carbon"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the normal human body temperature in Celsius?",
+    "options": ["36°C", "37°C", "38°C", "39°C"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which scientist developed the theory of relativity?",
+    "options": ["Newton", "Einstein", "Darwin", "Galileo"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for table salt?",
+    "options": ["NaCl", "KCl", "CaCl2", "MgCl2"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "How many bones are in the human skull?",
+    "options": ["20", "22", "24", "26"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which planet has the most moons?",
+    "options": ["Jupiter", "Saturn", "Uranus", "Neptune"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of life called?",
+    "options": ["Chemistry", "Physics", "Biology", "Geology"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which blood vessel carries blood away from the heart?",
+    "options": ["Vein", "Artery", "Capillary", "Ventricle"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for oxygen?",
+    "options": ["O", "Ox", "O2", "Og"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which part of the brain controls balance?",
+    "options": ["Cerebrum", "Cerebellum", "Medulla", "Pons"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the largest planet in our solar system?",
+    "options": ["Saturn", "Jupiter", "Neptune", "Uranus"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which acid is found in the stomach?",
+    "options": ["Sulfuric acid", "Nitric acid", "Hydrochloric acid", "Acetic acid"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the unit of electric current?",
+    "options": ["Volt", "Ampere", "Ohm", "Watt"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which organelle contains DNA in a cell?",
+    "options": ["Mitochondria", "Nucleus", "Ribosome", "Golgi apparatus"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for methane?",
+    "options": ["CH3", "CH4", "C2H4", "C2H6"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which type of radiation has the shortest wavelength?",
+    "options": ["Radio waves", "Visible light", "X-rays", "Gamma rays"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Science",
+    "question": "What is the process by which plants make food?",
+    "options": ["Respiration", "Photosynthesis", "Digestion", "Fermentation"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which element is essential for thyroid function?",
+    "options": ["Iron", "Calcium", "Iodine", "Zinc"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the speed of sound in air at room temperature?",
+    "options": ["330 m/s", "343 m/s", "350 m/s", "360 m/s"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which bone is the longest in the human body?",
+    "options": ["Tibia", "Humerus", "Femur", "Radius"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for helium?",
+    "options": ["H", "He", "Hl", "Hm"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which gland is known as the master gland?",
+    "options": ["Thyroid", "Adrenal", "Pituitary", "Pancreas"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of weather called?",
+    "options": ["Astronomy", "Meteorology", "Geology", "Oceanography"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which vitamin prevents scurvy?",
+    "options": ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the atomic number of hydrogen?",
+    "options": ["1", "2", "3", "4"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which part of the eye controls the amount of light entering?",
+    "options": ["Cornea", "Lens", "Iris", "Retina"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for carbon dioxide?",
+    "options": ["CO", "CO2", "C2O", "C2O2"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which scientist is famous for the laws of motion?",
+    "options": ["Einstein", "Newton", "Galileo", "Kepler"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the smallest bone in the human body?",
+    "options": ["Stapes", "Malleus", "Incus", "Hyoid"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which planet is known as the Evening Star?",
+    "options": ["Mars", "Venus", "Mercury", "Jupiter"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for silver?",
+    "options": ["S", "Si", "Ag", "Al"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which blood component is responsible for clotting?",
+    "options": ["Red blood cells", "White blood cells", "Platelets", "Plasma"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of fossils called?",
+    "options": ["Archaeology", "Paleontology", "Anthropology", "Geology"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which gas is used in balloons to make them float?",
+    "options": ["Hydrogen", "Helium", "Nitrogen", "Oxygen"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the unit of frequency?",
+    "options": ["Joule", "Watt", "Hertz", "Newton"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which organ produces bile?",
+    "options": ["Pancreas", "Liver", "Gallbladder", "Stomach"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for ammonia?",
+    "options": ["NH2", "NH3", "NH4", "N2H4"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which type of rock is formed by cooling lava?",
+    "options": ["Sedimentary", "Metamorphic", "Igneous", "Composite"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the charge of a proton?",
+    "options": ["Positive", "Negative", "Neutral", "Variable"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which muscle is the strongest in the human body?",
+    "options": ["Biceps", "Quadriceps", "Masseter", "Gluteus maximus"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for potassium?",
+    "options": ["P", "Po", "K", "Pt"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which planet has rings?",
+    "options": ["Mars", "Jupiter", "Saturn", "All of the above"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of heredity called?",
+    "options": ["Genetics", "Ecology", "Anatomy", "Physiology"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which part of the plant conducts water?",
+    "options": ["Phloem", "Xylem", "Cambium", "Epidermis"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for glucose?",
+    "options": ["C6H12O6", "C12H22O11", "C6H6", "CH4"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which scientist developed the periodic table?",
+    "options": ["Dalton", "Mendeleev", "Bohr", "Rutherford"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the largest artery in the human body?",
+    "options": ["Pulmonary artery", "Carotid artery", "Aorta", "Femoral artery"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which element is the most abundant in the universe?",
+    "options": ["Helium", "Hydrogen", "Oxygen", "Carbon"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the unit of electrical resistance?",
+    "options": ["Volt", "Ampere", "Ohm", "Watt"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which hormone regulates blood sugar?",
+    "options": ["Insulin", "Adrenaline", "Thyroxine", "Cortisol"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for calcium?",
+    "options": ["C", "Ca", "Cl", "Co"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which layer of the Earth's atmosphere contains the ozone layer?",
+    "options": ["Troposphere", "Stratosphere", "Mesosphere", "Thermosphere"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the process of cell division called?",
+    "options": ["Meiosis", "Mitosis", "Both A and B", "Osmosis"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which blood type is known as the universal recipient?",
+    "options": ["A", "B", "AB", "O"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for hydrogen peroxide?",
+    "options": ["H2O", "H2O2", "HO2", "H3O2"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which vitamin is essential for blood clotting?",
+    "options": ["Vitamin C", "Vitamin D", "Vitamin E", "Vitamin K"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for nitrogen?",
+    "options": ["Ni", "N", "No", "Ne"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the hardest substance in the human body?",
+    "options": ["Bone", "Dentin", "Enamel", "Cartilage"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which force opposes motion?",
+    "options": ["Gravity", "Friction", "Magnetism", "Tension"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for sulfuric acid?",
+    "options": ["H2SO3", "H2SO4", "HSO4", "SO4"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which scientist is known for the theory of evolution?",
+    "options": ["Darwin", "Mendel", "Watson", "Crick"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which element has the highest melting point?",
+    "options": ["Iron", "Tungsten", "Carbon", "Platinum"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of birds called?",
+    "options": ["Entomology", "Ornithology", "Herpetology", "Ichthyology"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which gas is produced during photosynthesis?",
+    "options": ["Carbon dioxide", "Nitrogen", "Oxygen", "Hydrogen"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for lead?",
+    "options": ["L", "Le", "Pb", "Pl"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which organ system includes the heart and blood vessels?",
+    "options": ["Respiratory", "Digestive", "Circulatory", "Nervous"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the unit of power?",
+    "options": ["Joule", "Watt", "Newton", "Pascal"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which type of cell lacks a nucleus?",
+    "options": ["Eukaryotic", "Prokaryotic", "Plant", "Animal"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical formula for ozone?",
+    "options": ["O2", "O3", "O4", "O"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "Which planet takes the longest to orbit the Sun?",
+    "options": ["Uranus", "Saturn", "Neptune", "Jupiter"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "What is the study of insects called?",
+    "options": ["Entomology", "Zoology", "Botany", "Ecology"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Science",
+    "question": "Which mineral is essential for healthy bones?",
+    "options": ["Iron", "Calcium", "Zinc", "Magnesium"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Science",
+    "question": "What is the chemical symbol for copper?",
+    "options": ["Co", "Cp", "Cu", "Cr"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Science",
+    "question": "Which part of the flower produces pollen?",
+    "options": ["Pistil", "Stamen", "Sepal", "Petal"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The French Revolution began in:",
+    "options": ["1787", "1788", "1789", "1790"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the founder of modern Nepal who unified the country?",
+    "options": ["Jung Bahadur Rana", "Tribhuvan Bir Bikram Shah", "Mahendra Bir Bikram Shah", "Prithvi Narayan Shah"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Berlin Wall fell in:",
+    "options": ["1987", "1988", "1989", "1990"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Rana regime in Nepal lasted for approximately how many years?",
+    "options": ["95 years", "100 years", "110 years", "104 years"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The first man on the moon was:",
+    "options": ["Buzz Aldrin", "John Glenn", "Neil Armstrong", "Alan Shepard"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Which treaty ended the Anglo-Nepalese War?",
+    "options": ["Treaty of Kathmandu", "Treaty of Thapathali", "Treaty of Betrawati", "Treaty of Sugauli"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Industrial Revolution began in:",
+    "options": ["France", "Germany", "Britain", "United States"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Kot Massacre occurred in which year?",
+    "options": ["1845", "1847", "1848", "1846"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The American Civil War ended in:",
+    "options": ["1863", "1864", "1865", "1866"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first democratic elections in Nepal were held in:",
+    "options": ["1957", "1958", "1960", "1959"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Great Wall of China was primarily built to defend against:",
+    "options": ["Japanese invasions", "Mongol invasions", "Korean invasions", "Vietnamese invasions"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "King Tribhuvan went into exile to which country?",
+    "options": ["China", "Tibet", "Britain", "India"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Russian Revolution occurred in:",
+    "options": ["1915", "1916", "1917", "1918"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Nepal became a member of the United Nations in:",
+    "options": ["1954", "1955", "1956", "1957"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The printing press was invented by:",
+    "options": ["Leonardo da Vinci", "Johannes Gutenberg", "Galileo Galilei", "Nicolaus Copernicus"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The People's Movement (Jana Andolan I) occurred in:",
+    "options": ["1988", "1989", "1990", "1991"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Renaissance began in:",
+    "options": ["France", "Germany", "Italy", "England"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the last king of Nepal?",
+    "options": ["King Birendra", "King Dipendra", "King Gyanendra", "King Mahendra"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first Emperor of China was:",
+    "options": ["Liu Bang", "Qin Shi Huang", "Emperor Wu", "Tang Taizong"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "Prithvi Narayan Shah conquered the Kathmandu Valley in:",
+    "options": ["1767", "1769", "1770", "1768"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Black Death peaked in Europe during the:",
+    "options": ["12th century", "13th century", "14th century", "15th century"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The capital of the Gorkha Kingdom before unification was:",
+    "options": ["Kathmandu", "Pokhara", "Palpa", "Gorkha"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "Julius Caesar was assassinated in:",
+    "options": ["46 BCE", "45 BCE", "44 BCE", "43 BCE"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the first elected Prime Minister of Nepal?",
+    "options": ["Tanka Prasad Acharya", "Matrika Prasad Koirala", "K.I. Singh", "B.P. Koirala"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The United Nations was founded in:",
+    "options": ["1944", "1945", "1946", "1947"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The royal massacre in Nepal occurred in:",
+    "options": ["1999", "2000", "2001", "2002"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Constitution of the United States was ratified in:",
+    "options": ["1786", "1787", "1788", "1789"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Nepal's first constitution was promulgated in:",
+    "options": ["1957", "1958", "1959", "1960"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Ottoman Empire ended after:",
+    "options": ["World War I", "World War II", "Crimean War", "Russo-Turkish War"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "The Comprehensive Peace Agreement was signed in:",
+    "options": ["2004", "2005", "2006", "2007"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first powered flight was achieved by:",
+    "options": ["Santos-Dumont", "Wright Brothers", "Langley", "Whitehead"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "Who led the first successful expedition to Mount Everest from Nepal side?",
+    "options": ["Tenzing Norgay", "Edmund Hillary", "Both A and B", "Ang Rita Sherpa"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Suez Canal was opened in:",
+    "options": ["1867", "1868", "1869", "1870"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first newspaper in Nepal was:",
+    "options": ["Nepal Bhasa Patrika", "Udaypur", "Madhav Narayan", "Gorkhapatra"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "Nelson Mandela was released from prison in:",
+    "options": ["1988", "1989", "1990", "1991"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Bhanubhakta Acharya is known as the:",
+    "options": ["First poet of Nepal", "Adikavi of Nepal", "Father of Nepali literature", "All of the above"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The first satellite launched into space was:",
+    "options": ["Explorer 1", "Sputnik 1", "Vanguard 1", "Luna 1"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Newar kingdoms in Kathmandu Valley were known as:",
+    "options": ["Three Kingdoms", "Valley Kingdoms", "Ancient Kingdoms", "Malla Kingdoms"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The D-Day landings occurred in:",
+    "options": ["1942", "1943", "1944", "1945"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Araniko, the famous architect, went to which country?",
+    "options": ["India", "Tibet", "China", "Mongolia"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Chernobyl nuclear disaster occurred in:",
+    "options": ["1984", "1985", "1986", "1987"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Battle of Nalapani was fought against:",
+    "options": ["Mughal Empire", "Sikh Empire", "Maratha Empire", "British East India Company"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The internet became publicly available in:",
+    "options": ["1989", "1990", "1991", "1992"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Bhimsen Thapa served as Prime Minister during which king's reign?",
+    "options": ["Prithvi Narayan Shah", "Pratap Singh Shah", "Rana Bahadur Shah", "Girvan Yuddha Bikram Shah"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The September 11 attacks occurred in:",
+    "options": ["1999", "2000", "2001", "2002"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first railway line in Nepal connected:",
+    "options": ["Kathmandu-Birgunj", "Kathmandu-Pokhara", "Biratnagar-Jogbani", "Janakpur-Jaynagar"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The first iPhone was released in:",
+    "options": ["2005", "2006", "2007", "2008"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Nepal's interim constitution was promulgated in:",
+    "options": ["2005", "2006", "2007", "2008"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "In which year did World War II end?",
+    "options": ["1944", "1945", "1946", "1947"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Licchavi period in Nepal is approximately from:",
+    "options": ["300-879 CE", "400-750 CE", "200-900 CE", "500-800 CE"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "Christopher Columbus reached the Americas in:",
+    "options": ["1490", "1491", "1492", "1493"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the first President of Nepal?",
+    "options": ["Parameswor Jha", "Krishna Prasad Bhattarai", "Bidhya Devi Bhandari", "Ram Baran Yadav"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Battle of Hastings took place in:",
+    "options": ["1064", "1065", "1066", "1067"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Kirant dynasty ruled Nepal for approximately:",
+    "options": ["800 years", "1000 years", "1225 years", "1500 years"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Roman Empire fell in the West in:",
+    "options": ["476 CE", "480 CE", "455 CE", "500 CE"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "Shamser Jang Bahadur Rana belonged to which roll number?",
+    "options": ["A Roll", "B Roll", "C Roll", "D Roll"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Magna Carta was signed in:",
+    "options": ["1213", "1214", "1215", "1216"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first university in Nepal was:",
+    "options": ["Kathmandu University", "Pokhara University", "Purbanchal University", "Tribhuvan University"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Cold War ended approximately in:",
+    "options": ["1988", "1989", "1990", "1991"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "Nepal adopted federal structure in which constitution?",
+    "options": ["2014", "2015", "2016", "2017"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Hundred Years' War was fought between:",
+    "options": ["France and Spain", "England and France", "England and Scotland", "France and Germany"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Mahakali Treaty was signed with:",
+    "options": ["China", "Britain", "Tibet", "India"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Crusades were primarily fought between:",
+    "options": ["Christians and Jews", "Christians and Muslims", "Catholics and Protestants", "Romans and Barbarians"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "Sankhadhar Sakhwa started which era?",
+    "options": ["Vikram Sambat", "Kali Yuga", "Shaka Sambat", "Nepal Sambat"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Titanic sank in:",
+    "options": ["1910", "1911", "1912", "1913"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first hydroelectric power plant in Nepal was built in:",
+    "options": ["Pharping", "Trishuli", "Kulekhani", "Marsyangdi"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "The Spanish Armada was defeated in:",
+    "options": ["1586", "1587", "1588", "1589"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Tribhuvan International Airport was formerly known as:",
+    "options": ["Kathmandu Airport", "Nepal Airport", "Royal Airport", "Gauchar Airport"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Reformation was started by:",
+    "options": ["John Calvin", "Martin Luther", "Huldrych Zwingli", "Henry VIII"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Muluki Ain (Civil Code) was first codified by:",
+    "options": ["Prithvi Narayan Shah", "Chandra Shumsher", "Bhimsen Thapa", "Jang Bahadur Rana"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Treaty of Versailles was signed in:",
+    "options": ["1917", "1918", "1919", "1920"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Nepal's first five-year plan was launched in:",
+    "options": ["1954", "1955", "1956", "1957"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Boston Tea Party occurred in:",
+    "options": ["1771", "1772", "1773", "1774"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The famous battle of Kirtipur was fought during the reign of:",
+    "options": ["Jaya Prakash Malla", "Tej Narsingh Malla", "Ranajit Malla", "All of the above"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Battle of Waterloo was fought in:",
+    "options": ["1813", "1814", "1815", "1816"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who introduced the Bikram Sambat calendar in Nepal?",
+    "options": ["Vikramaditya", "Prithvi Narayan Shah", "Jang Bahadur Rana", "King Vikramaditya of Ujjain"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Louisiana Purchase was made in:",
+    "options": ["1801", "1802", "1803", "1804"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The famous Pashupatinath Temple was built during which period?",
+    "options": ["Licchavi", "Malla", "Shah", "Kirant"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "The first transatlantic telegraph cable was completed in:",
+    "options": ["1856", "1857", "1858", "1859"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Nepal's current constitution came into effect in:",
+    "options": ["2014", "2015", "2016", "2017"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Cuban Missile Crisis occurred in:",
+    "options": ["1960", "1961", "1962", "1963"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The first cinema hall in Nepal was:",
+    "options": ["Kumari", "Bishwokarma", "Ranjana", "Jai Nepal"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The first computer, ENIAC, was completed in:",
+    "options": ["1944", "1945", "1946", "1947"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Boudhanath Stupa was built during which dynasty?",
+    "options": ["Kirant", "Licchavi", "Malla", "Shah"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The first successful heart transplant was performed in:",
+    "options": ["1965", "1966", "1967", "1968"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The famous Astamatrika temples were built by:",
+    "options": ["Licchavi kings", "Shah kings", "Rana rulers", "Malla kings"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Euro currency was introduced in:",
+    "options": ["1997", "1998", "1999", "2000"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Gorkha Dakshina Bahu was founded by:",
+    "options": ["Prithvi Narayan Shah", "Bahadur Shah", "Pratap Singh Shah", "Rana Bahadur Shah"],
+    "correctIndex": 0
+  },
+  {
+    "category": "History",
+    "question": "The Human Genome Project was completed in:",
+    "options": ["2001", "2002", "2003", "2004"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the first Prime Minister of Nepal after the end of Rana rule?",
+    "options": ["B.P. Koirala", "Matrika Prasad Koirala", "Tanka Prasad Acharya", "K.I. Singh"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The COVID-19 pandemic was declared by WHO in:",
+    "options": ["2018", "2019", "2020", "2021"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "The Anglo-Nepalese War was fought in which years?",
+    "options": ["1812-1814", "1813-1815", "1814-1816", "1815-1817"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who was the first President of the United States?",
+    "options": ["Thomas Jefferson", "John Adams", "Benjamin Franklin", "George Washington"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "In which year did Nepal abolish the monarchy?",
+    "options": ["2006", "2007", "2008", "2009"],
+    "correctIndex": 2
+  },
+  {
+    "category": "History",
+    "question": "Who established the Rana regime in Nepal?",
+    "options": ["Bir Shumsher Rana", "Dev Shumsher Rana", "Chandra Shumsher Rana", "Jang Bahadur Rana"],
+    "correctIndex": 3
+  },
+  {
+    "category": "History",
+    "question": "The Panchayat system in Nepal was introduced by:",
+    "options": ["King Tribhuvan", "King Mahendra", "King Birendra", "Jung Bahadur Rana"],
+    "correctIndex": 1
+  },
+  {
+    "category": "History",
+    "question": "The Maoist insurgency in Nepal began in:",
+    "options": ["1994", "1995", "1996", "1997"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport is considered the most popular sport in Nepal?(2025)",
+    "options": ["Basketball", "Volleyball", "Football", "Cricket"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "In which year was the first modern Olympic Games held?",
+    "options": ["1896", "1900", "1912", "1888"],
+    "correctIndex": 0
+  },
+ {
+  "category": "Sports",
+  "question": "Which Nepalese swimmer represented the country in the 2016 and 2020 Olympics?",
+  "options": ["Sita Rana Magar", "Gaurika Singh", "Nima Gharti Magar", "Rubeena Chhetry"],
+  "correctIndex": 1
+},
+  {
+    "category": "Sports",
+    "question": "Which country hosts the Wimbledon tennis championship?",
+    "options": ["Australia", "USA", "UK", "France"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which is the national game of Nepal?",
+    "options": ["Football", "Volleyball", "Cricket", "Dandi Biyo"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who holds the record for most goals in World Cup history?",
+    "options": ["Pelé", "Ronaldo", "Miroslav Klose", "Lionel Messi"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Who is the first Nepalese athlete to participate in the Paralympic Games?",
+    "options": ["Prakash Magar", "Devendra Jhajharia", "Raju Thapa", "Khadka Bahadur Khatri"],
+    "correctIndex": 0
+  },
+  {
+  "category": "Sports",
+  "question": "Which Nepalese taekwondo player has won multiple medals in the Asian Games?",
+  "options": ["Deepak Bista", "Nirmala Tamang", "Ashok Rai", "Sunil Lama"],
+  "correctIndex": 0
+},
+  {
+    "category": "Sports",
+    "question": "Which recreational activity is popular in Nepal for adventure seekers?",
+    "options": ["Meditation", "Bungee jumping", "Dancing", "Yoga"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who is known as the 'God of Football'?",
+    "options": ["Diego Maradona", "Pelé", "Lionel Messi", "Cristiano Ronaldo"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "In which sport did Nepal win its first-ever international medal?",
+    "options": ["Boxing", "Athletics", "Football", "Taekwondo"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Sports",
+    "question": "Which NBA player scored 100 points in a single game?",
+    "options": ["Michael Jordan", "Kobe Bryant", "Wilt Chamberlain", "LeBron James"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which Nepalese athlete is known as the fastest sprinter?",
+    "options": ["Shaili Singh", "Hari Kumar Rimal", "Gopi Chandra Parki", "Rajendra Bhandari"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which country has won the most Olympic gold medals overall?",
+    "options": ["Germany", "China", "USA", "Russia"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which Nepalese athlete has won the most gold medals at the South Asian Games?",
+    "options": ["Krishna Bahadur Mahara", "Deepak Bista", "Gaurika Singh", "Jit Bahadur Khadka"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who holds the record for the fastest goal in World Cup history?",
+    "options": ["Cristiano Ronaldo", "Hakan Şükür", "Pelé", "Lionel Messi"],
+    "correctIndex": 1
+  },
+  {
+  "category": "Sports",
+  "question": "Which Nepali women’s footballer is the all‑time top scorer and broke the South Asian international goal record?",
+  "options": ["Anu Lama", "Jamuna Gurung", "Sabitra Bhandari", "Preeti Rai"],
+  "correctIndex": 2
+},
+  {
+    "category": "Sports",
+    "question": "What sport is considered the most popular in the world?",
+    "options": ["Tennis", "Basketball", "Soccer", "Cricket"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Who is the first Nepalese athlete to win a gold medal in an international event?",
+    "options": ["Shrinkhala Khatiwada", "Dipa Karmakar", "Anju Khadka", "Gaurika Singh"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which team won the 2002 FIFA World Cup?",
+    "options": ["Brazil", "France", "Germany", "Croatia"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which mountain in Nepal is most popular for trekking and mountaineering?",
+    "options": ["Mount Kilimanjaro", "Mount Everest", "Mount Fuji", "Mount McKinley"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "In which year was FIFA founded?",
+    "options": ["1904", "1923", "1948", "1960"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport is most popular in the Terai region of Nepal?",
+    "options": ["Cricket", "Football", "Kabaddi", "Volleyball"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which football club won the UEFA Champions League in 2025?",
+    "options": ["Bayern Munich", "Manchester City", "PSG", "Chelsea"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which recreational activity is popular among tourists visiting Nepal?",
+    "options": ["Skiing", "Trekking", "Surfing", "Golfing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first Wimbledon tennis championship held?",
+    "options": ["1876", "1877", "1878", "1875"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who is the first Nepalese athlete to represent Nepal at the Olympic Games?",
+    "options": ["Bidhan Lama", "Deepak Bista", "Tanka Bahadur Karki", "Bijay Sinjali"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport did Nepal's first female mountaineer Pasang Lhamu Sherpa participate in?",
+    "options": ["Athletics", "Football", "Volleyball", "Mountaineering"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Sports",
+    "question": "When was the Tour de France established?",
+    "options": ["1902", "1903", "1904", "1901"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which recreational activity is popular in the Pokhara valley of Nepal?",
+    "options": ["Ice skating", "Paragliding", "Rock climbing", "Horseback riding"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was Major League Baseball (MLB) created?",
+    "options": ["1869", "1901", "1927", "1950"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport is played in traditional festivals like Dashain in Nepal?",
+    "options": ["Cricket", "Football", "Tug of War", "Volleyball"],
+    "correctIndex": 2
+  },
+  {
+  "category": "Sports",
+  "question": "Who holds the record for the fastest century in One Day Internationals (ODIs)?",
+  "options": ["AB de Villiers", "Chris Gayle", "Virat Kohli", "Brendon McCullum"],
+  "correctIndex": 0
+},
+  {
+    "category": "Sports",
+    "question": "Which recreational activity is popular in the Trishuli River of Nepal?",
+    "options": ["Windsurfing", "Bungee jumping", "White water rafting", "Parasailing"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which NFL team had a perfect season in 1972?",
+    "options": ["Miami Dolphins", "Dallas Cowboys", "Green Bay Packers", "Pittsburgh Steelers"],
+    "correctIndex": 0
+  },
+  {
+  "category": "Sports",
+  "question": "In which year was the first ICC T20 World Cup held?",
+  "options": ["2007", "2009", "2011", "2013"],
+  "correctIndex": 0
+}
+,
+  {
+    "category": "Sports",
+    "question": "When was the first Boston Marathon run?",
+    "options": ["1896", "1897", "1898", "1895"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which recreational activity is popular in the Seti River of Nepal?",
+    "options": ["Scuba diving", "Kayaking", "Parasailing", "Jet skiing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which NBA team came back from a 3-1 deficit to win the championship in 2016?",
+    "options": ["Miami Heat", "Cleveland Cavaliers", "Golden State Warriors", "San Antonio Spurs"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which traditional Nepalese game involves a stick and small wooden piece?",
+    "options": ["Bagh Chal", "Dandi Biyo", "Ludo", "Katti"],
+    "correctIndex": 1
+  },
+  {
+  "category": "Sports",
+  "question": "Who became the fastest bowler to reach 300 wickets in Test cricket?",
+  "options": ["James Anderson", "Stuart Broad", "Pat Cummins", "Muttiah Muralitharan"],
+  "correctIndex": 2
+}
+,
+  {
+    "category": "Sports",
+    "question": "Which Nepalese cricketer is most internationally recognized?",
+    "options": ["Gyanendra Malla", "Sandeep Lamichhane", "Paras Khadka", "Sompal Kami"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who made the famous 'Hand of God' goal in football?",
+    "options": ["Diego Maradona", "Pelé", "Lionel Messi", "Cristiano Ronaldo"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport is associated with the Everest region of Nepal?",
+    "options": ["Football", "Mountaineering", "Cricket", "Athletics"],
+    "correctIndex": 1
+  },
+  {
+  "category": "Sports",
+  "question": "Which nation is known as the 'Proteas' in international cricket?",
+  "options": ["South Africa", "New Zealand", "Pakistan", "Sri Lanka"],
+  "correctIndex": 0
+},
+  {
+    "category": "Sports",
+    "question": "Which festival in Nepal involves traditional wrestling competitions?",
+    "options": ["Bisket Jatra", "Dashain", "Tihar", "Holi"],
+    "correctIndex": 0
+  },
+ {
+  "category": "Sports",
+  "question": "Which nation’s cricket team is nicknamed the 'Tigers'?",
+  "options": ["England", "Pakistan", "Sri Lanka", "Bangladesh"],
+  "correctIndex": 3
+},
+  {
+    "category": "Sports",
+    "question": "Which traditional board game is popular in Nepal?",
+    "options": ["Chess", "Bagh Chal", "Checkers", "Ludo"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "In tennis, when was the men's U.S. National Championship first held?",
+    "options": ["1880", "1881", "1882", "1879"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which adventure sport is popular in Bhote Koshi river in Nepal?",
+    "options": ["Bungee jumping", "Kayaking", "Rafting", "Canyoning"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sports",
+    "question": "When was the Masters Tournament first held?",
+    "options": ["1933", "1934", "1935", "1932"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which combat sport is traditionally practiced in Nepal?",
+    "options": ["Boxing", "Karate", "Wrestling", "Taekwondo"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sports",
+    "question": "Which country won the first FIFA World Cup?",
+    "options": ["Argentina", "Uruguay", "Brazil", "Italy"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which water sport is popular in Phewa Lake, Nepal?",
+    "options": ["Swimming", "Boating", "Water skiing", "Jet skiing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the Australian Open tennis championship first held?",
+    "options": ["1904", "1905", "1906", "1903"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which winter sport is practiced in the higher altitudes of Nepal?",
+    "options": ["Ice hockey", "Skiing", "Figure skating", "Snowboarding"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the National Baseball League established in the US?",
+    "options": ["1875", "1876", "1877", "1874"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which archery style is traditional to Nepal?",
+    "options": ["Recurve", "Traditional bow", "Compound", "Crossbow"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When were the Cambridge Rules of football first adopted?",
+    "options": ["1847", "1848", "1849", "1846"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which martial art has gained popularity in Nepal?",
+    "options": ["Judo", "Taekwondo", "Karate", "Kung Fu"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first match of Australian rules football played?",
+    "options": ["1857", "1858", "1859", "1856"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which racquet sport is growing in popularity in Nepal?",
+    "options": ["Tennis", "Badminton", "Squash", "Table Tennis"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which Olympic sport first included women's events in 1900?",
+    "options": ["Swimming", "Tennis", "Golf", "Sailing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which team sport is most popular in Nepal's schools?",
+    "options": ["Basketball", "Volleyball", "Football", "Cricket"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first Oxford-Cambridge rowing race held?",
+    "options": ["1828", "1829", "1830", "1827"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which extreme sport is practiced in the Annapurna region?",
+    "options": ["Base jumping", "Rock climbing", "Paragliding", "Mountaineering"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Sports",
+    "question": "When was a women's tennis event first held at the Australian Open?",
+    "options": ["1921", "1922", "1923", "1920"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which cycling event is popular in Nepal?",
+    "options": ["Road racing", "Mountain biking", "Track cycling", "BMX"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "In which decade did formal cricket clubs begin forming in London?",
+    "options": ["1740s", "1750s", "1760s", "1730s"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which running event is popular among Nepali athletes?",
+    "options": ["Sprints", "Marathon", "Middle distance", "Hurdles"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first written mention of cricket?",
+    "options": ["16th century", "17th century", "18th century", "15th century"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which combat sport has produced international medalists from Nepal?",
+    "options": ["Boxing", "Taekwondo", "Wrestling", "Judo"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first FIFA World Cup held?",
+    "options": ["1928", "1930", "1932", "1926"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which individual sport is most successful for Nepal internationally?",
+    "options": ["Athletics", "Taekwondo", "Boxing", "Swimming"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the first NFL player to rush for over 2000 yards in a season?",
+    "options": ["Jim Brown", "O.J. Simpson", "Eric Dickerson", "Walter Payton"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which shooting sport is practiced in Nepal?",
+    "options": ["Clay shooting", "Rifle shooting", "Pistol shooting", "Archery"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which swimming stroke is most commonly taught in Nepal?",
+    "options": ["Butterfly", "Freestyle", "Breaststroke", "Backstroke"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who holds the record for most home runs in a single MLB season?",
+    "options": ["Babe Ruth", "Barry Bonds", "Mark McGwire", "Sammy Sosa"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which gymnastics apparatus is most popular in Nepal?",
+    "options": ["Vault", "Floor exercise", "Balance beam", "Parallel bars"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first Super Bowl played?",
+    "options": ["1966", "1967", "1968", "1965"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which equestrian sport has followers in Nepal?",
+    "options": ["Dressage", "Polo", "Show jumping", "Eventing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the first golfer to win all four major championships?",
+    "options": ["Ben Hogan", "Gene Sarazen", "Gary Player", "Jack Nicklaus"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which athletics field event is popular in Nepali schools?",
+    "options": ["Shot put", "Javelin", "Discus", "Hammer throw"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When did Tiger Woods win his first Masters Tournament?",
+    "options": ["1996", "1997", "1998", "1995"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which motor sport has a following in Nepal?",
+    "options": ["Formula 1", "Rally", "MotoGP", "NASCAR"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the first woman to win the Boston Marathon?",
+    "options": ["Bobbi Gibb", "Kathrine Switzer", "Joan Benoit", "Nina Kuscsik"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which precision sport is growing in Nepal's cities?",
+    "options": ["Darts", "Billiards", "Bowling", "Snooker"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first World Cup in cricket held?",
+    "options": ["1974", "1975", "1976", "1973"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which fitness activity is most popular in Nepal's urban areas?",
+    "options": ["Aerobics", "Yoga", "Zumba", "CrossFit"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the first basketball player to score 100 points in an NBA game?",
+    "options": ["Kareem Abdul-Jabbar", "Wilt Chamberlain", "Michael Jordan", "Kobe Bryant"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which traditional sport involves tigers and goats as game pieces?",
+    "options": ["Chaturanga", "Bagh Chal", "Pachisi", "Ashta Chemma"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first Stanley Cup awarded in hockey?",
+    "options": ["1892", "1893", "1894", "1891"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which adventure tourism activity brings most foreign visitors to Nepal?",
+    "options": ["Bungee jumping", "Trekking", "Paragliding", "River rafting"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who holds the world record in men's 100m sprint?",
+    "options": ["Carl Lewis", "Usain Bolt", "Ben Johnson", "Justin Gatlin"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which indoor sport is most popular during Nepal's monsoon season?",
+    "options": ["Chess", "Table tennis", "Carrom", "Badminton"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first Ironman triathlon held?",
+    "options": ["1977", "1978", "1979", "1976"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which team sport requires the least equipment in Nepal?",
+    "options": ["Cricket", "Football", "Volleyball", "Basketball"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the first tennis player to achieve a Grand Slam?",
+    "options": ["Rod Laver", "Don Budge", "Maureen Connolly", "Margaret Court"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which high-altitude sport is unique to Nepal and Tibet?",
+    "options": ["Ice climbing", "Yak racing", "Snow polo", "Alpine skiing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When did professional football (NFL) begin in America?",
+    "options": ["1919", "1920", "1921", "1918"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport combines elements popular in both Nepal and India?",
+    "options": ["Hockey", "Kabaddi", "Wrestling", "Boxing"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Who was the youngest player to win a tennis Grand Slam?",
+    "options": ["Martina Hingis", "Monica Seles", "Tracy Austin", "Andrea Jaeger"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "Which sport has the strongest domestic league in Nepal?",
+    "options": ["Cricket", "Football", "Volleyball", "Basketball"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sports",
+    "question": "When was the first World Athletics Championships held?",
+    "options": ["1982", "1983", "1984", "1981"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which country has the longest coastline in the world?",
+    "options": ["Australia", "Canada", "Russia", "Indonesia"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain is called the 'Killer Mountain'?",
+    "options": ["Manaslu", "Cho Oyu", "Annapurna", "Dhaulagiri"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which tectonic plates meet in the Himalayas?",
+    "options": ["Indian and Eurasian", "Pacific and North American", "African and Arabian", "Antarctic and Australian"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the world's largest archipelago?",
+    "options": ["Philippines", "Indonesia", "Japan", "Greece"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which river flows northward in Nepal?",
+    "options": ["Karnali", "Bagmati", "Karmanasa", "Gandak"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital of New Zealand?",
+    "options": ["Auckland", "Wellington", "Christchurch", "Hamilton"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which zone is the largest in Nepal?",
+    "options": ["Mechi", "Bagmati", "Janakpur", "Karnali"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which desert spans across multiple countries in North Africa?",
+    "options": ["Kalahari", "Sahara", "Namib", "Libyan"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the approximate north-south width of Nepal?",
+    "options": ["150 km", "193 km", "225 km", "167 km"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain range is the longest in the world?",
+    "options": ["Rockies", "Alps", "Himalayas", "Andes"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which district is known as the northernmost district of Nepal?",
+    "options": ["Dolpa", "Mustang", "Manang", "Humla"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the Ring of Fire?",
+    "options": ["Volcanic belt around Pacific Ocean", "Solar phenomenon", "Mountain range", "Trade route"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which valley in Nepal is known for its apple production?",
+    "options": ["Mustang Valley", "Langtang Valley", "Khumbu Valley", "Dolpo Valley"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which country is known as the Land of a Thousand Lakes?",
+    "options": ["Sweden", "Finland", "Norway", "Denmark"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Nepal is situated between which latitudes?",
+    "options": ["26°N to 31°N", "25°N to 30°N", "27°N to 32°N", "28°N to 33°N"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which strait separates Europe and Africa?",
+    "options": ["Strait of Gibraltar", "Bosphorus Strait", "Strait of Hormuz", "Strait of Malacca"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which is the deepest lake in Nepal?",
+    "options": ["Phoksundo Lake", "Rara Lake", "Tilicho Lake", "Gosaikunda Lake"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which volcano is known as the most active in the world?",
+    "options": ["Mount Vesuvius", "Kilauea", "Mount Etna", "Stromboli"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the main cash crop grown in Nepal's hills?",
+    "options": ["Tea", "Coffee", "Cardamom", "Ginger"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which sea is the saltiest natural water body on Earth?",
+    "options": ["Red Sea", "Dead Sea", "Mediterranean Sea", "Arabian Sea"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which is Nepal's hottest place?",
+    "options": ["Jhapa", "Dhangadhi", "Birgunj", "Nepalgunj"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "What is the world's largest hot desert?",
+    "options": ["Sahara Desert", "Arabian Desert", "Gobi Desert", "Kalahari Desert"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which river is the longest in Nepal?",
+    "options": ["Gandak", "Bagmati", "Karnali", "Kosi"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "Which European city is built on 14 islands?",
+    "options": ["Venice", "Stockholm", "Amsterdam", "Copenhagen"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What type of climate is predominant in the Terai region of Nepal?",
+    "options": ["Subtropical", "Temperate", "Alpine", "Monsoon"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which country has three capital cities?",
+    "options": ["Switzerland", "South Africa", "Netherlands", "Bolivia"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "The famous pilgrimage site Muktinath is located in which district?",
+    "options": ["Mustang", "Kaski", "Dolpa", "Myagdi"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the deepest point on Earth's surface?",
+    "options": ["Dead Sea", "Challenger Deep", "Death Valley", "Lake Baikal"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which district is known for the highest rainfall in Nepal?",
+    "options": ["Sindhupalchowk", "Dhankuta", "Kaski", "Taplejung"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which is the world's most populous metropolitan area?",
+    "options": ["Tokyo-Yokohama", "Delhi", "Shanghai", "Mexico City"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "The capital city of Nepal is?",
+    "options": ["Lalitpur", "Biratnagar", "Pokhara", "Kathmandu"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which country is the most linguistically diverse?",
+    "options": ["India", "Papua New Guinea", "Indonesia", "Nigeria"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the total land area of Nepal?",
+    "options": ["147,181 sq km", "140,000 sq km", "150,000 sq km", "130,000 sq km"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the world's highest capital city?",
+    "options": ["Quito", "La Paz", "Bogotá", "Kathmandu"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which country is famously known as the Land of the Rising Sun?",
+    "options": ["China", "South Korea", "Thailand", "Japan"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which ethnic group is indigenous to Nepal's high mountains?",
+    "options": ["Tharu", "Sherpa", "Madhesi", "Newars"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "How many continents are there?",
+    "options": ["5", "6", "8", "7"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain peak in Nepal is considered unclimbable?",
+    "options": ["Annapurna", "Machapuchare", "Dhaulagiri", "Cho Oyu"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which desert is the largest in the world?",
+    "options": ["Sahara Desert", "Gobi Desert", "Kalahari Desert", "Antarctic Desert"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "What is the main source of Nepal's monsoon rains?",
+    "options": ["Arabian Sea", "Bay of Bengal", "Indian Ocean", "Tibetan Plateau"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the largest island in the world?",
+    "options": ["Greenland", "Australia", "Madagascar", "Borneo"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which region of Nepal has the highest population density?",
+    "options": ["Kathmandu Valley", "Terai", "Hills", "Mountains"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Mount Kilimanjaro is located in which country?",
+    "options": ["Kenya", "Uganda", "Tanzania", "Ethiopia"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "Which hydroelectric project is the largest in Nepal?",
+    "options": ["Kulekhani", "Kaligandaki A", "Chilime", "Marsyangdi"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which is the highest mountain in Nepal?",
+    "options": ["Kanchenjunga", "Makalu", "Mount Everest", "Dhaulagiri"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is Nepal's main agricultural season called?",
+    "options": ["Baisakh", "Monsoon", "Chaitra", "Kartik"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which country has the largest population in the world?",
+    "options": ["India", "USA", "China", "Brazil"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain range has the highest average elevation?",
+    "options": ["Himalayas", "Andes", "Rockies", "Alps"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which province of Nepal is also known as Madhesh Province?",
+    "options": ["Province No. 2", "Province No. 1", "Bagmati Province", "Lumbini Province"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the smallest country in the world by area?",
+    "options": ["Monaco", "San Marino", "Vatican City", "Liechtenstein"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "Which geographic region lies in the southern part of Nepal?",
+    "options": ["Terai", "Himalaya", "Pahad", "Kathmandu Valley"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the world's largest coral reef system?",
+    "options": ["Great Barrier Reef", "Belize Barrier Reef", "Red Sea Coral Reef", "Caribbean Reef"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which ocean is Bermuda located in?",
+    "options": ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which sacred mountain in Nepal is associated with Shiva?",
+    "options": ["Mount Kailash", "Machapuchare", "Ganesh Himal", "Api"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "How many districts does Nepal have?",
+    "options": ["77", "75", "80", "72"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What type of forest is predominant in Nepal's middle hills?",
+    "options": ["Tropical", "Temperate", "Alpine", "Mangrove"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which continent is the Sahara Desert located in?",
+    "options": ["Asia", "Africa", "Australia", "South America"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which river system drains into the Bay of Bengal from Nepal?",
+    "options": ["Ganges system", "Brahmaputra system", "Indus system", "Narmada system"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which is the longest river in the world?",
+    "options": ["Nile", "Amazon", "Yangtze", "Mississippi"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which wetland area in Nepal is designated as a Ramsar Site?",
+    "options": ["Koshi Tappu", "Jagadishpur Reservoir", "Beeshazar Tal", "All of the above"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital of Australia?",
+    "options": ["Sydney", "Melbourne", "Canberra", "Perth"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is the highest motorable road in Nepal?",
+    "options": ["Thorong La Pass", "Road to Muktinath", "Daman-Kathmandu Highway", "Koshi Highway"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which US state is known as the 'Sunshine State'?",
+    "options": ["California", "Florida", "Texas", "Arizona"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which ecosystem is most threatened in Nepal?",
+    "options": ["High mountains", "Terai grasslands", "Hill forests", "River systems"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which country has the most natural lakes?",
+    "options": ["Canada", "USA", "Russia", "Finland"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain range separates the Kathmandu Valley from the Terai?",
+    "options": ["Siwalik Hills", "Mahabharat Range", "Himalayas", "Annapurna Range"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Nepal is divided into how many provinces?",
+    "options": ["7", "6", "5", "8"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which two cities are connected by the Suez Canal?",
+    "options": ["Cairo and Alexandria", "Port Said and Suez", "Mediterranean and Red Sea", "Europe and Asia"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital city of Brazil?",
+    "options": ["Brasília", "Rio de Janeiro", "São Paulo", "Salvador"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What percentage of Nepal is covered by forests?",
+    "options": ["25%", "44.7%", "35%", "52%"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Nepal shares its borders with which two countries?",
+    "options": ["India and China", "India and Bhutan", "China and Bangladesh", "India and Myanmar"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which river confluence is considered sacred in Nepal?",
+    "options": ["Bagmati and Bishnumati", "Kali Gandaki and Trishuli", "Koshi and Tamur", "Mahakali and Sarda"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which ocean is the largest by surface area?",
+    "options": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is the most abundant gas in Earth's atmosphere?",
+    "options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Argon"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which city is known as the City of Canals?",
+    "options": ["Venice", "Amsterdam", "Bangkok", "Bruges"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which protected area in Nepal is known for snow leopards?",
+    "options": ["Sagarmatha National Park", "Shey Phoksundo National Park", "Langtang National Park", "Makalu Barun National Park"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Where is the Great Barrier Reef located?",
+    "options": ["Australia", "Fiji", "Maldives", "Philippines"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "What is the traditional agricultural region of Nepal called?",
+    "options": ["Terai", "Madhesh", "Pahad", "Himal"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which African river is the longest?",
+    "options": ["Nile River", "Congo River", "Zambezi River", "Niger River"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which glacier feeds the Bhote Koshi river?",
+    "options": ["Rongbuk Glacier", "Ngozumpa Glacier", "Khumbu Glacier", "Langtang Glacier"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "In which mountain range is Annapurna located?",
+    "options": ["Himalayas", "Andes", "Alps", "Rockies"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Where is the Mariana Trench located?",
+    "options": ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the driest place on Earth?",
+    "options": ["Sahara Desert", "Atacama Desert", "Death Valley", "Gobi Desert"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which river forms the eastern boundary of Nepal?",
+    "options": ["Mahakali", "Koshi", "Narayani", "Bagmati"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which lake in Nepal is situated at the highest altitude?",
+    "options": ["Rara Lake", "Tilicho Lake", "Gosaikunda Lake", "Phoksundo Lake"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which African country is completely surrounded by South Africa?",
+    "options": ["Swaziland", "Lesotho", "Botswana", "Namibia"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which European country has the most time zones?",
+    "options": ["UK", "France", "Spain", "Russia"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which peninsula contains Spain and Portugal?",
+    "options": ["Balkan Peninsula", "Iberian Peninsula", "Italian Peninsula", "Scandinavian Peninsula"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the main source of the Ganges River in Nepal?",
+    "options": ["Kailash Mansarovar", "Gangotri Glacier", "Gokyo Lakes", "Koshi River"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which district of Nepal borders both India and China?",
+    "options": ["Darchula", "Taplejung", "Sankhuwasabha", "Both A and B"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which strait separates Asia and Europe?",
+    "options": ["Bosphorus", "Gibraltar", "Hormuz", "Malacca"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which conservation area in Nepal is the largest?",
+    "options": ["Annapurna Conservation Area", "Kanchenjunga Conservation Area", "Manaslu Conservation Area", "Api Nampa Conservation Area"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which river system drains most of the Terai region?",
+    "options": ["Mahakali", "Karnali", "Narayani", "Koshi"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is Nepal's approximate east-west length?",
+    "options": ["800 km", "885 km", "950 km", "723 km"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the world's largest salt water lake?",
+    "options": ["Caspian Sea", "Aral Sea", "Lake Superior", "Dead Sea"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain system contains Mount McKinley?",
+    "options": ["Rocky Mountains", "Alaska Range", "Cascade Range", "Appalachian Mountains"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which National Park in Nepal is a UNESCO World Heritage Site?",
+    "options": ["Chitwan National Park", "Banke National Park", "Rara National Park", "Makalu Barun National Park"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "In which district is Lumbini, the birthplace of Buddha, located?",
+    "options": ["Rupandehi", "Kapilvastu", "Parasi", "Nawalparasi"],
+    "correctIndex": 0
+  },
+  {
+    "category": "Geography",
+    "question": "Which waterfall is the tallest in the world?",
+    "options": ["Niagara Falls", "Angel Falls", "Victoria Falls", "Iguazu Falls"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "What is the average elevation of the Kathmandu Valley?",
+    "options": ["1350 meters", "1400 meters", "1450 meters", "1500 meters"],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geography",
+    "question": "Which pass connects Kathmandu Valley with Tibet?",
+    "options": ["Thorong La", "Nangpa La", "Kodari Pass", "Mustang La"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geography",
+    "question": "What is the capital city of Canada?",
+    "options": ["Toronto", "Montreal", "Vancouver", "Ottawa"],
+    "correctIndex": 3
+  },
+  {
+    "category": "Geography",
+    "question": "Which mountain is the tallest in North America?",
+    "options": ["Mount Logan", "Mount Rainier", "Denali", "Mount Whitney"],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is a firewall used for in computer networks?",
+    "options": [
+      "To increase speed",
+      "To connect devices",
+      "To block unauthorized access",
+      "To store data"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Nepal's first IT institution established in 2001 was called?",
+    "options": [
+      "National Information Technology Center",
+      "Government Integrated Data Center",
+      "Nepal Tech Hub",
+      "Nepal Computer Institute"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What is blockchain technology mainly used for?",
+    "options": [
+      "Cloud storage",
+      "Search engines",
+      "Video streaming",
+      "Cryptocurrency"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Which company created the first commercial microprocessor?",
+    "options": [
+      "Apple",
+      "AMD",
+      "Intel",
+      "IBM"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which of the following is an example of social media?",
+    "options": [
+      "Python",
+      "Oracle",
+      "Linux",
+      "Facebook"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Which company is known for the Windows operating system?",
+    "options": [
+      "IBM",
+      "Microsoft",
+      "Apple",
+      "Google"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What does CPU stand for in computing?",
+    "options": [
+      "Computer Personal Unit",
+      "Central Processing Unit",
+      "Central Processing Utility",
+      "Central Programming Unit"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What does IoT (Internet of Things) refer to?",
+    "options": [
+      "Quantum computing",
+      "Creating virtual reality",
+      "Connecting everyday objects to the internet",
+      "Programming computers"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Nepali microcomputer pioneer Muni Bahadur Shakya created the first Nepali font for what script?",
+    "options": [
+      "Tibetan",
+      "Roman",
+      "Devanagari",
+      "Arabic"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Who is considered Nepal's pioneer computer scientist?",
+    "options": [
+      "Sanduk Ruit",
+      "Krishna Bhandari",
+      "Muni Bahadur Shakya",
+      "Mahabir Pun"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is the main component of a computer that stores data temporarily?",
+    "options": [
+      "RAM",
+      "Hard Disk",
+      "CPU",
+      "ROM"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What is Ginger, developed by Nepali firm Paaila Technology?",
+    "options": [
+      "A waiter robot",
+      "A drone",
+      "A new app",
+      "A solar pump"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Which company is known for the Linux operating system?",
+    "options": [
+      "Apple",
+      "Google",
+      "Linus Torvalds",
+      "Microsoft"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is the name of the first programmable computer?",
+    "options": [
+      "UNIVAC",
+      "Z3",
+      "ENIAC",
+      "Colossus"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What is augmented reality?",
+    "options": [
+      "Creating virtual worlds",
+      "A type of AI",
+      "A programming language",
+      "Overlaying digital content on real world"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Cloud computing is a service provided over what?",
+    "options": [
+      "Internet",
+      "Local network",
+      "Satellite",
+      "Telephone line"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What does AI stand for?",
+    "options": [
+      "Adaptive Interface",
+      "Advanced Integration",
+      "Artificial Intelligence",
+      "Automated Information"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology is used to make telephone calls over the Internet?",
+    "options": [
+      "VPN",
+      "SMTP",
+      "VoIP",
+      "HTTP"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What does HTML stand for?",
+    "options": [
+      "Home Tool Markup Language",
+      "HighText Machine Language",
+      "HyperText and links Markup Language",
+      "HyperText Markup Language"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology is used to make cryptocurrencies secure?",
+    "options": [
+      "Blockchain",
+      "Phishing",
+      "Malware",
+      "Distributed Denial of Service"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What is virtual reality?",
+    "options": [
+      "Technology to create virtual worlds",
+      "Artificial Intelligence",
+      "Technology for 3D printing",
+      "Blockchain technology"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Who founded Microsoft?",
+    "options": [
+      "Larry Page",
+      "Mark Zuckerberg",
+      "Bill Gates",
+      "Steve Jobs"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which device enables communication on a cellular network?",
+    "options": [
+      "Satellite",
+      "Router",
+      "Mobile phone",
+      "Modem"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "The first electronic digital computer was called?",
+    "options": [
+      "UNIVAC",
+      "Z3",
+      "ENIAC",
+      "ABC"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology is used for secure digital currency transactions?",
+    "options": [
+      "Cloud computing",
+      "Blockchain",
+      "IoT",
+      "AI"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "Cloud computing resources are accessed via which technology?",
+    "options": [
+      "Ethernet",
+      "Bluetooth",
+      "Internet",
+      "Wi-Fi"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which company developed the iPhone?",
+    "options": [
+      "Samsung",
+      "Microsoft",
+      "Apple",
+      "Google"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which programming language is primarily used for web development?",
+    "options": [
+      "Python",
+      "JavaScript",
+      "C++",
+      "Java"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "In computing, what does RAM stand for?",
+    "options": [
+      "Random Account Memory",
+      "Random Access Memory",
+      "Read Access Memory",
+      "Ready Access Memory"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "Who invented the World Wide Web?",
+    "options": [
+      "Tim Berners-Lee",
+      "Steve Jobs",
+      "Alan Turing",
+      "Bill Gates"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Which device is used to connect to a wireless network?",
+    "options": [
+      "Wi-Fi router",
+      "Modem",
+      "Firewall",
+      "Switch"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What traditional Nepali device uses flowing water for grinding grains?",
+    "options": [
+      "Dhiki",
+      "Charkha",
+      "Paani Ghatta",
+      "Jaato"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is phishing?",
+    "options": [
+      "A social media platform",
+      "A cyberattack to steal information",
+      "A type of video game",
+      "A programming language"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What is the main purpose of machine learning?",
+    "options": [
+      "To design websites",
+      "To create virtual reality",
+      "Allow computers to learn from data",
+      "To program robots"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which of these is a quantum computing company?",
+    "options": [
+      "Google",
+      "All of the above",
+      "IBM",
+      "Microsoft"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What kind of technology is used in 3D printing?",
+    "options": [
+      "Virtual reality",
+      "Blockchain",
+      "Additive manufacturing",
+      "Subtractive manufacturing"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which system is used for global navigation and positioning?",
+    "options": [
+      "Galileo",
+      "GPS",
+      "GLONASS",
+      "BeiDou"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What is the unique feature of the traditional Nepali grinding stone 'Jaato'?",
+    "options": [
+      "Water driven",
+      "Manually rotated",
+      "Solar powered",
+      "Electronic powered"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology is not traditionally used in Nepal?",
+    "options": [
+      "Water mills",
+      "Solar irrigation pumps",
+      "Fiber optic internet",
+      "Manual rice pounder"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which of the following is an example of machine learning algorithm?",
+    "options": [
+      "Linear regression",
+      "HTML coding",
+      "Email spam filter",
+      "Microsoft Excel"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Which programming language is known for scientific computing?",
+    "options": [
+      "PHP",
+      "Java",
+      "C",
+      "Python"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "What type of malware encrypts the victim's files until a ransom is paid?",
+    "options": [
+      "Adware",
+      "Trojan horse",
+      "Spyware",
+      "Ransomware"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "What is a chatbot?",
+    "options": [
+      "A computer program designed to simulate conversation",
+      "A wireless device",
+      "A type of robot",
+      "A programming language"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Which Nepali scientist is known for wireless internet connectivity projects in rural Nepal?",
+    "options": [
+      "Bhola Rimal",
+      "Muni Bahadur Shakya",
+      "Mahabir Pun",
+      "Dr. Sanduk Ruit"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is data mining?",
+    "options": [
+      "Creating data backups",
+      "Extracting useful information from large data sets",
+      "Designing databases",
+      "Encrypting data"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What does VPN stand for?",
+    "options": [
+      "Verified Private Network",
+      "Virtual Private Network",
+      "Virtual Public Network",
+      "Virtual Protected Network"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology allows remote servers to store and manage data?",
+    "options": [
+      "Hard Disk",
+      "Flash Memory",
+      "Cloud Storage",
+      "RAM"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "What is 5G technology?",
+    "options": [
+      "Fifth-generation artificial intelligence technology",
+      "Fifth-generation wireless technology",
+      "Fifth-generation internet technology",
+      "Fifth-generation computer technology"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "Who developed a low-cost cataract surgery technique benefiting thousands in Nepal and worldwide?",
+    "options": [
+      "Dr. Mahabir Pun",
+      "Dr. Muni Bahadur Shakya",
+      "Dr. Sushil Koirala",
+      "Dr. Sanduk Ruit"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Which of the following is a popular open-source database software?",
+    "options": [
+      "SQL Server",
+      "MySQL",
+      "IBM DB2",
+      "Oracle"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Technology",
+    "question": "What is an IP address used for?",
+    "options": [
+      "Encrypt data",
+      "Store files",
+      "Manage databases",
+      "Identify devices on a network"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Nepal Wireless Networking Project focuses on improving internet connectivity in what areas?",
+    "options": [
+      "Urban centers",
+      "Capital city",
+      "Tourist spots",
+      "Remote rural areas"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Technology",
+    "question": "Which technology allows multiple users to interact with a single digital application simultaneously?",
+    "options": [
+      "Multi-user",
+      "Multi-threading",
+      "Multi-touch",
+      "Multi-tasking"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Nepal's first computer, IBM 1401, was used for which purpose?",
+    "options": [
+      "Census data processing",
+      "Communication",
+      "Weather forecasting",
+      "Education"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "What technology enables paying for things with a mobile phone?",
+    "options": [
+      "Mobile Payment",
+      "Online Banking",
+      "E-Commerce",
+      "Digital Wallet"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Technology",
+    "question": "Which Nepali project launched rockets marking a space technology milestone?",
+    "options": [
+      "Katmandu Rocketry",
+      "Mach24Orbitals",
+      "Garuda Project",
+      "Nepal Space Program"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Technology",
+    "question": "Which is a blockchain platform?",
+    "options": [
+      "Bitcoin",
+      "Litecoin",
+      "Ethereum",
+      "Ripple"
+    ],
+    "correctIndex": 2
+  }
+]

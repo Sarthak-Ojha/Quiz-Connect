@@ -1,20 +1,45 @@
-// lib/services/database_service.dart
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import '../models/question.dart';
 
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'app_database.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion =
+      2; // Increment version for questions table
 
   // Tables
   static const String _usersTable = 'users';
   static const String _settingsTable = 'settings';
+  static const String _questionsTable = 'questions'; // Add this
 
   // Singleton pattern
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   DatabaseService._internal();
+  // === ADD THIS NEW METHOD just after getQuestionsByCategory() ===
+  Future<List<Question>> getRandomQuestionsByCategory(
+    String category, {
+    int limit = 10,
+  }) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+      '''
+    SELECT * FROM $_questionsTable
+    WHERE category = ?
+    ORDER BY RANDOM()
+    LIMIT ?
+    ''',
+      [category, limit],
+    );
+    return maps.map((m) => Question.fromMap(m)).toList();
+  }
+
+  // Delete a setting by its key
+  Future<int> deleteSetting(String key) async {
+    final db = await database;
+    return await db.delete(_settingsTable, where: 'key = ?', whereArgs: [key]);
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -58,59 +83,34 @@ class DatabaseService {
       )
     ''');
 
+    // Create questions table
     await db.execute('''
-  CREATE TABLE questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    category TEXT NOT NULL,
-    question TEXT NOT NULL,
-    options TEXT NOT NULL,   -- store options as JSON string
-    correctIndex INTEGER NOT NULL
-  );
-''');
-    Future<void> onUpgrade(Database db, int oldVersion, int newVersion) async {
-      if (oldVersion < 2) {
-        await db.execute('''
-      CREATE TABLE questions (
+      CREATE TABLE $_questionsTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         category TEXT NOT NULL,
         question TEXT NOT NULL,
         options TEXT NOT NULL,
         correctIndex INTEGER NOT NULL
-      );
+      )
     ''');
-      }
-    } // Insert a question
-
-    Future<int> insertQuestion(Question question) async {
-      final db = await database;
-      return await db.insert('questions', question.toMap());
-    }
-
-    // Retrieve questions by category with optional limit
-    Future<List<Question>> getQuestionsByCategory(
-      String category, {
-      int limit = 10,
-    }) async {
-      final db = await database;
-      final List<Map<String, dynamic>> maps = await db.query(
-        'questions',
-        where: 'category = ?',
-        whereArgs: [category],
-        limit: limit,
-      );
-      return maps.map((map) => Question.fromMap(map)).toList();
-    }
 
     // Insert default settings
     await db.insert(_settingsTable, {'key': 'theme', 'value': 'light'});
-
     await db.insert(_settingsTable, {'key': 'notifications', 'value': 'true'});
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database upgrades here
     if (oldVersion < 2) {
-      // Add new columns or tables for version 2
+      // Add questions table for version 2
+      await db.execute('''
+        CREATE TABLE $_questionsTable (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category TEXT NOT NULL,
+          question TEXT NOT NULL,
+          options TEXT NOT NULL,
+          correctIndex INTEGER NOT NULL
+        )
+      ''');
     }
   }
 
@@ -119,7 +119,7 @@ class DatabaseService {
     await database;
   }
 
-  // User operations
+  // User operations (existing methods - keep as they are)
   Future<int> insertUser(Map<String, dynamic> user) async {
     final db = await database;
     return await db.insert(
@@ -159,7 +159,7 @@ class DatabaseService {
     return await db.delete(_usersTable, where: 'uid = ?', whereArgs: [uid]);
   }
 
-  // Settings operations
+  // Settings operations (existing methods - keep as they are)
   Future<int> insertSetting(String key, String value) async {
     final db = await database;
     return await db.insert(_settingsTable, {
@@ -195,17 +195,42 @@ class DatabaseService {
       whereArgs: [key],
     );
   }
+  // *** ADD THESE QUESTION METHODS ***
 
-  Future<int> deleteSetting(String key) async {
+  // Insert a question
+  Future<int> insertQuestion(Question question) async {
     final db = await database;
-    return await db.delete(_settingsTable, where: 'key = ?', whereArgs: [key]);
+    return await db.insert(_questionsTable, question.toMap());
   }
 
-  // Database utility methods
+  // Get questions by category (THIS IS THE MISSING METHOD)
+  Future<List<Question>> getQuestionsByCategory(
+    String category, {
+    int limit = 10,
+  }) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      _questionsTable,
+      where: 'category = ?',
+      whereArgs: [category],
+      limit: limit,
+    );
+    return maps.map((map) => Question.fromMap(map)).toList();
+  }
+
+  // Get all questions
+  Future<List<Question>> getAllQuestions() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(_questionsTable);
+    return maps.map((map) => Question.fromMap(map)).toList();
+  }
+
+  // Database utility methods (existing methods - keep as they are)
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete(_usersTable);
     await db.delete(_settingsTable);
+    await db.delete(_questionsTable);
   }
 
   Future<void> closeDatabase() async {

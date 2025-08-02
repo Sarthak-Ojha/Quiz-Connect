@@ -5,7 +5,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
-import 'screens/home_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'widgets/auth_wrapper.dart';
 import 'services/database_service.dart';
@@ -34,6 +33,16 @@ void main() async {
     runApp(const MyApp());
   } catch (e) {
     runApp(ErrorApp(error: e.toString()));
+  }
+  Future<void> main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+
+    // FORCE RE-SEED (remove after first run)
+    final dbService = DatabaseService();
+    await dbService.deleteSetting('questionsSeeded');
+
+    runApp(const MyApp());
   }
 }
 
@@ -177,6 +186,18 @@ class MyApp extends StatelessWidget {
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: (context) => const NotFoundScreen());
       },
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Home')),
+      body: const Center(child: Text('Welcome to the Home Screen!')),
     );
   }
 }

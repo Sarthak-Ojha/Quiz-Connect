@@ -1,29 +1,13 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
+import '../models/quiz_category.dart';
+import 'quiz_screen.dart';
 
-// --- Data Models ---
-class QuizCategory {
-  final String name;
-  final IconData icon;
-  final Color color;
-  final String description;
-
-  const QuizCategory({
-    required this.name,
-    required this.icon,
-    required this.color,
-    required this.description,
-  });
-}
-
-Future<void> _startQuiz(BuildContext context, QuizCategory category) async {
-  List<Question> questions = await DatabaseService().getQuestionsByCategory(
-    category.name,
-    limit: 10,
-  );
-  // Pass `questions` to your QuizScreen
-}
+/* -------------------------------- USER DATA MODEL -------------------------------- */
 
 class UserData {
   final String displayName;
@@ -43,7 +27,8 @@ class UserData {
   });
 }
 
-// --- MAIN HOME SCREEN ---
+/* -------------------------------- HOME SCREEN -------------------------------- */
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -52,6 +37,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
 
@@ -67,10 +53,39 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
+
+  /* ---------- Used by Quick-mode "Start Quiz" button ---------- */
+  Future<void> f(BuildContext context, QuizCategory category) async {
+    try {
+      final questions = await DatabaseService().getRandomQuestionsByCategory(
+        category.name,
+        limit: 10,
+      );
+
+      if (!mounted) return;
+      if (questions.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No questions available.')),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => QuizScreen(questions: questions, category: category),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading questions: $e')));
+    }
   }
 
+  /* ---------- Sign-out ---------- */
   Future<void> _signOut() async {
     setState(() => _isSigningOut = true);
     try {
@@ -83,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Error signing out: ${e.toString()}')),
+                Expanded(child: Text('Error signing out: $e')),
               ],
             ),
             backgroundColor: Colors.red,
@@ -95,78 +110,75 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /* ---------- UI ---------- */
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    return PopScope(
-      canPop: _selectedIndex == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && _selectedIndex != 0) {
-          setState(() => _selectedIndex = 0);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        appBar: AppBar(
-          title: const Text('Quiz Master'),
-          backgroundColor: const Color(0xFF1976D2),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          actions: [
-            if (user?.photoURL != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundImage: NetworkImage(user!.photoURL!),
-                ),
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(
+        title: const Text('Quiz Master'),
+        backgroundColor: const Color(0xFF1976D2),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          if (user?.photoURL != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundImage: NetworkImage(user!.photoURL!),
               ),
-            _isSigningOut
-                ? const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
+            ),
+          _isSigningOut
+              ? const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
                     ),
-                  )
-                : IconButton(
-                    icon: const Icon(Icons.logout),
-                    tooltip: 'Sign Out',
-                    onPressed: _signOut,
                   ),
-          ],
-        ),
-        body: IndexedStack(index: _selectedIndex, children: _pages),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF1976D2),
-          unselectedItemColor: Colors.grey.shade600,
-          elevation: 8,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history),
-              label: 'My Scores',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.leaderboard),
-              label: 'Leaderboard',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-        ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.logout),
+                  tooltip: 'Sign Out',
+                  onPressed: _signOut,
+                ),
+        ],
+      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF1976D2),
+        unselectedItemColor: Colors.grey.shade600,
+        elevation: 8,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'My Scores',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard),
+            label: 'Leaderboard',
+          ),
+        ],
       ),
     );
   }
 }
 
-// ------------ CATEGORY PAGE - WITH MODES SECTION --------------
+/* =============================================================================== */
+/* =============================== CATEGORY PAGE ================================= */
+/* =============================================================================== */
+
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
   @override
@@ -200,18 +212,6 @@ class _CategoryPageState extends State<CategoryPage>
       description: 'Sports and athletics',
     ),
     QuizCategory(
-      name: 'Movies',
-      icon: Icons.movie,
-      color: Color(0xFFF44336),
-      description: 'Cinema and entertainment',
-    ),
-    QuizCategory(
-      name: 'Music',
-      icon: Icons.music_note,
-      color: Color(0xFF9C27B0),
-      description: 'Musical knowledge',
-    ),
-    QuizCategory(
       name: 'Geography',
       icon: Icons.public,
       color: Color(0xFF009688),
@@ -224,13 +224,12 @@ class _CategoryPageState extends State<CategoryPage>
       description: 'Tech and innovation',
     ),
     QuizCategory(
-      name: 'Literature',
-      icon: Icons.book,
-      color: Color(0xFF795548),
-      description: 'Books and authors',
+      name: 'Current Affairs',
+      icon: Icons.newspaper,
+      color: Color(0xFF9C27B0),
+      description: 'Stay updated with the latest events',
     ),
   ];
-
   @override
   bool get wantKeepAlive => true;
 
@@ -243,9 +242,7 @@ class _CategoryPageState extends State<CategoryPage>
   Future<UserData> _fetchUserData() async {
     await Future.delayed(const Duration(milliseconds: 1000));
     final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      throw Exception('No user logged in');
-    }
+    if (currentUser == null) throw Exception('No user logged in');
     return UserData(
       displayName: currentUser.displayName ?? 'Quiz Master',
       email: currentUser.email ?? '',
@@ -256,66 +253,89 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  Future<void> _refreshUserData() async {
-    setState(() => _userDataFuture = _fetchUserData());
-  }
+  Future<void> _refreshUserData() async =>
+      setState(() => _userDataFuture = _fetchUserData());
 
-  void _startQuiz(BuildContext context, QuizCategory category) {
+  /* ---------- Dialog shown when a category card is tapped ---------- */
+  void _showStartQuizDialog(BuildContext context, QuizCategory category) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(category.name),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(category.description),
-              const SizedBox(height: 16),
-              const Text(
-                'Quiz features:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const Text('• 10 challenging questions'),
-              const Text('• 30 seconds per question'),
-              const Text('• Earn coins and points'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(category.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(category.description),
+            const SizedBox(height: 16),
+            const Text(
+              'Quiz features:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.play_arrow, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text('Starting ${category.name} quiz...'),
-                      ],
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: category.color,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Start Quiz'),
-            ),
+            const Text('• 10 challenging questions'),
+            const Text('• 30 seconds per question'),
+            const Text('• Earn coins and points'),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _startQuiz(context, category);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: category.color,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Start Quiz'),
+          ),
+        ],
+      ),
     );
   }
 
+  /* ---------- CATEGORY-MODE startQuiz (NOW RANDOM) ---------- */
+  Future<void> _startQuiz(BuildContext context, QuizCategory category) async {
+    try {
+      final questions = await DatabaseService().getRandomQuestionsByCategory(
+        category.name,
+        limit: 10,
+      );
+
+      if (!mounted) return;
+
+      if (questions.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No questions available for this category.'),
+          ),
+        );
+        return;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => QuizScreen(questions: questions, category: category),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading questions: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /* ----------------------------- UI BUILD ----------------------------- */
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -380,7 +400,7 @@ class _CategoryPageState extends State<CategoryPage>
             final userData = snapshot.data!;
             return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -407,7 +427,7 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  // -------- MODES Picker UI ----------
+  /* ------------------ MODES SECTION ------------------ */
   Widget _buildModesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,7 +469,7 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  /// ----------- MODES LOGIC: QUICK & KBC -----------
+  /* ------------------ OTHER MODE CONTENT ------------------ */
   Widget _buildOtherModeContent(BuildContext context) {
     if (_selectedMode == 'Quick Mode') {
       return _QuickModeOptions(
@@ -464,6 +484,7 @@ class _CategoryPageState extends State<CategoryPage>
               ),
             ),
           );
+          // TODO: Implement quick mode quiz logic here
         },
       );
     }
@@ -491,11 +512,7 @@ class _CategoryPageState extends State<CategoryPage>
                   label: const Text('Start KBC Mode'),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'KBC Mode starting (implement your navigation)!',
-                        ),
-                      ),
+                      const SnackBar(content: Text('KBC Mode coming soon!')),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -512,7 +529,7 @@ class _CategoryPageState extends State<CategoryPage>
     return Container();
   }
 
-  /// ----------- STANDARD UI sections ------------
+  /* ------------------ WELCOME SECTION ------------------ */
   Widget _buildWelcomeSection(BuildContext context, UserData userData) {
     return Card(
       margin: EdgeInsets.zero,
@@ -548,6 +565,7 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
+  /* ------------------ CATEGORIES SECTION ------------------ */
   Widget _buildCategoriesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,12 +610,13 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
+  /* ------------------ CATEGORY CARD ------------------ */
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
     return Card(
       elevation: 6,
-      shadowColor: category.color.withOpacity(0.2), // alpha: 0.2
+      shadowColor: category.color.withOpacity(0.2),
       child: InkWell(
-        onTap: () => _startQuiz(context, category),
+        onTap: () => _showStartQuizDialog(context, category),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
@@ -606,8 +625,8 @@ class _CategoryPageState extends State<CategoryPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                category.color.withOpacity(0.1), // alpha: 0.1
-                category.color.withOpacity(0.05), // alpha: 0.05
+                category.color.withOpacity(0.1),
+                category.color.withOpacity(0.05),
               ],
             ),
           ),
@@ -617,7 +636,7 @@ class _CategoryPageState extends State<CategoryPage>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: category.color.withOpacity(0.2), // alpha: 0.2
+                  color: category.color.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(category.icon, size: 32, color: category.color),
@@ -650,10 +669,14 @@ class _CategoryPageState extends State<CategoryPage>
   }
 }
 
-// --- QUICK MODE/RAPID FIRE OPTIONS WIDGET ---
+/* =============================================================================== */
+/* ========================== QUICK MODE OPTIONS WIDGET ========================== */
+/* =============================================================================== */
+
 class _QuickModeOptions extends StatefulWidget {
   final List<QuizCategory> categories;
   final void Function(List<QuizCategory> selected, bool isRandom) onStartQuiz;
+
   const _QuickModeOptions({
     required this.categories,
     required this.onStartQuiz,
@@ -780,7 +803,10 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
   }
 }
 
-// ------------ STATS CARD ------------
+/* =============================================================================== */
+/* ============================== USER STATS CARD =============================== */
+/* =============================================================================== */
+
 class UserStatsCard extends StatelessWidget {
   final UserData userData;
   const UserStatsCard({super.key, required this.userData});
@@ -915,7 +941,10 @@ class UserStatsCard extends StatelessWidget {
   }
 }
 
-// ---- SCORES PAGE STUB ----
+/* =============================================================================== */
+/* ======================== SCORES & LEADERBOARD STUBS =========================== */
+/* =============================================================================== */
+
 class ScoresPage extends StatelessWidget {
   const ScoresPage({super.key});
 
@@ -969,7 +998,6 @@ class ScoresPage extends StatelessWidget {
   }
 }
 
-// ---- LEADERBOARD PAGE STUB ----
 class LeaderboardPage extends StatelessWidget {
   const LeaderboardPage({super.key});
 

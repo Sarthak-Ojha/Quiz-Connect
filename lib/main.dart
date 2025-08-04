@@ -13,8 +13,9 @@ import 'utils/seed_questions.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Optional: Improved error reporting
+  // Improved error reporting
   FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('Flutter Error: ${details.exception}');
     FlutterError.presentError(details);
   };
 
@@ -32,17 +33,8 @@ void main() async {
 
     runApp(const MyApp());
   } catch (e) {
+    debugPrint('Firebase initialization error: $e');
     runApp(ErrorApp(error: e.toString()));
-  }
-  Future<void> main() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
-
-    // FORCE RE-SEED (remove after first run)
-    final dbService = DatabaseService();
-    await dbService.deleteSetting('questionsSeeded');
-
-    runApp(const MyApp());
   }
 }
 
@@ -175,11 +167,10 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const AuthWrapper(),
+      home: const AuthWrapper(), // Single entry point
       routes: {
         '/signin': (context) => const SigninScreen(),
         '/signup': (context) => const SignupScreen(),
-        '/home': (context) => const HomeScreen(),
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/splash': (context) => const SplashScreen(),
       },
@@ -190,22 +181,11 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
-      body: const Center(child: Text('Welcome to the Home Screen!')),
-    );
-  }
-}
-
 // Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {
   final String error;
   const ErrorApp({super.key, required this.error});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -219,15 +199,109 @@ class ErrorApp extends StatelessWidget {
         message: 'Failed to initialize the app. Please try restarting.',
         error: error,
         onRetry: () {
-          // Optionally add restart logic here
+          // Restart app logic could go here
         },
       ),
     );
   }
 }
 
-// 404 Not Found Screen and ErrorScreen should also be included as before
-// ... (Keep your previous NotFoundScreen and ErrorScreen implementations here)
+// Error Screen Widget
+class ErrorScreen extends StatelessWidget {
+  final String title;
+  final String message;
+  final String error;
+  final VoidCallback? onRetry;
+
+  const ErrorScreen({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.error,
+    this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 80,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red.shade700,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      message,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ExpansionTile(
+                      title: const Text('Error Details'),
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            error,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    if (onRetry != null)
+                      ElevatedButton.icon(
+                        onPressed: onRetry,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // 404 Not Found Screen
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});

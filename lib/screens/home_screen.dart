@@ -1,11 +1,14 @@
 // lib/screens/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../models/quiz_category.dart';
+import '../models/question.dart';
 import 'quiz_screen.dart';
+import 'timer_quiz_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
 
@@ -31,61 +34,25 @@ class UserData {
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
-
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = [
-      const CategoryPage(),
-      const ScoresPage(),
-      const LeaderboardPage(),
-    ];
+    _pages = const [CategoryPage(), ScoresPage(), LeaderboardPage()];
   }
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
 
-  /* ---------- Used by Quick-mode "Start Quiz" button ---------- */
-  Future<void> f(BuildContext context, QuizCategory category) async {
-    try {
-      final questions = await DatabaseService().getRandomQuestionsByCategory(
-        category.name,
-        limit: 10,
-      );
-
-      if (!mounted) return;
-      if (questions.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No questions available.')),
-        );
-        return;
-      }
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => QuizScreen(questions: questions, category: category),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error loading questions: $e')));
-    }
-  }
-
-  /* ---------- Sign-out ---------- */
   Future<void> _signOut() async {
     setState(() => _isSigningOut = true);
     try {
@@ -110,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /* ---------- UI ---------- */
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -181,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({super.key});
+
   @override
   State<CategoryPage> createState() => _CategoryPageState();
 }
@@ -189,8 +156,10 @@ class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   late Future<UserData> _userDataFuture;
 
-  final List<String> _modes = ['Category Mode', 'Quick Mode', 'KBC Mode'];
+  final List<String> _modes = ['Category Mode', 'Quick Mode'];
   String _selectedMode = 'Category Mode';
+
+  int _chosenQuestionCount = 10;
 
   static const List<QuizCategory> _categories = [
     QuizCategory(
@@ -230,6 +199,7 @@ class _CategoryPageState extends State<CategoryPage>
       description: 'Stay updated with the latest events',
     ),
   ];
+
   @override
   bool get wantKeepAlive => true;
 
@@ -256,59 +226,94 @@ class _CategoryPageState extends State<CategoryPage>
   Future<void> _refreshUserData() async =>
       setState(() => _userDataFuture = _fetchUserData());
 
-  /* ---------- Dialog shown when a category card is tapped ---------- */
   void _showStartQuizDialog(BuildContext context, QuizCategory category) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(category.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(category.description),
-            const SizedBox(height: 16),
-            const Text(
-              'Quiz features:',
-              style: TextStyle(fontWeight: FontWeight.bold),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateSB) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(category.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(category.description),
+              const SizedBox(height: 16),
+              const Text(
+                'How many questions?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [10, 15, 20, 25, 30].map((count) {
+                  final isSelected = _chosenQuestionCount == count;
+                  return ChoiceChip(
+                    label: Text('$count'),
+                    selected: isSelected,
+                    selectedColor: category.color,
+                    onSelected: (_) {
+                      setStateSB(() => _chosenQuestionCount = count);
+                    },
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : category.color,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    backgroundColor: category.color.withOpacity(0.1),
+                    side: BorderSide(color: category.color),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Quiz features:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Text('• Random questions'),
+              const Text('• No time limit'),
+              const Text('• Earn coins and points'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
             ),
-            const Text('• 10 challenging questions'),
-            const Text('• 30 seconds per question'),
-            const Text('• Earn coins and points'),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _startCategoryQuiz(
+                  context,
+                  category,
+                  _chosenQuestionCount,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: category.color,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Start Quiz'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _startQuiz(context, category);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: category.color,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Start Quiz'),
-          ),
-        ],
       ),
     );
   }
 
-  /* ---------- CATEGORY-MODE startQuiz (NOW RANDOM) ---------- */
-  Future<void> _startQuiz(BuildContext context, QuizCategory category) async {
+  Future<void> _startCategoryQuiz(
+    BuildContext context,
+    QuizCategory category,
+    int questionCount,
+  ) async {
     try {
       final questions = await DatabaseService().getRandomQuestionsByCategory(
         category.name,
-        limit: 10,
+        limit: questionCount,
       );
 
       if (!mounted) return;
-
       if (questions.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -335,7 +340,64 @@ class _CategoryPageState extends State<CategoryPage>
     }
   }
 
-  /* ----------------------------- UI BUILD ----------------------------- */
+  Future<void> _startQuickModeQuiz(
+    BuildContext context,
+    List<QuizCategory> selectedCategories,
+    bool isRandom,
+    int questionCount,
+  ) async {
+    try {
+      final dbService = DatabaseService();
+      final List<Question> allQuestions = [];
+
+      if (isRandom) {
+        for (final category in _categories) {
+          final questions = await dbService.getRandomQuestionsByCategory(
+            category.name,
+            limit: questionCount ~/ _categories.length,
+          );
+          allQuestions.addAll(questions);
+        }
+      } else {
+        for (final category in selectedCategories) {
+          final questions = await dbService.getRandomQuestionsByCategory(
+            category.name,
+            limit: questionCount ~/ selectedCategories.length,
+          );
+          allQuestions.addAll(questions);
+        }
+      }
+
+      if (allQuestions.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No questions available.')),
+        );
+        return;
+      }
+
+      allQuestions.shuffle();
+      final quickQuestions = allQuestions.take(questionCount).toList();
+
+      if (!mounted) return;
+
+      // Quick Mode always goes to TimerQuizScreen with 15 seconds
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TimerQuizScreen(
+            questions: quickQuestions,
+            timerSeconds: 15, // Fixed at 15 seconds for Quick Mode
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading quiz: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -414,7 +476,7 @@ class _CategoryPageState extends State<CategoryPage>
                     _buildCategoriesSection(context),
                   ] else ...[
                     const SizedBox(height: 16),
-                    _buildOtherModeContent(context),
+                    _buildQuickModeOptions(context),
                   ],
                 ],
               ),
@@ -427,7 +489,6 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  /* ------------------ MODES SECTION ------------------ */
   Widget _buildModesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,109 +530,12 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  /* ------------------ OTHER MODE CONTENT ------------------ */
-  Widget _buildOtherModeContent(BuildContext context) {
-    if (_selectedMode == 'Quick Mode') {
-      return _QuickModeOptions(
-        categories: _categories,
-        onStartQuiz: (selectedCategories, isRandom) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isRandom
-                    ? 'Rapid Fire: Random questions from ALL categories!'
-                    : 'Quick quiz for: ${selectedCategories.map((e) => e.name).join(", ")}',
-              ),
-            ),
-          );
-          // TODO: Implement quick mode quiz logic here
-        },
-      );
-    }
-    if (_selectedMode == 'KBC Mode') {
-      return Card(
-        margin: const EdgeInsets.only(top: 8),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'KBC Mode',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Play in KBC (Ko banchha crorepati) style! Answer questions one by one, increasing in difficulty and prize. Lifelines available!',
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.stars),
-                  label: const Text('Start KBC Mode'),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('KBC Mode coming soon!')),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return Container();
-  }
-
-  /* ------------------ WELCOME SECTION ------------------ */
-  Widget _buildWelcomeSection(BuildContext context, UserData userData) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome back,',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              userData.displayName,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1976D2),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Ready for another challenge?',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /* ------------------ CATEGORIES SECTION ------------------ */
   Widget _buildCategoriesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
+          padding: const EdgeInsets.only(bottom: 16),
           child: Row(
             children: [
               const Icon(Icons.category, color: Color(0xFF1976D2), size: 28),
@@ -610,7 +574,6 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  /* ------------------ CATEGORY CARD ------------------ */
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
     return Card(
       elevation: 6,
@@ -667,6 +630,55 @@ class _CategoryPageState extends State<CategoryPage>
       ),
     );
   }
+
+  Widget _buildQuickModeOptions(BuildContext context) {
+    return _QuickModeOptions(
+      categories: _categories,
+      onStartQuiz: (selectedCategories, isRandom, questionCount) async {
+        await _startQuickModeQuiz(
+          context,
+          selectedCategories,
+          isRandom,
+          questionCount,
+        );
+      },
+    );
+  }
+
+  Widget _buildWelcomeSection(BuildContext context, UserData userData) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome back,',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              userData.displayName,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1976D2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Ready for another challenge?',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /* =============================================================================== */
@@ -675,7 +687,12 @@ class _CategoryPageState extends State<CategoryPage>
 
 class _QuickModeOptions extends StatefulWidget {
   final List<QuizCategory> categories;
-  final void Function(List<QuizCategory> selected, bool isRandom) onStartQuiz;
+  final void Function(
+    List<QuizCategory> selected,
+    bool isRandom,
+    int questionCount,
+  )
+  onStartQuiz;
 
   const _QuickModeOptions({
     required this.categories,
@@ -688,6 +705,7 @@ class _QuickModeOptions extends StatefulWidget {
 
 class _QuickModeOptionsState extends State<_QuickModeOptions> {
   bool _isRandom = true;
+  int _questionCount = 10;
   final Set<int> _selectedIndexes = {};
 
   @override
@@ -700,10 +718,74 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Rapid Fire / Quick Mode',
+              'Quick Mode Settings',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
+
+            // Fixed timer info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.timer, color: Colors.orange.shade700, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Timer: 15 seconds per question',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Question count selector
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Number of Questions:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [5, 10, 15, 20, 25, 30].map((count) {
+                    final isSelected = _questionCount == count;
+                    return ChoiceChip(
+                      label: Text('$count'),
+                      selected: isSelected,
+                      selectedColor: const Color(0xFF1976D2),
+                      onSelected: (_) {
+                        setState(() => _questionCount = count);
+                      },
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF1976D2),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFF1976D2)),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Random/Choose Categories buttons
             Row(
               children: [
                 Expanded(
@@ -737,6 +819,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
               ],
             ),
+
+            // Category selection chips (only show if not random)
             if (!_isRandom) ...[
               const SizedBox(height: 14),
               Wrap(
@@ -772,13 +856,16 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 }),
               ),
             ],
+
             const SizedBox(height: 20),
+
+            // Start Quiz button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.play_arrow),
+                icon: const Icon(Icons.timer),
                 label: Text(
-                  _isRandom ? 'Start Random Quiz' : 'Start Custom Quiz',
+                  'Start Quick Quiz ($_questionCount Q • 15s per question)',
                 ),
                 onPressed: _isRandom || _selectedIndexes.isNotEmpty
                     ? () {
@@ -787,11 +874,12 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                             : _selectedIndexes
                                   .map((i) => widget.categories[i])
                                   .toList();
-                        widget.onStartQuiz(selected, _isRandom);
+
+                        widget.onStartQuiz(selected, _isRandom, _questionCount);
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1976D2),
+                  backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                 ),
               ),

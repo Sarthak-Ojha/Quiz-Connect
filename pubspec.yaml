@@ -32,6 +32,7 @@ dependencies:
   
   # Utilities
   intl: ^0.20.2
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
@@ -41,7 +42,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  # Add assets section to fix the google_logo.png error
   assets:
     - assets/google_logo.png
     - assets/questions.json
+
+
+flutter_native_splash:
+  color: "#1976D2"
+  android_12:
+    icon_background_color: "#1976D2"
+    icon_background_color_dark: "#1565C0"

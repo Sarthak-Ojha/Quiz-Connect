@@ -5,9 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email'],
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
 
   // Current Firebase user
   User? get currentUser => _auth.currentUser;
@@ -17,7 +15,9 @@ class AuthService with ChangeNotifier {
 
   // Sign up (Email/Password)
   Future<User?> signUpWithEmailAndPassword(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     try {
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -35,7 +35,9 @@ class AuthService with ChangeNotifier {
 
   // Sign in (Email/Password)
   Future<User?> signInWithEmailAndPassword(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     try {
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -51,7 +53,7 @@ class AuthService with ChangeNotifier {
     }
   }
 
-// Add these methods to your AuthService class
+  // Add these methods to your AuthService class
   Future<void> setRememberMe(bool remember) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('remember_me', remember);
@@ -144,7 +146,9 @@ class AuthService with ChangeNotifier {
 
   // Re-authenticate for sensitive actions
   Future<void> reauthenticateWithEmailAndPassword(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     final user = _auth.currentUser;
     if (user != null) {
       final credential = EmailAuthProvider.credential(

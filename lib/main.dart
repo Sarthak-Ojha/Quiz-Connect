@@ -7,6 +7,7 @@ import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'widgets/auth_wrapper.dart';
+import 'widgets/exit_confirmation_wrapper.dart'; // Add this import
 import 'services/database_service.dart';
 import 'utils/seed_questions.dart';
 
@@ -167,7 +168,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home: const AuthWrapper(), // Single entry point
+      // Wrap AuthWrapper with ExitConfirmationWrapper
+      home: const ExitConfirmationWrapper(
+        title: 'Exit Quiz Master?',
+        message:
+            'Are you sure you want to close Quiz Master? Your progress will be saved.',
+        child: AuthWrapper(),
+      ),
       routes: {
         '/signin': (context) => const SigninScreen(),
         '/signup': (context) => const SignupScreen(),
@@ -194,13 +201,18 @@ class ErrorApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
       ),
-      home: ErrorScreen(
-        title: 'Initialization Error',
-        message: 'Failed to initialize the app. Please try restarting.',
-        error: error,
-        onRetry: () {
-          // Restart app logic could go here
-        },
+      home: ExitConfirmationWrapper(
+        // Add wrapper to error app too
+        title: 'Close App?',
+        message: 'The app encountered an error. Do you want to close it?',
+        child: ErrorScreen(
+          title: 'Initialization Error',
+          message: 'Failed to initialize the app. Please try restarting.',
+          error: error,
+          onRetry: () {
+            // Restart app logic could go here
+          },
+        ),
       ),
     );
   }

@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../models/quiz_category.dart';
@@ -48,7 +47,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _pages = const [CategoryPage(), ScoresPage(), LeaderboardPage()];
+    _pages = [
+      const CategoryPage(),
+      const ScoresPage(),
+      const LeaderboardPage(),
+    ];
   }
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
@@ -80,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -155,11 +157,8 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   late Future<UserData> _userDataFuture;
-
   final List<String> _modes = ['Category Mode', 'Quick Mode'];
   String _selectedMode = 'Category Mode';
-
-  int _chosenQuestionCount = 10;
 
   static const List<QuizCategory> _categories = [
     QuizCategory(
@@ -213,6 +212,7 @@ class _CategoryPageState extends State<CategoryPage>
     await Future.delayed(const Duration(milliseconds: 1000));
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) throw Exception('No user logged in');
+
     return UserData(
       displayName: currentUser.displayName ?? 'Quiz Master',
       email: currentUser.email ?? '',
@@ -227,6 +227,8 @@ class _CategoryPageState extends State<CategoryPage>
       setState(() => _userDataFuture = _fetchUserData());
 
   void _showStartQuizDialog(BuildContext context, QuizCategory category) {
+    int chosenQuestionCount = 15; // Default value
+
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
@@ -240,32 +242,87 @@ class _CategoryPageState extends State<CategoryPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(category.description),
-              const SizedBox(height: 16),
-              const Text(
-                'How many questions?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [10, 15, 20, 25, 30].map((count) {
-                  final isSelected = _chosenQuestionCount == count;
-                  return ChoiceChip(
-                    label: Text('$count'),
-                    selected: isSelected,
-                    selectedColor: category.color,
-                    onSelected: (_) {
-                      setStateSB(() => _chosenQuestionCount = count);
-                    },
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : category.color,
-                      fontWeight: FontWeight.bold,
+              const SizedBox(height: 20),
+
+              // Question Count Slider
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Questions:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                    backgroundColor: category.color.withOpacity(0.1),
-                    side: BorderSide(color: category.color),
-                  );
-                }).toList(),
+                    decoration: BoxDecoration(
+                      color: category.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: category.color),
+                    ),
+                    child: Text(
+                      '$chosenQuestionCount Questions',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: category.color,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 16),
+
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: category.color,
+                  inactiveTrackColor: category.color.withValues(alpha: 0.3),
+                  thumbColor: category.color,
+                  overlayColor: category.color.withValues(alpha: 0.2),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 12.0,
+                    pressedElevation: 8.0,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 24.0,
+                  ),
+                  trackHeight: 6.0,
+                  valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
+                  valueIndicatorColor: category.color,
+                  valueIndicatorTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  showValueIndicator: ShowValueIndicator.always,
+                ),
+                child: Slider(
+                  value: chosenQuestionCount.toDouble(),
+                  min: 1,
+                  max: 50,
+                  divisions: 49,
+                  label: '$chosenQuestionCount',
+                  onChanged: (double value) {
+                    setStateSB(() {
+                      chosenQuestionCount = value.round();
+                    });
+                  },
+                ),
+              ),
+
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('1', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(
+                    '50',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 16),
               const Text(
                 'Quiz features:',
@@ -284,11 +341,13 @@ class _CategoryPageState extends State<CategoryPage>
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _startCategoryQuiz(
-                  context,
-                  category,
-                  _chosenQuestionCount,
-                );
+                if (mounted) {
+                  await _startCategoryQuiz(
+                    context,
+                    category,
+                    chosenQuestionCount,
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: category.color,
@@ -302,44 +361,71 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
+  // Fixed method to get exact question count
   Future<void> _startCategoryQuiz(
     BuildContext context,
     QuizCategory category,
     int questionCount,
   ) async {
     try {
-      final questions = await DatabaseService().getRandomQuestionsByCategory(
+      // Get ALL available questions for the category first
+      final allQuestions = await DatabaseService().getRandomQuestionsByCategory(
         category.name,
-        limit: questionCount,
+        limit: 100, // Get more questions than needed
       );
 
       if (!mounted) return;
-      if (questions.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No questions available for this category.'),
-          ),
-        );
+
+      if (allQuestions.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No questions available for this category.'),
+            ),
+          );
+        }
         return;
       }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => QuizScreen(questions: questions, category: category),
-        ),
-      );
+      // Shuffle and take only the requested number
+      allQuestions.shuffle();
+      final selectedQuestions = allQuestions.take(questionCount).toList();
+
+      // Check if we have enough questions
+      if (selectedQuestions.length < questionCount) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Only ${selectedQuestions.length} questions available for this category. Starting with available questions.',
+              ),
+            ),
+          );
+        }
+      }
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                QuizScreen(questions: selectedQuestions, category: category),
+          ),
+        );
+      }
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading questions: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading questions: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
+  // Fixed method to get exact question count for quick mode
   Future<void> _startQuickModeQuiz(
     BuildContext context,
     List<QuizCategory> selectedCategories,
@@ -351,32 +437,50 @@ class _CategoryPageState extends State<CategoryPage>
       final List<Question> allQuestions = [];
 
       if (isRandom) {
+        // Get questions from ALL categories
         for (final category in _categories) {
           final questions = await dbService.getRandomQuestionsByCategory(
             category.name,
-            limit: questionCount ~/ _categories.length,
+            limit: 50, // Get more questions per category
           );
           allQuestions.addAll(questions);
         }
       } else {
+        // Get questions from selected categories
         for (final category in selectedCategories) {
           final questions = await dbService.getRandomQuestionsByCategory(
             category.name,
-            limit: questionCount ~/ selectedCategories.length,
+            limit: 50, // Get more questions per category
           );
           allQuestions.addAll(questions);
         }
       }
 
       if (allQuestions.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No questions available.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No questions available.')),
+          );
+        }
         return;
       }
 
+      // Shuffle all questions and take only the requested number
       allQuestions.shuffle();
       final quickQuestions = allQuestions.take(questionCount).toList();
+
+      // Check if we have enough questions
+      if (quickQuestions.length < questionCount) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Only ${quickQuestions.length} questions available. Starting with available questions.',
+              ),
+            ),
+          );
+        }
+      }
 
       if (!mounted) return;
 
@@ -384,24 +488,22 @@ class _CategoryPageState extends State<CategoryPage>
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => TimerQuizScreen(
-            questions: quickQuestions,
-            timerSeconds: 15, // Fixed at 15 seconds for Quick Mode
-          ),
+          builder: (_) =>
+              TimerQuizScreen(questions: quickQuestions, timerSeconds: 15),
         ),
       );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error loading quiz: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading quiz: $e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return RefreshIndicator(
       onRefresh: _refreshUserData,
       color: const Color(0xFF1976D2),
@@ -577,7 +679,7 @@ class _CategoryPageState extends State<CategoryPage>
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
     return Card(
       elevation: 6,
-      shadowColor: category.color.withOpacity(0.2),
+      shadowColor: category.color.withValues(alpha: 0.2),
       child: InkWell(
         onTap: () => _showStartQuizDialog(context, category),
         borderRadius: BorderRadius.circular(16),
@@ -588,8 +690,8 @@ class _CategoryPageState extends State<CategoryPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                category.color.withOpacity(0.1),
-                category.color.withOpacity(0.05),
+                category.color.withValues(alpha: 0.1),
+                category.color.withValues(alpha: 0.05),
               ],
             ),
           ),
@@ -599,7 +701,7 @@ class _CategoryPageState extends State<CategoryPage>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: category.color.withOpacity(0.2),
+                  color: category.color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(category.icon, size: 32, color: category.color),
@@ -705,7 +807,7 @@ class _QuickModeOptions extends StatefulWidget {
 
 class _QuickModeOptionsState extends State<_QuickModeOptions> {
   bool _isRandom = true;
-  int _questionCount = 10;
+  int _questionCount = 15; // Default to 15 instead of 10
   final Set<int> _selectedIndexes = {};
 
   @override
@@ -723,67 +825,134 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
             ),
             const SizedBox(height: 16),
 
-            // Fixed timer info
+            // Smaller timer info design
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.timer, color: Colors.orange.shade700, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.timer, color: Colors.orange.shade700, size: 16),
+                  const SizedBox(width: 6),
                   Text(
-                    'Timer: 15 seconds per question',
+                    'Timer: 15s per question',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Colors.orange.shade800,
-                      fontSize: 14,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 16),
-
-            // Question count selector
+            // Enhanced Slider for Question Count Selection
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Number of Questions:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [5, 10, 15, 20, 25, 30].map((count) {
-                    final isSelected = _questionCount == count;
-                    return ChoiceChip(
-                      label: Text('$count'),
-                      selected: isSelected,
-                      selectedColor: const Color(0xFF1976D2),
-                      onSelected: (_) {
-                        setState(() => _questionCount = count);
-                      },
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF1976D2),
-                        fontWeight: FontWeight.bold,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Number of Questions:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: Color(0xFF1976D2)),
-                    );
-                  }).toList(),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFF1976D2)),
+                      ),
+                      child: Text(
+                        '$_questionCount Questions',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1976D2),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Enhanced Slider with Custom Styling
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: const Color(0xFF1976D2),
+                    inactiveTrackColor: const Color(
+                      0xFF1976D2,
+                    ).withValues(alpha: 0.3),
+                    thumbColor: const Color(0xFF1976D2),
+                    overlayColor: const Color(
+                      0xFF1976D2,
+                    ).withValues(alpha: 0.2),
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 12.0,
+                      pressedElevation: 8.0,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 24.0,
+                    ),
+                    trackHeight: 6.0,
+                    valueIndicatorShape:
+                        const PaddleSliderValueIndicatorShape(),
+                    valueIndicatorColor: const Color(0xFF1976D2),
+                    valueIndicatorTextStyle: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    showValueIndicator: ShowValueIndicator.always,
+                  ),
+                  child: Slider(
+                    value: _questionCount.toDouble(),
+                    min: 1,
+                    max: 50,
+                    divisions: 49,
+                    label: '$_questionCount',
+                    onChanged: (double value) {
+                      setState(() {
+                        _questionCount = value.round();
+                      });
+                    },
+                  ),
+                ),
+
+                // Min-Max Labels
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '1',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '50',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Random/Choose Categories buttons
             Row(
@@ -832,7 +1001,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                   return FilterChip(
                     label: Text(cat.name),
                     selected: selected,
-                    selectedColor: cat.color.withOpacity(0.2),
+                    selectedColor: cat.color.withValues(alpha: 0.2),
                     onSelected: (_) {
                       setState(() {
                         if (selected) {
@@ -874,7 +1043,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                             : _selectedIndexes
                                   .map((i) => widget.categories[i])
                                   .toList();
-
                         widget.onStartQuiz(selected, _isRandom, _questionCount);
                       }
                     : null,
@@ -897,20 +1065,24 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
 
 class UserStatsCard extends StatelessWidget {
   final UserData userData;
+
   const UserStatsCard({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 8,
-      shadowColor: const Color(0xFF1976D2).withOpacity(0.1),
+      shadowColor: const Color(0xFF1976D2).withValues(alpha: 0.1),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [const Color(0xFF1976D2).withOpacity(0.05), Colors.white],
+            colors: [
+              const Color(0xFF1976D2).withValues(alpha: 0.05),
+              Colors.white,
+            ],
           ),
         ),
         child: Padding(
@@ -968,7 +1140,7 @@ class UserStatsCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withOpacity(0.1),
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -1005,7 +1177,7 @@ class UserStatsCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -1030,7 +1202,7 @@ class UserStatsCard extends StatelessWidget {
 }
 
 /* =============================================================================== */
-/* ======================== SCORES & LEADERBOARD STUBS =========================== */
+/* ======================== SCORES & LEADERBOARD PAGES =========================== */
 /* =============================================================================== */
 
 class ScoresPage extends StatelessWidget {

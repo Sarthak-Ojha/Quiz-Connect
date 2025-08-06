@@ -1,6 +1,9 @@
+// lib/screens/quiz_screen.dart
+
 import 'package:flutter/material.dart';
 import '../models/question.dart';
-import '../models/quiz_category.dart'; // Change this import
+import '../models/quiz_category.dart';
+import 'quiz_result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<Question> questions;
@@ -17,261 +20,229 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  int _currentIndex = 0;
-  int? _selectedOption;
+  int _currentQuestionIndex = 0;
+  final List<String> _userAnswers = [];
+  String? _selectedAnswer;
+  bool _hasAnswered = false;
   int _score = 0;
-  bool _answered = false;
 
-  void _nextQuestion() {
-    if (_selectedOption != null) {
-      if (_selectedOption == widget.questions[_currentIndex].correctIndex) {
-        _score++;
-      }
-    }
+  Question get _currentQuestion => widget.questions[_currentQuestionIndex];
+  bool get _isLastQuestion =>
+      _currentQuestionIndex == widget.questions.length - 1;
+
+  void _selectAnswer(String answer) {
+    if (_hasAnswered) return;
 
     setState(() {
-      _answered = false;
-      _selectedOption = null;
-      if (_currentIndex < widget.questions.length - 1) {
-        _currentIndex++;
-      } else {
-        _showResult();
+      _selectedAnswer = answer;
+      _hasAnswered = true;
+
+      // Check if answer is correct and update score
+      if (answer == _currentQuestion.options[_currentQuestion.correctIndex]) {
+        _score++;
       }
+    });
+
+    // Auto proceed after showing icons for 1.5 seconds
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      _nextQuestion();
     });
   }
 
-  void _showResult() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              _score >= widget.questions.length * 0.7
-                  ? Icons.celebration
-                  : Icons.thumb_up,
-              color: widget.category.color,
-            ),
-            const SizedBox(width: 8),
-            const Text('Quiz Complete!'),
-          ],
+  void _nextQuestion() {
+    if (_selectedAnswer == null) return;
+
+    _userAnswers.add(_selectedAnswer!);
+
+    if (_isLastQuestion) {
+      _showResults();
+    } else {
+      setState(() {
+        _currentQuestionIndex++;
+        _selectedAnswer = null;
+        _hasAnswered = false;
+      });
+    }
+  }
+
+  void _showResults() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizResultScreen(
+          totalQuestions: widget.questions.length,
+          correctAnswers: _score,
+          questions: widget.questions,
+          userAnswers: _userAnswers,
+          category: widget.category,
+          isTimerMode: false,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Your Score: $_score / ${widget.questions.length}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Percentage: ${((_score / widget.questions.length) * 100).toStringAsFixed(1)}%',
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            child: const Text('Back to Home'),
-          ),
-        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final question = widget.questions[_currentIndex];
-    final progress = (_currentIndex + 1) / widget.questions.length;
+    final correctAnswer =
+        _currentQuestion.options[_currentQuestion.correctIndex];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text('${widget.category.name} Quiz'),
+        title: Text(widget.category.name),
         backgroundColor: widget.category.color,
         foregroundColor: Colors.white,
         elevation: 0,
+        // Removed score display from app bar
       ),
-      body: Column(
-        children: [
-          // Progress indicator
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: widget.category.color,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Question ${_currentIndex + 1} of ${widget.questions.length}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      'Score: $_score',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.white.withValues(alpha: 0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Progress indicator
+            LinearProgressIndicator(
+              value: (_currentQuestionIndex + 1) / widget.questions.length,
+              backgroundColor: Colors.grey.shade300,
+              valueColor: AlwaysStoppedAnimation<Color>(widget.category.color),
             ),
-          ),
+            const SizedBox(height: 16),
 
-          // Question content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Text(
-                        question.question,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+            // Question counter
+            Text(
+              'Question ${_currentQuestionIndex + 1} of ${widget.questions.length}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: widget.category.color,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Question card
+            Card(
+              elevation: 8,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  _currentQuestion.question,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Answer options with minimal feedback (only icons)
+            Expanded(
+              child: ListView.builder(
+                itemCount: _currentQuestion.options.length,
+                itemBuilder: (context, index) {
+                  final option = _currentQuestion.options[index];
+                  final isSelected = _selectedAnswer == option;
+                  final isCorrectAnswer = option == correctAnswer;
+
+                  // Determine colors and icons based on state
+                  Color? backgroundColor;
+                  Color? borderColor;
+                  Color? textColor;
+                  IconData? icon;
+
+                  if (_hasAnswered) {
+                    if (isCorrectAnswer) {
+                      // Correct answer - always green with ✓
+                      backgroundColor = Colors.green.withValues(alpha: 0.1);
+                      borderColor = Colors.green;
+                      textColor = Colors.green.shade700;
+                      icon = Icons.check_circle;
+                    } else if (isSelected) {
+                      // Wrong selected answer - red with X
+                      backgroundColor = Colors.red.withValues(alpha: 0.1);
+                      borderColor = Colors.red;
+                      textColor = Colors.red.shade700;
+                      icon = Icons.cancel;
+                    }
+                  } else if (isSelected) {
+                    // Selected but not answered yet
+                    backgroundColor = widget.category.color.withValues(
+                      alpha: 0.1,
+                    );
+                    borderColor = widget.category.color;
+                    textColor = widget.category.color;
+                  }
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: isSelected ? 8 : 2,
+                    child: InkWell(
+                      onTap: _hasAnswered ? null : () => _selectAnswer(option),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: borderColor ?? Colors.transparent,
+                            width: 2,
+                          ),
+                          color: backgroundColor,
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Options
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: question.options.length,
-                      itemBuilder: (context, index) {
-                        final isSelected = _selectedOption == index;
-                        final isCorrect = index == question.correctIndex;
-
-                        Color? cardColor;
-                        if (_answered) {
-                          if (isCorrect) {
-                            cardColor = Colors.green.withValues(alpha: 0.1);
-                          } else if (isSelected && !isCorrect) {
-                            cardColor = Colors.red.withValues(alpha: 0.1);
-                          }
-                        } else if (isSelected) {
-                          cardColor = widget.category.color.withValues(
-                            alpha: 0.1,
-                          );
-                        }
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Card(
-                            color: cardColor,
-                            child: InkWell(
-                              onTap: _answered
-                                  ? null
-                                  : () {
-                                      setState(() {
-                                        _selectedOption = index;
-                                        _answered = true;
-                                      });
-                                    },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isSelected
-                                              ? widget.category.color
-                                              : Colors.grey,
-                                          width: 2,
-                                        ),
-                                        color: isSelected
-                                            ? widget.category.color
-                                            : Colors.transparent,
-                                      ),
-                                      child: isSelected
-                                          ? const Icon(
-                                              Icons.check,
-                                              color: Colors.white,
-                                              size: 16,
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Text(
-                                        question.options[index],
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                    if (_answered && isCorrect)
-                                      const Icon(
-                                        Icons.check_circle,
-                                        color: Colors.green,
-                                      )
-                                    else if (_answered &&
-                                        isSelected &&
-                                        !isCorrect)
-                                      const Icon(
-                                        Icons.cancel,
-                                        color: Colors.red,
-                                      ),
-                                  ],
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: borderColor ?? Colors.grey,
+                                  width: 2,
+                                ),
+                                color:
+                                    (isSelected ||
+                                        (_hasAnswered && isCorrectAnswer))
+                                    ? (borderColor ?? Colors.transparent)
+                                    : Colors.transparent,
+                              ),
+                              child: icon != null
+                                  ? Icon(icon, color: Colors.white, size: 16)
+                                  : (isSelected && !_hasAnswered)
+                                  ? const Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 16,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                option,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight:
+                                      (isSelected ||
+                                          (_hasAnswered && isCorrectAnswer))
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: textColor,
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-          ),
 
-          // Next button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _answered ? _nextQuestion : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.category.color,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  _currentIndex == widget.questions.length - 1
-                      ? 'Finish Quiz'
-                      : 'Next Question',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ),
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

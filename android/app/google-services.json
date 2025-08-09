@@ -14,39 +14,22 @@
       },
       "oauth_client": [
         {
-          "client_id": "308786259998-18504hpqaj50casei8c3aa7q97hc5jiv.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.sarthak.quiz",
-            "certificate_hash": "36ea4abd1c756e3c2950971e4337efe50dc7b339"
-          }
-        },
-        {
-          "client_id": "308786259998-abebnbu5ql8m3hkqi0q3jcvptl90cfo9.apps.googleusercontent.com",
+          "client_id": "308786259998-vekqrcs05tgmecnjumv7ks2op7m5t3v7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.sarthak.quiz",
             "certificate_hash": "632b9425aa6447b065af9ecbb6c72ff80e8ebd5d"
           }
-        },
-        {
-          "client_id": "308786259998-4lcndud60hsapc3tdbjsarg2noms4dji.apps.googleusercontent.com",
-          "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAvomA0l7vLuwlFFmlvF9OMNe_j8sgFrHM"
+          "current_key": "AIzaSyAnaBOW_7vnEbL7DCexg-mqC5A1WsVbrW0"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "308786259998-4lcndud60hsapc3tdbjsarg2noms4dji.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

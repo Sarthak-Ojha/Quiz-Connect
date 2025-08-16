@@ -1,5 +1,4 @@
 // lib/screens/quiz_result_screen.dart
-
 import 'package:flutter/material.dart';
 import '../models/question.dart';
 import '../models/quiz_category.dart';
@@ -29,6 +28,8 @@ class QuizResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const buttonColor = Color(0xFF1976D2); // Consistent color for all buttons
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -60,7 +61,7 @@ class QuizResultScreen extends StatelessWidget {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1976D2),
+                              color: buttonColor,
                             ),
                         textAlign: TextAlign.center,
                       ),
@@ -77,7 +78,7 @@ class QuizResultScreen extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 value: 1.0,
                                 strokeWidth: 12,
-                                valueColor: AlwaysStoppedAnimation<Color>(
+                                valueColor: AlwaysStoppedAnimation(
                                   Colors.grey.shade200,
                                 ),
                               ),
@@ -87,8 +88,8 @@ class QuizResultScreen extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 value: percentage / 100,
                                 strokeWidth: 12,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF1976D2),
+                                valueColor: const AlwaysStoppedAnimation(
+                                  buttonColor,
                                 ),
                               ),
                             ),
@@ -104,7 +105,7 @@ class QuizResultScreen extends StatelessWidget {
                                         .headlineMedium
                                         ?.copyWith(
                                           fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF1976D2),
+                                          color: buttonColor,
                                         ),
                                   ),
                                   Text(
@@ -131,7 +132,7 @@ class QuizResultScreen extends StatelessWidget {
                             'Total Questions',
                             totalQuestions.toString(),
                             Icons.quiz,
-                            const Color(0xFF1976D2),
+                            buttonColor,
                           ),
                           _buildStatItem(
                             context,
@@ -151,10 +152,10 @@ class QuizResultScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 32),
 
-                      // Action Buttons
+                      // Action Buttons in 2x2 Grid Layout
                       Column(
                         children: [
-                          // Row 1
+                          // Row 1: Play Again | Review Answer
                           Row(
                             children: [
                               Expanded(
@@ -168,10 +169,13 @@ class QuizResultScreen extends StatelessWidget {
                                   icon: const Icon(Icons.refresh),
                                   label: const Text('Play Again'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1976D2),
+                                    backgroundColor: buttonColor,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
@@ -185,10 +189,13 @@ class QuizResultScreen extends StatelessWidget {
                                   icon: const Icon(Icons.visibility),
                                   label: const Text('Review Answer'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
+                                    backgroundColor: buttonColor,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
@@ -196,48 +203,7 @@ class QuizResultScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
-
-                          // Row 2
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    _shareScore();
-                                  },
-                                  icon: const Icon(Icons.share),
-                                  label: const Text('Share Score'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    _generatePDF();
-                                  },
-                                  icon: const Icon(Icons.picture_as_pdf),
-                                  label: const Text('Generate PDF'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.purple,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Row 3
+                          // Row 2: Home | Leaderboard
                           Row(
                             children: [
                               Expanded(
@@ -254,10 +220,13 @@ class QuizResultScreen extends StatelessWidget {
                                   icon: const Icon(Icons.home),
                                   label: const Text('Home'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey.shade700,
+                                    backgroundColor: buttonColor,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
@@ -271,10 +240,13 @@ class QuizResultScreen extends StatelessWidget {
                                   icon: const Icon(Icons.leaderboard),
                                   label: const Text('Leaderboard'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.amber,
+                                    backgroundColor: buttonColor,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
                                 ),
@@ -335,18 +307,7 @@ class QuizResultScreen extends StatelessWidget {
     );
   }
 
-  void _shareScore() {
-    // TODO: Implement share functionality
-    // You can use packages like share_plus for sharing
-  }
-
-  void _generatePDF() {
-    // TODO: Implement PDF generation
-    // You can use packages like pdf for generating PDFs
-  }
-
   void _showLeaderboard(BuildContext context) {
-    // TODO: Implement leaderboard functionality
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(
@@ -361,7 +322,7 @@ class QuizResultScreen extends StatelessWidget {
   }
 }
 
-// Review Answers Screen
+// Review Answers Screen (unchanged from your original code)
 class ReviewAnswersScreen extends StatelessWidget {
   final List<Question> questions;
   final List<String> userAnswers;
@@ -413,7 +374,6 @@ class ReviewAnswersScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
-
                   // Show all options with indicators
                   ...question.options.map((option) {
                     final isUserAnswer = option == userAnswer;
@@ -465,7 +425,6 @@ class ReviewAnswersScreen extends StatelessWidget {
                       ),
                     );
                   }),
-
                   if (userAnswer.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),

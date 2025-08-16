@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../widgets/auth_wrapper.dart'; // Update path as needed
+import 'auth_selection_screen.dart'; // Add this import
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,15 +13,18 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _navigateToAuthSelection(); // Change this method name
   }
 
-  void _navigateToHome() {
+  void _navigateToAuthSelection() {
+    // Updated method
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          MaterialPageRoute(
+            builder: (context) => const AuthSelectionScreen(),
+          ), // Navigate to auth selection
         );
       }
     });

@@ -13,7 +13,6 @@ class _SigninScreenState extends State<SigninScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
@@ -31,9 +30,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
-
     try {
       await _authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
@@ -43,7 +40,6 @@ class _SigninScreenState extends State<SigninScreen> {
         await _authService.setRememberMe(true);
       }
       if (!mounted) return;
-      // Optionally navigate after success
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,11 +61,9 @@ class _SigninScreenState extends State<SigninScreen> {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
-
     try {
       await _authService.signInWithGoogle();
       if (!mounted) return;
-      // Optionally navigate after success
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +87,6 @@ class _SigninScreenState extends State<SigninScreen> {
     final resetEmailController = TextEditingController(
       text: _emailController.text,
     );
-
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -127,7 +120,6 @@ class _SigninScreenState extends State<SigninScreen> {
             onPressed: () async {
               final email = resetEmailController.text.trim();
               if (email.isEmpty) return;
-
               try {
                 await _authService.resetPassword(email);
                 if (!dialogContext.mounted) return;
@@ -147,7 +139,7 @@ class _SigninScreenState extends State<SigninScreen> {
               } catch (e) {
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error: ${e.toString()}'),
                     backgroundColor: Colors.red,
@@ -166,13 +158,26 @@ class _SigninScreenState extends State<SigninScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
+      // **ADD BACK BUTTON HERE**
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: const Color(0xFF1976D2),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            physics: const NeverScrollableScrollPhysics(),
             child: Card(
               elevation: 12,
               shadowColor: Colors.black.withAlpha(25),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -184,7 +189,6 @@ class _SigninScreenState extends State<SigninScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo/Icon
                       Container(
                         width: 80,
                         height: 70,
@@ -199,8 +203,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // Title
                       Text(
                         'Sign in to your\nAccount',
                         style: Theme.of(context).textTheme.headlineSmall
@@ -219,24 +221,13 @@ class _SigninScreenState extends State<SigninScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-
-                      // Google Sign-In Button
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: Container(
+                        icon: Image.asset(
+                          'assets/google_logo.png',
                           width: 20,
                           height: 20,
-                          decoration: const BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage('assets/google_logo.png'),
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.g_mobiledata,
-                            color: Colors.red,
-                            size: 20,
-                          ),
+                          fit: BoxFit.contain,
                         ),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
@@ -246,8 +237,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // Divider
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.grey.shade300)),
@@ -262,8 +251,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // Email Field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -281,8 +268,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Password Field
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -310,8 +295,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Remember Me and Forgot Password (fixed)
                       Row(
                         children: [
                           Checkbox(
@@ -328,7 +311,7 @@ class _SigninScreenState extends State<SigninScreen> {
                                   ? null
                                   : _showForgotPasswordDialog,
                               child: const Text(
-                                'Forgot Password ?',
+                                'Forgot Password?',
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                               ),
@@ -337,8 +320,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // Login Button
                       ElevatedButton(
                         onPressed: _isLoading ? null : _submitForm,
                         style: ElevatedButton.styleFrom(
@@ -356,8 +337,6 @@ class _SigninScreenState extends State<SigninScreen> {
                             : const Text('Log in'),
                       ),
                       const SizedBox(height: 24),
-
-                      // Sign Up Link
                       TextButton(
                         onPressed: _isLoading ? null : _navigateToSignup,
                         child: const Text('Don\'t have an account? Sign Up'),

@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 // Import screens and services
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/auth_selection_screen.dart';
 import 'screens/verify_email_screen.dart';
-import 'widgets/auth_wrapper.dart';
-import 'widgets/exit_confirmation_wrapper.dart'; // Add this import
+import 'widgets/exit_confirmation_wrapper.dart';
 import 'services/database_service.dart';
 import 'utils/seed_questions.dart';
 
 void main() async {
+  // ✅ CRITICAL: This MUST be the very first line
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Handle native splash with correct binding
+  FlutterNativeSplash.preserve(widgetsBinding: WidgetsBinding.instance);
 
   // Improved error reporting
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -32,9 +37,14 @@ void main() async {
       await dbService.insertSetting('questionsSeeded', 'true');
     }
 
+    // Remove native splash after initialization
+    FlutterNativeSplash.remove();
+
     runApp(const MyApp());
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
+    // Remove native splash on error
+    FlutterNativeSplash.remove();
     runApp(ErrorApp(error: e.toString()));
   }
 }
@@ -168,18 +178,16 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      // Wrap AuthWrapper with ExitConfirmationWrapper
-      home: const ExitConfirmationWrapper(
-        title: 'Exit Quiz Master?',
-        message:
-            'Are you sure you want to close Quiz Master? Your progress will be saved.',
-        child: AuthWrapper(),
-      ),
+
+      // ✅ Start directly with splash screen to avoid wrapper conflicts
+      home: const SplashScreen(),
+
       routes: {
         '/signin': (context) => const SigninScreen(),
         '/signup': (context) => const SignupScreen(),
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/splash': (context) => const SplashScreen(),
+        '/auth-selection': (context) => const AuthSelectionScreen(),
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: (context) => const NotFoundScreen());
@@ -191,6 +199,7 @@ class MyApp extends StatelessWidget {
 // Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {
   final String error;
+
   const ErrorApp({super.key, required this.error});
 
   @override
@@ -202,7 +211,6 @@ class ErrorApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
       ),
       home: ExitConfirmationWrapper(
-        // Add wrapper to error app too
         title: 'Close App?',
         message: 'The app encountered an error. Do you want to close it?',
         child: ErrorScreen(

@@ -52,7 +52,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     if (_resultSaved) return;
 
     setState(() => _isSaving = true);
-
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -323,7 +322,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                               ),
                             ],
                           ),
+
                           const SizedBox(height: 12),
+
                           // Row 2: Home | My Scores
                           Row(
                             children: [
@@ -356,11 +357,12 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    // Navigate to My Scores tab (you'll need to implement tab switching)
+                                    // Navigate to My Scores tab with initialTabIndex: 1
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            const HomeScreen(),
+                                        builder: (context) => const HomeScreen(
+                                          initialTabIndex: 1,
+                                        ),
                                       ),
                                       (route) => false,
                                     );
@@ -488,6 +490,7 @@ class ReviewAnswersScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
+
                   // Show all options with indicators
                   ...question.options.map((option) {
                     final isUserAnswer = option == userAnswer;
@@ -539,6 +542,7 @@ class ReviewAnswersScreen extends StatelessWidget {
                       ),
                     );
                   }),
+
                   if (userAnswer.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),

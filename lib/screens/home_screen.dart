@@ -6,11 +6,11 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../models/quiz_category.dart';
 import '../models/question.dart';
+import '../models/quiz_result.dart';
 import 'quiz_screen.dart';
 import 'timer_quiz_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
-
 class UserData {
   final String displayName;
   final String email;
@@ -30,16 +30,17 @@ class UserData {
 }
 
 /* -------------------------------- HOME SCREEN -------------------------------- */
-
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialTabIndex;
+
+  const HomeScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
   late final List<Widget> _pages;
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTabIndex;
     _pages = [
       const CategoryPage(),
       const ScoresPage(),
@@ -209,7 +211,7 @@ class _CategoryPageState extends State<CategoryPage>
   }
 
   Future<UserData> _fetchUserData() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 500)); // Reduced delay
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) throw Exception('No user logged in');
 
@@ -227,7 +229,7 @@ class _CategoryPageState extends State<CategoryPage>
       setState(() => _userDataFuture = _fetchUserData());
 
   void _showStartQuizDialog(BuildContext context, QuizCategory category) {
-    int chosenQuestionCount = 15; // Default value
+    int chosenQuestionCount = 15;
 
     showDialog(
       context: context,
@@ -243,8 +245,6 @@ class _CategoryPageState extends State<CategoryPage>
             children: [
               Text(category.description),
               const SizedBox(height: 20),
-
-              // Question Count Slider
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -274,7 +274,6 @@ class _CategoryPageState extends State<CategoryPage>
                 ],
               ),
               const SizedBox(height: 16),
-
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   activeTrackColor: category.color,
@@ -311,7 +310,6 @@ class _CategoryPageState extends State<CategoryPage>
                   },
                 ),
               ),
-
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -322,7 +320,6 @@ class _CategoryPageState extends State<CategoryPage>
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
               const Text(
                 'Quiz features:',
@@ -361,17 +358,15 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  // Fixed method to get exact question count
   Future<void> _startCategoryQuiz(
     BuildContext context,
     QuizCategory category,
     int questionCount,
   ) async {
     try {
-      // Get ALL available questions for the category first
       final allQuestions = await DatabaseService().getRandomQuestionsByCategory(
         category.name,
-        limit: 100, // Get more questions than needed
+        limit: 100,
       );
 
       if (!mounted) return;
@@ -387,11 +382,9 @@ class _CategoryPageState extends State<CategoryPage>
         return;
       }
 
-      // Shuffle and take only the requested number
       allQuestions.shuffle();
       final selectedQuestions = allQuestions.take(questionCount).toList();
 
-      // Check if we have enough questions
       if (selectedQuestions.length < questionCount) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -425,7 +418,6 @@ class _CategoryPageState extends State<CategoryPage>
     }
   }
 
-  // Fixed method to get exact question count for quick mode
   Future<void> _startQuickModeQuiz(
     BuildContext context,
     List<QuizCategory> selectedCategories,
@@ -437,20 +429,18 @@ class _CategoryPageState extends State<CategoryPage>
       final List<Question> allQuestions = [];
 
       if (isRandom) {
-        // Get questions from ALL categories
         for (final category in _categories) {
           final questions = await dbService.getRandomQuestionsByCategory(
             category.name,
-            limit: 50, // Get more questions per category
+            limit: 50,
           );
           allQuestions.addAll(questions);
         }
       } else {
-        // Get questions from selected categories
         for (final category in selectedCategories) {
           final questions = await dbService.getRandomQuestionsByCategory(
             category.name,
-            limit: 50, // Get more questions per category
+            limit: 50,
           );
           allQuestions.addAll(questions);
         }
@@ -465,11 +455,9 @@ class _CategoryPageState extends State<CategoryPage>
         return;
       }
 
-      // Shuffle all questions and take only the requested number
       allQuestions.shuffle();
       final quickQuestions = allQuestions.take(questionCount).toList();
 
-      // Check if we have enough questions
       if (quickQuestions.length < questionCount) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -484,7 +472,6 @@ class _CategoryPageState extends State<CategoryPage>
 
       if (!mounted) return;
 
-      // Quick Mode always goes to TimerQuizScreen with 15 seconds
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -517,7 +504,7 @@ class _CategoryPageState extends State<CategoryPage>
                 children: [
                   CircularProgressIndicator(color: Color(0xFF1976D2)),
                   SizedBox(height: 16),
-                  Text('Loading your profile...'),
+                  Text('Loading...'),
                 ],
               ),
             );
@@ -569,9 +556,9 @@ class _CategoryPageState extends State<CategoryPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeSection(context, userData),
-                  const SizedBox(height: 20),
-                  UserStatsCard(userData: userData),
-                  const SizedBox(height: 32),
+                  const SizedBox(
+                    height: 32,
+                  ), // Increased spacing since stats removed
                   _buildModesSection(context),
                   if (_selectedMode == 'Category Mode') ...[
                     const SizedBox(height: 24),
@@ -587,6 +574,102 @@ class _CategoryPageState extends State<CategoryPage>
             return const Center(child: Text('No user data found.'));
           }
         },
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection(BuildContext context, UserData userData) {
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 8,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF1976D2).withValues(alpha: 0.05),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.waving_hand,
+                      color: Color(0xFF1976D2),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome back,',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.grey.shade600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userData.displayName,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1976D2),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.psychology,
+                      color: Color(0xFF1976D2),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Ready for your next challenge?',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF1976D2),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -746,37 +829,853 @@ class _CategoryPageState extends State<CategoryPage>
       },
     );
   }
+}
 
-  Widget _buildWelcomeSection(BuildContext context, UserData userData) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Welcome back,',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              userData.displayName,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1976D2),
+/* =============================================================================== */
+/* ============================== SCORES PAGE =================================== */
+/* =============================================================================== */
+
+class ScoresPage extends StatefulWidget {
+  const ScoresPage({super.key});
+
+  @override
+  State<ScoresPage> createState() => _ScoresPageState();
+}
+
+class _ScoresPageState extends State<ScoresPage>
+    with AutomaticKeepAliveClientMixin {
+  late Future<List<QuizResult>> _quizResultsFuture;
+  late Future<Map<String, dynamic>> _statsFuture;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final dbService = DatabaseService();
+      _quizResultsFuture = dbService.getUserQuizResults(user.uid);
+      _statsFuture = dbService.getUserStats(user.uid);
+    }
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _loadData();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('Please sign in to view your scores'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      color: const Color(0xFF1976D2),
+      child: CustomScrollView(
+        slivers: [
+          // Stats Overview Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _statsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return _buildStatsOverview(context, snapshot.data!);
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Ready for another challenge?',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700),
+          ),
+
+          // Quiz Results Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  const Icon(Icons.history, color: Color(0xFF1976D2), size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Recent Quiz Results',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1976D2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // Quiz Results List
+          FutureBuilder<List<QuizResult>>(
+            future: _quizResultsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFF1976D2)),
+                        SizedBox(height: 16),
+                        Text('Loading your quiz history...'),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Card(
+                      margin: const EdgeInsets.all(24),
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 64,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Error loading scores',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              snapshot.error.toString(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _refreshData,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Try Again'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Card(
+                      margin: const EdgeInsets.all(24),
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.quiz_outlined,
+                              size: 80,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Quiz Results Yet',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade600,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Take your first quiz to see results here!',
+                              style: TextStyle(color: Colors.grey.shade500),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                // Navigate back to home tab
+                                final homeScreenState = context
+                                    .findAncestorStateOfType<
+                                      _HomeScreenState
+                                    >();
+                                homeScreenState?._onItemTapped(0);
+                              },
+                              icon: const Icon(Icons.quiz),
+                              label: const Text('Take a Quiz'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              final results = snapshot.data!;
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    if (index < results.length) {
+                      return _buildQuizResultCard(context, results[index]);
+                    }
+                    return null;
+                  }, childCount: results.length),
+                ),
+              );
+            },
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsOverview(BuildContext context, Map<String, dynamic> stats) {
+    return Card(
+      elevation: 8,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics, color: Color(0xFF1976D2), size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Overall Statistics',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1976D2),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                  context,
+                  Icons.quiz,
+                  '${stats['totalQuizzes'] ?? 0}',
+                  'Total Quizzes',
+                  const Color(0xFF1976D2),
+                ),
+                _buildStatItem(
+                  context,
+                  Icons.percent,
+                  '${(stats['averagePercentage'] ?? 0.0).toStringAsFixed(1)}%',
+                  'Average Score',
+                  Colors.orange,
+                ),
+                _buildStatItem(
+                  context,
+                  Icons.star,
+                  '${stats['bestScore'] ?? 0}',
+                  'Best Score',
+                  Colors.green,
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuizResultCard(BuildContext context, QuizResult result) {
+    final categoryColor = result.categoryColor != null
+        ? Color(int.parse('0xFF${result.categoryColor}'))
+        : const Color(0xFF1976D2);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 4,
+      child: InkWell(
+        onTap: () => _showResultDetails(context, result),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      result.isTimerMode ? Icons.timer : Icons.category,
+                      color: categoryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          result.categoryName,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: categoryColor,
+                              ),
+                        ),
+                        Text(
+                          _formatDate(result.completedAt),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Score Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getScoreColor(
+                        result.percentage,
+                      ).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _getScoreColor(result.percentage),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '${result.percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getScoreColor(result.percentage),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Stats Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildResultStat(
+                    context,
+                    Icons.quiz,
+                    '${result.totalQuestions}',
+                    'Questions',
+                  ),
+                  _buildResultStat(
+                    context,
+                    Icons.check_circle,
+                    '${result.correctAnswers}',
+                    'Correct',
+                  ),
+                  _buildResultStat(
+                    context,
+                    Icons.cancel,
+                    '${result.wrongAnswers}',
+                    'Wrong',
+                  ),
+                  _buildResultStat(
+                    context,
+                    Icons.star,
+                    '${result.totalScore}',
+                    'Points',
+                  ),
+                ],
+              ),
+
+              if (result.isTimerMode) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.timer, color: Colors.orange, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Quick Mode',
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultStat(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, size: 18, color: Colors.grey.shade600),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+      ],
+    );
+  }
+
+  Color _getScoreColor(double percentage) {
+    if (percentage >= 80) return Colors.green;
+    if (percentage >= 60) return Colors.orange;
+    return Colors.red;
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      return 'Today ${_formatTime(date)}';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday ${_formatTime(date)}';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:$minute $period';
+  }
+
+  void _showResultDetails(BuildContext context, QuizResult result) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(20),
+                  child: _buildDetailedResult(context, result),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailedResult(BuildContext context, QuizResult result) {
+    final categoryColor = result.categoryColor != null
+        ? Color(int.parse('0xFF${result.categoryColor}'))
+        : const Color(0xFF1976D2);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'Quiz Result Details',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: categoryColor,
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Category Info
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: categoryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: categoryColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                result.categoryName,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: categoryColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Completed on ${_formatDate(result.completedAt)}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+              ),
+              if (result.isTimerMode) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'Quick Mode - 15 seconds per question',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Performance Summary
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailStat(
+                context,
+                Icons.quiz,
+                '${result.totalQuestions}',
+                'Total Questions',
+                categoryColor,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDetailStat(
+                context,
+                Icons.check_circle,
+                '${result.correctAnswers}',
+                'Correct Answers',
+                Colors.green,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: _buildDetailStat(
+                context,
+                Icons.cancel,
+                '${result.wrongAnswers}',
+                'Wrong Answers',
+                Colors.red,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDetailStat(
+                context,
+                Icons.star,
+                '${result.totalScore}',
+                'Total Score',
+                Colors.amber,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // Percentage and Grade
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _getScoreColor(result.percentage).withValues(alpha: 0.1),
+                _getScoreColor(result.percentage).withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _getScoreColor(result.percentage).withValues(alpha: 0.3),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                '${result.percentage.toStringAsFixed(1)}%',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: _getScoreColor(result.percentage),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Grade: ${result.grade}',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: _getScoreColor(result.percentage),
+                ),
+              ),
+              Text(
+                result.performance,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey.shade700),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Action Button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              // Navigate to home and take the same type of quiz again
+              final homeScreenState = context
+                  .findAncestorStateOfType<_HomeScreenState>();
+              homeScreenState?._onItemTapped(0);
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Take Similar Quiz'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: categoryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailStat(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* =============================================================================== */
+/* ============================== LEADERBOARD PAGE ============================== */
+/* =============================================================================== */
+
+class LeaderboardPage extends StatelessWidget {
+  const LeaderboardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        margin: const EdgeInsets.all(24),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.leaderboard, size: 80, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              Text(
+                'Leaderboard',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Compete with other players',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.info, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Leaderboard feature coming soon!'),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -807,7 +1706,7 @@ class _QuickModeOptions extends StatefulWidget {
 
 class _QuickModeOptionsState extends State<_QuickModeOptions> {
   bool _isRandom = true;
-  int _questionCount = 15; // Default to 15 instead of 10
+  int _questionCount = 15;
   final Set<int> _selectedIndexes = {};
 
   @override
@@ -825,7 +1724,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
             ),
             const SizedBox(height: 16),
 
-            // Smaller timer info design
+            // Timer info
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -849,9 +1748,10 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
 
-            // Enhanced Slider for Question Count Selection
+            // Question Count Slider
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -885,7 +1785,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
                 const SizedBox(height: 16),
 
-                // Enhanced Slider with Custom Styling
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: const Color(0xFF1976D2),
@@ -928,7 +1827,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                   ),
                 ),
 
-                // Min-Max Labels
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -952,6 +1850,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
 
             // Random/Choose Categories buttons
@@ -989,7 +1888,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ],
             ),
 
-            // Category selection chips (only show if not random)
+            // Category selection chips
             if (!_isRandom) ...[
               const SizedBox(height: 14),
               Wrap(
@@ -1053,258 +1952,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/* =============================================================================== */
-/* ============================== USER STATS CARD =============================== */
-/* =============================================================================== */
-
-class UserStatsCard extends StatelessWidget {
-  final UserData userData;
-
-  const UserStatsCard({super.key, required this.userData});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 8,
-      shadowColor: const Color(0xFF1976D2).withValues(alpha: 0.1),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1976D2).withValues(alpha: 0.05),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.analytics,
-                    color: Color(0xFF1976D2),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Your Stats',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1976D2),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatColumn(
-                    context,
-                    Icons.leaderboard,
-                    '#${userData.rank}',
-                    'Rank',
-                    Colors.orange,
-                  ),
-                  _buildStatColumn(
-                    context,
-                    Icons.star,
-                    '${userData.score}',
-                    'Score',
-                    const Color.fromARGB(255, 223, 179, 48),
-                  ),
-                  _buildStatColumn(
-                    context,
-                    Icons.monetization_on,
-                    '${userData.coins}',
-                    'Coins',
-                    Colors.green,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.quiz, size: 16, color: Color(0xFF1976D2)),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${userData.quizzesCompleted} quizzes completed',
-                      style: const TextStyle(
-                        color: Color(0xFF1976D2),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatColumn(
-    BuildContext context,
-    IconData icon,
-    String value,
-    String label,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-        ),
-      ],
-    );
-  }
-}
-
-/* =============================================================================== */
-/* ======================== SCORES & LEADERBOARD PAGES =========================== */
-/* =============================================================================== */
-
-class ScoresPage extends StatelessWidget {
-  const ScoresPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Card(
-        margin: const EdgeInsets.all(24),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.history, size: 80, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'My Scores',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your quiz history will appear here',
-                style: TextStyle(color: Colors.grey.shade500),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.info, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Scores feature coming soon!'),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class LeaderboardPage extends StatelessWidget {
-  const LeaderboardPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Card(
-        margin: const EdgeInsets.all(24),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.leaderboard, size: 80, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Leaderboard',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Compete with other players',
-                style: TextStyle(color: Colors.grey.shade500),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.info, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Leaderboard feature coming soon!'),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh'),
-              ),
-            ],
-          ),
         ),
       ),
     );

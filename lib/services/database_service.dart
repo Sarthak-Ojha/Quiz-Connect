@@ -6,7 +6,7 @@ import '../models/quiz_result.dart';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'app_database.db';
-  static const int _databaseVersion = 3; // Increment for quiz_results table
+  static const int _databaseVersion = 3; // Keep this as 3
 
   // Tables
   static const String _usersTable = 'users';
@@ -97,40 +97,53 @@ class DatabaseService {
     await db.insert(_settingsTable, {'key': 'notifications', 'value': 'true'});
   }
 
+  // ✅ FIXED: Enhanced onUpgrade with proper error handling
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add questions table for version 2
-      await db.execute('''
-        CREATE TABLE $_questionsTable (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          category TEXT NOT NULL,
-          question TEXT NOT NULL,
-          options TEXT NOT NULL,
-          correctIndex INTEGER NOT NULL
-        )
-      ''');
+      // Check if questions table exists before creating
+      final tablesResult = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='$_questionsTable'",
+      );
+
+      if (tablesResult.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $_questionsTable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT NOT NULL,
+            question TEXT NOT NULL,
+            options TEXT NOT NULL,
+            correctIndex INTEGER NOT NULL
+          )
+        ''');
+      }
     }
 
     if (oldVersion < 3) {
-      // Add quiz results table for version 3
-      await db.execute('''
-        CREATE TABLE $_quizResultsTable (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          userId TEXT NOT NULL,
-          categoryName TEXT NOT NULL,
-          categoryColor TEXT,
-          totalQuestions INTEGER NOT NULL,
-          correctAnswers INTEGER NOT NULL,
-          wrongAnswers INTEGER NOT NULL,
-          totalScore INTEGER NOT NULL,
-          percentage REAL NOT NULL,
-          isTimerMode INTEGER NOT NULL,
-          timerSeconds INTEGER DEFAULT 0,
-          completedAt TEXT NOT NULL,
-          userAnswers TEXT NOT NULL,
-          questions TEXT NOT NULL
-        )
-      ''');
+      // Check if quiz_results table exists before creating
+      final tablesResult = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='$_quizResultsTable'",
+      );
+
+      if (tablesResult.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $_quizResultsTable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            categoryName TEXT NOT NULL,
+            categoryColor TEXT,
+            totalQuestions INTEGER NOT NULL,
+            correctAnswers INTEGER NOT NULL,
+            wrongAnswers INTEGER NOT NULL,
+            totalScore INTEGER NOT NULL,
+            percentage REAL NOT NULL,
+            isTimerMode INTEGER NOT NULL,
+            timerSeconds INTEGER DEFAULT 0,
+            completedAt TEXT NOT NULL,
+            userAnswers TEXT NOT NULL,
+            questions TEXT NOT NULL
+          )
+        ''');
+      }
     }
   }
 
@@ -218,9 +231,9 @@ class DatabaseService {
         MAX(totalScore) as bestScore
       FROM $_quizResultsTable 
       WHERE userId = ? 
-      GROUP BY categoryName
+      GROUP BY categoryName 
       ORDER BY playCount DESC
-    ''',
+      ''',
       [userId],
     );
 
@@ -301,9 +314,9 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
       '''
-      SELECT * FROM $_questionsTable
-      WHERE category = ?
-      ORDER BY RANDOM()
+      SELECT * FROM $_questionsTable 
+      WHERE category = ? 
+      ORDER BY RANDOM() 
       LIMIT ?
       ''',
       [category, limit],

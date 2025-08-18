@@ -2,153 +2,71 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/home_screen.dart';
-import '../screens/signin_screen.dart'; // CHANGED: Import SigninScreen instead of LoginScreen
+import '../screens/auth_selection_screen.dart';
 import '../screens/verify_email_screen.dart';
-import '../screens/splash_screen.dart'; // ADDED: Import SplashScreen
+import '../screens/splash_screen.dart';
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Show loading/splash screen while checking auth state
+        debugPrint(
+          '🔄 AuthWrapper: Connection state = ${snapshot.connectionState}',
+        );
+        debugPrint('📱 AuthWrapper: Has data = ${snapshot.hasData}');
+        debugPrint('👤 AuthWrapper: User = ${snapshot.data?.uid}');
+        debugPrint(
+          '📧 AuthWrapper: Email verified = ${snapshot.data?.emailVerified}',
+        );
+
+        // Show splash while checking auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen(); // CHANGED: Use SplashScreen instead of basic loading
+          debugPrint(
+            '⏳ AuthWrapper: Showing splash screen (waiting for auth state)',
+          );
+          return const SplashScreen();
         }
+
         // Handle stream errors
-        else if (snapshot.hasError) {
-          return ErrorScreen(
-            title: 'Authentication Error',
-            message: 'Something went wrong with authentication.',
-            error: snapshot.error.toString(),
-            onRetry: () {
-              // Trigger a rebuild by creating a new stream
-              FirebaseAuth.instance.authStateChanges();
-            },
+        if (snapshot.hasError) {
+          debugPrint('❌ AuthWrapper: Auth stream error = ${snapshot.error}');
+          return Scaffold(
+            body: Center(
+              child: Text('Authentication Error: ${snapshot.error}'),
+            ),
           );
         }
+
         // If user is logged in
-        else if (snapshot.hasData) {
+        if (snapshot.hasData && snapshot.data != null) {
           final user = snapshot.data!;
-          // Check if email is verified
+          debugPrint('✅ AuthWrapper: User authenticated = ${user.uid}');
+
+          // Check if email is verified (Google Sign-In users are auto-verified)
           if (user.emailVerified) {
-            return const HomeScreen(); // ADDED: const
+            debugPrint('🏠 AuthWrapper: Navigating to HomeScreen');
+            return const HomeScreen();
           } else {
-            // Show email verification screen
-            return const VerifyEmailScreen(); // ADDED: const
+            debugPrint('📨 AuthWrapper: Navigating to VerifyEmailScreen');
+            return const VerifyEmailScreen();
           }
         }
+
         // If user is not logged in
-        else {
-          // Send them to the signin screen - UPDATED
-          return const SigninScreen(); // CHANGED: Use SigninScreen instead of LoginScreen
-        }
+        debugPrint(
+          '🔐 AuthWrapper: No user authenticated, showing AuthSelectionScreen',
+        );
+        return const AuthSelectionScreen();
       },
-    );
-  }
-}
-
-// Enhanced Error Screen
-class ErrorScreen extends StatelessWidget {
-  final String title;
-  final String message;
-  final String error;
-  final VoidCallback? onRetry;
-
-  const ErrorScreen({
-    super.key,
-    required this.title,
-    required this.message,
-    required this.error,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Error Icon
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.error_outline,
-                    size: 50,
-                    color: Colors.red.shade400,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Title
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red.shade700,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                // Message
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // Error Details (collapsible)
-                ExpansionTile(
-                  title: const Text('Error Details'),
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        error,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Retry Button
-                if (onRetry != null)
-                  ElevatedButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

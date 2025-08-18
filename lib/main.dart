@@ -9,6 +9,7 @@ import 'screens/signup_screen.dart';
 import 'screens/auth_selection_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'widgets/exit_confirmation_wrapper.dart';
+import 'widgets/auth_wrapper.dart'; // ADD THIS IMPORT
 import 'services/database_service.dart';
 import 'utils/seed_questions.dart';
 
@@ -27,6 +28,7 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
+
     final dbService = DatabaseService();
     await dbService.initializeDatabase();
 
@@ -178,10 +180,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-
-      // ✅ Start directly with splash screen to avoid wrapper conflicts
-      home: const SplashScreen(),
-
+      // ✅ FIXED: Use AuthWrapper instead of SplashScreen for proper auth handling
+      home: const AuthWrapper(),
       routes: {
         '/signin': (context) => const SigninScreen(),
         '/signup': (context) => const SignupScreen(),

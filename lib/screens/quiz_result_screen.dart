@@ -1,16 +1,21 @@
 // lib/screens/quiz_result_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/question.dart';
 import '../models/quiz_category.dart';
+import '../models/quiz_result.dart';
+import '../services/database_service.dart';
 import 'home_screen.dart';
 
-class QuizResultScreen extends StatelessWidget {
+class QuizResultScreen extends StatefulWidget {
   final int totalQuestions;
   final int correctAnswers;
   final List<Question> questions;
   final List<String> userAnswers;
   final QuizCategory? category;
   final bool isTimerMode;
+  final int timerSeconds;
 
   const QuizResultScreen({
     super.key,
@@ -20,15 +25,68 @@ class QuizResultScreen extends StatelessWidget {
     required this.userAnswers,
     this.category,
     required this.isTimerMode,
+    this.timerSeconds = 0,
   });
 
-  int get wrongAnswers => totalQuestions - correctAnswers;
-  double get percentage => (correctAnswers / totalQuestions) * 100;
-  int get totalScore => correctAnswers * 10; // 10 points per correct answer
+  @override
+  State<QuizResultScreen> createState() => _QuizResultScreenState();
+}
+
+class _QuizResultScreenState extends State<QuizResultScreen> {
+  bool _isSaving = false;
+  bool _resultSaved = false;
+
+  int get wrongAnswers => widget.totalQuestions - widget.correctAnswers;
+  double get percentage =>
+      (widget.correctAnswers / widget.totalQuestions) * 100;
+  int get totalScore =>
+      widget.correctAnswers * 10; // 10 points per correct answer
+
+  @override
+  void initState() {
+    super.initState();
+    _saveQuizResult();
+  }
+
+  Future<void> _saveQuizResult() async {
+    if (_resultSaved) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final quizResult = QuizResult(
+          userId: user.uid,
+          categoryName: widget.isTimerMode
+              ? 'Quick Mode'
+              : (widget.category?.name ?? 'Unknown'),
+          categoryColor: widget.category?.color.value.toRadixString(16),
+          totalQuestions: widget.totalQuestions,
+          correctAnswers: widget.correctAnswers,
+          wrongAnswers: wrongAnswers,
+          totalScore: totalScore,
+          percentage: percentage,
+          isTimerMode: widget.isTimerMode,
+          timerSeconds: widget.timerSeconds,
+          completedAt: DateTime.now(),
+          userAnswers: widget.userAnswers,
+          questions: widget.questions.map((q) => q.question).toList(),
+        );
+
+        await DatabaseService().saveQuizResult(quizResult);
+        setState(() => _resultSaved = true);
+      }
+    } catch (e) {
+      debugPrint('Error saving quiz result: $e');
+    } finally {
+      setState(() => _isSaving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    const buttonColor = Color(0xFF1976D2); // Consistent color for all buttons
+    const buttonColor = Color(0xFF1976D2);
 
     return Scaffold(
       body: Container(
@@ -53,11 +111,72 @@ class QuizResultScreen extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Save Status Indicator
+                      if (_isSaving)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Saving result...',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (_resultSaved)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Result saved!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      const SizedBox(height: 16),
+
                       // Title
                       Text(
-                        isTimerMode
+                        widget.isTimerMode
                             ? 'Quick Mode Results'
-                            : '${category?.name} Results',
+                            : '${widget.category?.name} Results',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -65,6 +184,7 @@ class QuizResultScreen extends StatelessWidget {
                             ),
                         textAlign: TextAlign.center,
                       ),
+
                       const SizedBox(height: 32),
 
                       // Circular Progress Indicator
@@ -121,6 +241,7 @@ class QuizResultScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 32),
 
                       // Stats Row
@@ -130,14 +251,14 @@ class QuizResultScreen extends StatelessWidget {
                           _buildStatItem(
                             context,
                             'Total Questions',
-                            totalQuestions.toString(),
+                            widget.totalQuestions.toString(),
                             Icons.quiz,
                             buttonColor,
                           ),
                           _buildStatItem(
                             context,
                             'Correct',
-                            correctAnswers.toString(),
+                            widget.correctAnswers.toString(),
                             Icons.check_circle,
                             Colors.green,
                           ),
@@ -150,6 +271,7 @@ class QuizResultScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 32),
 
                       // Action Buttons in 2x2 Grid Layout
@@ -161,7 +283,6 @@ class QuizResultScreen extends StatelessWidget {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    // Play Again functionality
                                     Navigator.of(
                                       context,
                                     ).popUntil((route) => route.isFirst);
@@ -203,7 +324,7 @@ class QuizResultScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Row 2: Home | Leaderboard
+                          // Row 2: Home | My Scores
                           Row(
                             children: [
                               Expanded(
@@ -235,10 +356,17 @@ class QuizResultScreen extends StatelessWidget {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    _showLeaderboard(context);
+                                    // Navigate to My Scores tab (you'll need to implement tab switching)
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HomeScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   },
-                                  icon: const Icon(Icons.leaderboard),
-                                  label: const Text('Leaderboard'),
+                                  icon: const Icon(Icons.history),
+                                  label: const Text('My Scores'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: buttonColor,
                                     foregroundColor: Colors.white,
@@ -299,30 +427,16 @@ class QuizResultScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReviewAnswersScreen(
-          questions: questions,
-          userAnswers: userAnswers,
-          category: category,
-        ),
-      ),
-    );
-  }
-
-  void _showLeaderboard(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.info, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Leaderboard feature coming soon!'),
-          ],
+          questions: widget.questions,
+          userAnswers: widget.userAnswers,
+          category: widget.category,
         ),
       ),
     );
   }
 }
 
-// Review Answers Screen (unchanged from your original code)
+// Review Answers Screen
 class ReviewAnswersScreen extends StatelessWidget {
   final List<Question> questions;
   final List<String> userAnswers;
@@ -384,11 +498,11 @@ class ReviewAnswersScreen extends StatelessWidget {
                     IconData? icon;
 
                     if (isCorrectAnswer) {
-                      backgroundColor = Colors.green.withValues(alpha: 0.1);
+                      backgroundColor = Colors.green.withOpacity(0.1);
                       textColor = Colors.green.shade700;
                       icon = Icons.check_circle;
                     } else if (isUserAnswer && !isCorrect) {
-                      backgroundColor = Colors.red.withValues(alpha: 0.1);
+                      backgroundColor = Colors.red.withOpacity(0.1);
                       textColor = Colors.red.shade700;
                       icon = Icons.cancel;
                     }
@@ -429,7 +543,7 @@ class ReviewAnswersScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
+                        color: Colors.grey.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(

@@ -8,7 +8,7 @@ plugins {
     id("com.google.gms.google-services") // Google Services plugin
 }
 
-// Load keystore properties from key.properties
+// Load keystore properties from key.properties (optional for testing)
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
@@ -39,30 +39,48 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-signingConfigs {
-    create("release") {
-        // Temporarily disabled for debug builds
-        /*
-        if (keystorePropertiesFile.exists()) {
-            storeFile = file(requireKeystoreProperty("storeFile"))
-            storePassword = requireKeystoreProperty("storePassword")
-            keyAlias = requireKeystoreProperty("keyAlias")
-            keyPassword = requireKeystoreProperty("keyPassword")
-        }
-        */
-    }
-}
 
+    signingConfigs {
+        create("release") {
+            // For testing phase: use debug signing or configure proper keystore
+            if (keystorePropertiesFile.exists()) {
+                try {
+                    storeFile = file(requireKeystoreProperty("storeFile"))
+                    storePassword = requireKeystoreProperty("storePassword")
+                    keyAlias = requireKeystoreProperty("keyAlias")
+                    keyPassword = requireKeystoreProperty("keyPassword")
+                } catch (e: Exception) {
+                    // Fall back to debug signing if keystore properties are missing
+                    println("Keystore properties missing, using debug signing for release builds")
+                }
+            }
+        }
+    }
 
     buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
             isMinifyEnabled = false
             isShrinkResources = false
+        }
+        
+        release {
+            // Use debug signing for testing phase
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            
+            // Uncomment below line when you have proper release keystore
+            // signingConfig = signingConfigs.getByName("release")
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Add any additional dependencies here if needed
 }

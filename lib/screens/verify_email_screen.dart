@@ -37,11 +37,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
           CurvedAnimation(
@@ -49,31 +47,43 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
             curve: Curves.easeOutCubic,
           ),
         );
-
     _animationController.forward();
   }
 
+  // ✅ FIXED: Improved email verification check with proper reload
   void _startEmailVerificationCheck() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       try {
-        await FirebaseAuth.instance.currentUser?.reload();
         final user = FirebaseAuth.instance.currentUser;
-        if (user?.emailVerified ?? false) {
-          timer.cancel();
-          _cooldownTimer?.cancel();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Email verified successfully!'),
-                  ],
+        if (user != null) {
+          // ✅ CRITICAL: Force reload to get fresh data from Firebase servers
+          await user.reload();
+
+          // ✅ Get the refreshed user instance after reload
+          final refreshedUser = FirebaseAuth.instance.currentUser;
+
+          if (refreshedUser?.emailVerified ?? false) {
+            timer.cancel();
+            _cooldownTimer?.cancel();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Email verified successfully! Redirecting...'),
+                    ],
+                  ),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
                 ),
-                backgroundColor: Colors.green,
-              ),
-            );
+              );
+
+              // The AuthWrapper will automatically detect the change and navigate
+              // No manual navigation needed
+            }
           }
         }
       } catch (e) {
@@ -92,9 +102,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
 
   Future<void> _sendVerificationEmail() async {
     if (_isLoading || !_canResend) return;
-
     setState(() => _isLoading = true);
-
     try {
       await _authService.sendEmailVerification();
       if (mounted) {
@@ -103,7 +111,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
           _canResend = false;
           _resendCooldown = 60;
         });
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -162,7 +169,6 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
 
   Future<void> _signOut() async {
     setState(() => _isSigningOut = true);
-
     try {
       _timer?.cancel();
       _cooldownTimer?.cancel();
@@ -198,7 +204,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 13), // 0.05
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -261,7 +267,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                               BoxShadow(
                                 color: const Color(
                                   0xFF1976D2,
-                                ).withValues(alpha: 77), // 0.3
+                                ).withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -273,6 +279,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                             color: Colors.white,
                           ),
                         ),
+
                         const SizedBox(height: 32),
 
                         // Card Container
@@ -293,6 +300,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                         color: Colors.grey.shade800,
                                       ),
                                 ),
+
                                 const SizedBox(height: 16),
 
                                 // Email Address
@@ -304,12 +312,12 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                   decoration: BoxDecoration(
                                     color: const Color(
                                       0xFF1976D2,
-                                    ).withValues(alpha: 25), // 0.1
+                                    ).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                       color: const Color(
                                         0xFF1976D2,
-                                      ).withValues(alpha: 77), // 0.3
+                                      ).withValues(alpha: 0.3),
                                       width: 1,
                                     ),
                                   ),
@@ -322,6 +330,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                     ),
                                   ),
                                 ),
+
                                 const SizedBox(height: 24),
 
                                 // Description
@@ -335,6 +344,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                         height: 1.5,
                                       ),
                                 ),
+
                                 const SizedBox(height: 32),
 
                                 // Resend Email Button
@@ -369,6 +379,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                                     ),
                                   ),
                                 ),
+
                                 const SizedBox(height: 24),
 
                                 // Status Indicator
@@ -408,6 +419,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 24),
 
                         // Help Section

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "308786259998-bfk2peq9tth6q77m9pfrls9sd00o0o09.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sarthak.quiz",
+            "certificate_hash": "36ea4abd1c756e3c2950971e4337efe50dc7b339"
+          }
+        },
+        {
           "client_id": "308786259998-vekqrcs05tgmecnjumv7ks2op7m5t3v7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

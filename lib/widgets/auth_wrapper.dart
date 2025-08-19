@@ -1,6 +1,6 @@
-// lib/widgets/auth_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../screens/home_screen.dart';
 import '../screens/auth_selection_screen.dart';
 import '../screens/verify_email_screen.dart';
@@ -41,7 +41,22 @@ class _AuthWrapperState extends State<AuthWrapper> {
           debugPrint('❌ AuthWrapper: Auth stream error = ${snapshot.error}');
           return Scaffold(
             body: Center(
-              child: Text('Authentication Error: ${snapshot.error}'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 64, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text('Authentication Error: ${snapshot.error}'),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Force rebuild
+                      setState(() {});
+                    },
+                    child: Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -51,8 +66,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
           final user = snapshot.data!;
           debugPrint('✅ AuthWrapper: User authenticated = ${user.uid}');
 
-          // Check if email is verified (Google Sign-In users are auto-verified)
-          if (user.emailVerified) {
+          // Check if email is verified OR if it's a Google sign-in user
+          bool isEmailVerified = user.emailVerified;
+          bool isGoogleUser = user.providerData.any(
+            (info) => info.providerId == 'google.com',
+          );
+
+          if (isEmailVerified || isGoogleUser) {
             debugPrint('🏠 AuthWrapper: Navigating to HomeScreen');
             return const HomeScreen();
           } else {

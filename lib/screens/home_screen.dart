@@ -8,6 +8,7 @@ import '../models/quiz_category.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
 import 'quiz_screen.dart';
+import 'settings_screen.dart';
 import 'timer_quiz_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
@@ -93,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // User profile photo (if available)
           if (user?.photoURL != null)
             Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -101,6 +103,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundImage: NetworkImage(user!.photoURL!),
               ),
             ),
+
+          // Settings button
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+
+          // Sign out button
           _isSigningOut
               ? const Padding(
                   padding: EdgeInsets.all(16),
@@ -211,7 +227,7 @@ class _CategoryPageState extends State<CategoryPage>
   }
 
   Future<UserData> _fetchUserData() async {
-    await Future.delayed(const Duration(milliseconds: 500)); // Reduced delay
+    await Future.delayed(const Duration(milliseconds: 500));
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) throw Exception('No user logged in');
 
@@ -230,7 +246,6 @@ class _CategoryPageState extends State<CategoryPage>
 
   void _showStartQuizDialog(BuildContext context, QuizCategory category) {
     int chosenQuestionCount = 15;
-
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
@@ -556,9 +571,7 @@ class _CategoryPageState extends State<CategoryPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildWelcomeSection(context, userData),
-                  const SizedBox(
-                    height: 32,
-                  ), // Increased spacing since stats removed
+                  const SizedBox(height: 32),
                   _buildModesSection(context),
                   if (_selectedMode == 'Category Mode') ...[
                     const SizedBox(height: 24),

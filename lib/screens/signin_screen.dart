@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'signup_screen.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -13,6 +14,7 @@ class _SigninScreenState extends State<SigninScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
@@ -24,24 +26,33 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
-  void _navigateToSignup() {
-    Navigator.of(context).pushReplacementNamed('/signup');
-  }
-
+  // ✅ SINGLE _submitForm method with debugging
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
-      await _authService.signInWithEmailAndPassword(
+      print('🔐 Starting sign-in process...');
+
+      final user = await _authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
+
+      print('✅ Sign-in successful! User: ${user?.uid}');
+      print('📧 Email verified: ${user?.emailVerified}');
+
       if (_rememberMe) {
         await _authService.setRememberMe(true);
+        print('💾 Remember me set');
       }
-      if (!mounted) return;
+
+      // ✅ NO MANUAL NAVIGATION - AuthWrapper will handle it automatically
+      print('⏳ Waiting for AuthWrapper to redirect...');
     } catch (e) {
+      print('❌ Sign-in error: $e');
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -59,13 +70,27 @@ class _SigninScreenState extends State<SigninScreen> {
     }
   }
 
+  void _navigateToSignup() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const SignupScreen()),
+    );
+  }
+
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signInWithGoogle();
-      if (!mounted) return;
+      print('🔐 Starting Google sign-in...');
+
+      final user = await _authService.signInWithGoogle();
+
+      print('✅ Google sign-in successful! User: ${user?.uid}');
+      print('📧 Email verified: ${user?.emailVerified}');
+
+      // AuthWrapper will handle navigation automatically
     } catch (e) {
+      print('❌ Google sign-in error: $e');
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -87,6 +112,7 @@ class _SigninScreenState extends State<SigninScreen> {
     final resetEmailController = TextEditingController(
       text: _emailController.text,
     );
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -120,11 +146,14 @@ class _SigninScreenState extends State<SigninScreen> {
             onPressed: () async {
               final email = resetEmailController.text.trim();
               if (email.isEmpty) return;
+
               try {
                 await _authService.resetPassword(email);
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Row(
                       children: [
@@ -139,6 +168,8 @@ class _SigninScreenState extends State<SigninScreen> {
               } catch (e) {
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
+
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Error: ${e.toString()}'),
@@ -158,22 +189,19 @@ class _SigninScreenState extends State<SigninScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      // **ADD BACK BUTTON HERE**
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           color: const Color(0xFF1976D2),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            physics: const NeverScrollableScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             child: Card(
               elevation: 12,
               shadowColor: Colors.black.withAlpha(25),
@@ -189,6 +217,7 @@ class _SigninScreenState extends State<SigninScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Logo/Icon
                       Container(
                         width: 80,
                         height: 70,
@@ -203,6 +232,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      // Title
                       Text(
                         'Sign in to your\nAccount',
                         style: Theme.of(context).textTheme.headlineSmall
@@ -221,14 +252,11 @@ class _SigninScreenState extends State<SigninScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+
+                      // Google Sign-In Button
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: Image.asset(
-                          'assets/google_logo.png',
-                          width: 20,
-                          height: 20,
-                          fit: BoxFit.contain,
-                        ),
+                        icon: const Icon(Icons.g_mobiledata, size: 24),
                         label: const Text('Continue with Google'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -237,6 +265,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      // Divider
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.grey.shade300)),
@@ -251,6 +281,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
+
+                      // Email Field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -268,6 +300,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+
+                      // Password Field
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -295,6 +329,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
+
+                      // Remember Me & Forgot Password
                       Row(
                         children: [
                           Checkbox(
@@ -320,6 +356,8 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
+
+                      // Sign In Button
                       ElevatedButton(
                         onPressed: _isLoading ? null : _submitForm,
                         style: ElevatedButton.styleFrom(
@@ -337,6 +375,8 @@ class _SigninScreenState extends State<SigninScreen> {
                             : const Text('Log in'),
                       ),
                       const SizedBox(height: 24),
+
+                      // Sign Up Link
                       TextButton(
                         onPressed: _isLoading ? null : _navigateToSignup,
                         child: const Text('Don\'t have an account? Sign Up'),

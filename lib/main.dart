@@ -8,8 +8,9 @@ import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/auth_selection_screen.dart';
 import 'screens/verify_email_screen.dart';
+import 'screens/home_screen.dart'; // ✅ ADD THIS IMPORT
 import 'widgets/exit_confirmation_wrapper.dart';
-import 'widgets/auth_wrapper.dart'; // ADD THIS IMPORT
+import 'widgets/auth_wrapper.dart';
 import 'services/database_service.dart';
 import 'utils/seed_questions.dart';
 
@@ -28,15 +29,18 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
+    debugPrint('✅ Firebase initialized successfully');
 
     final dbService = DatabaseService();
     await dbService.initializeDatabase();
+    debugPrint('✅ Database initialized successfully');
 
     // Prevent duplicate question inserts
     final seeded = await dbService.getSetting('questionsSeeded');
     if (seeded != 'true') {
       await seedQuestionsFromAsset();
       await dbService.insertSetting('questionsSeeded', 'true');
+      debugPrint('✅ Questions seeded successfully');
     }
 
     // Remove native splash after initialization
@@ -44,7 +48,7 @@ void main() async {
 
     runApp(const MyApp());
   } catch (e) {
-    debugPrint('Firebase initialization error: $e');
+    debugPrint('❌ Firebase initialization error: $e');
     // Remove native splash on error
     FlutterNativeSplash.remove();
     runApp(ErrorApp(error: e.toString()));
@@ -180,7 +184,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      // ✅ FIXED: Use AuthWrapper instead of SplashScreen for proper auth handling
+      // ✅ Use AuthWrapper as home - this is correct
       home: const AuthWrapper(),
       routes: {
         '/signin': (context) => const SigninScreen(),
@@ -188,6 +192,7 @@ class MyApp extends StatelessWidget {
         '/verify-email': (context) => const VerifyEmailScreen(),
         '/splash': (context) => const SplashScreen(),
         '/auth-selection': (context) => const AuthSelectionScreen(),
+        '/home': (context) => const HomeScreen(), // ✅ ADD HOME ROUTE
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(builder: (context) => const NotFoundScreen());

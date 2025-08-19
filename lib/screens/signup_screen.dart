@@ -16,6 +16,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isValidatingEmail = false;
@@ -35,13 +36,13 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<bool> _isDisposableEmail(String email) async {
     try {
       final domain = email.split('@')[1].toLowerCase();
-      // Check against Kickbox API for disposable emails
       final response = await http
           .get(
             Uri.parse('https://open.kickbox.com/v1/disposable/$domain'),
             headers: {'Accept': 'application/json'},
           )
           .timeout(const Duration(seconds: 5));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['disposable'] == true;
@@ -55,6 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
   // Enhanced email validation with real-time checking
   Future<String?> _validateEmailWithApi(String email) async {
     if (email.isEmpty) return 'Please enter your email';
+
     // Basic format validation
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
@@ -91,15 +93,10 @@ class _SignupScreenState extends State<SignupScreen> {
         'invalid.com',
         'fake.com',
       ];
+
       if (blockedDomains.contains(domain)) {
         setState(() => _isValidatingEmail = false);
         return 'This email provider is not allowed';
-      }
-
-      // Validate MX record existence (basic check)
-      if (!await _checkEmailDomainExists(domain)) {
-        setState(() => _isValidatingEmail = false);
-        return 'Email domain does not exist';
       }
     } catch (e) {
       print('Email validation error: $e');
@@ -110,34 +107,10 @@ class _SignupScreenState extends State<SignupScreen> {
     return null;
   }
 
-  // Check if domain has MX record (simplified)
-  Future<bool> _checkEmailDomainExists(String domain) async {
-    try {
-      // Common valid domains check
-      final validDomains = [
-        'gmail.com',
-        'yahoo.com',
-        'outlook.com',
-        'hotmail.com',
-        'icloud.com',
-        'aol.com',
-        'live.com',
-        'msn.com',
-      ];
-      if (validDomains.contains(domain)) return true;
-      // For other domains, do a basic HTTP check
-      final response = await http
-          .head(Uri.parse('https://$domain'))
-          .timeout(const Duration(seconds: 3));
-      return response.statusCode < 400;
-    } catch (e) {
-      return false; // If domain check fails, consider it invalid
-    }
-  }
-
   // Enhanced client-side validation
   bool _isValidEmail(String email) {
     final lowercaseEmail = email.toLowerCase();
+
     // Block obvious fake patterns
     final invalidPatterns = [
       'test@',
@@ -162,54 +135,13 @@ class _SignupScreenState extends State<SignupScreen> {
       'ccccc',
       'ddddd',
       'eeeee',
-      'akjak',
-      'kaldkl',
-      'abcdef',
-      'qwerty',
-      'asdfgh',
     ];
+
     for (String pattern in invalidPatterns) {
       if (lowercaseEmail.contains(pattern)) return false;
     }
-    if (_hasSequentialChars(email)) return false;
-    if (_hasRepeatedChars(email)) return false;
+
     return true;
-  }
-
-  bool _hasSequentialChars(String email) {
-    final username = email.split('@')[0].toLowerCase();
-    for (int i = 0; i < username.length - 3; i++) {
-      String sequence = username.substring(i, i + 4);
-      if ([
-        'abcd',
-        'bcde',
-        'cdef',
-        'defg',
-        'efgh',
-        'fghi',
-        '1234',
-        '2345',
-        '3456',
-        '4567',
-        '5678',
-        '6789',
-      ].contains(sequence)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool _hasRepeatedChars(String email) {
-    final username = email.split('@')[0].toLowerCase();
-    for (int i = 0; i < username.length - 3; i++) {
-      if (username[i] == username[i + 1] &&
-          username[i] == username[i + 2] &&
-          username[i] == username[i + 3]) {
-        return true;
-      }
-    }
-    return false;
   }
 
   Future<void> _submitForm() async {
@@ -234,16 +166,16 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
-      // Only proceed if email passes all validations
       await _authService.signUpWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
+
       if (mounted) _showEmailVerificationDialog();
     } catch (e) {
-      // If Firebase signup fails, the fake email won't be stored
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -409,16 +341,13 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       resizeToAvoidBottomInset: true,
-      // **ADD BACK BUTTON HERE**
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           color: const Color(0xFF1976D2),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
@@ -470,6 +399,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
+
                             // Title
                             Text(
                               'Create your\nAccount',
@@ -488,6 +418,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
+
                             // Google Sign-In Button
                             OutlinedButton.icon(
                               onPressed: _isLoading ? null : _signInWithGoogle,
@@ -507,6 +438,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
+
                             // Divider
                             Row(
                               children: [
@@ -530,6 +462,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               ],
                             ),
                             const SizedBox(height: 24),
+
                             // Email Field with Real-time Validation
                             TextFormField(
                               controller: _emailController,
@@ -564,6 +497,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
+
                             // Password Field
                             TextFormField(
                               controller: _passwordController,
@@ -597,6 +531,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               },
                             ),
                             const SizedBox(height: 24),
+
                             // Sign Up Button
                             ElevatedButton(
                               onPressed: (_isLoading || _isValidatingEmail)
@@ -619,6 +554,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   : const Text('Sign Up'),
                             ),
                             const SizedBox(height: 24),
+
                             // Sign In Link
                             TextButton(
                               onPressed: _isLoading ? null : _navigateToSignin,

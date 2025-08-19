@@ -13,50 +13,81 @@ class AuthService with ChangeNotifier {
   // Firebase auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Sign up (Email/Password)
+  // Sign up with Email/Password
   Future<User?> signUpWithEmailAndPassword(
     String email,
     String password,
   ) async {
     try {
+      print('🔐 Creating user account...');
+
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
       final user = result.user;
+
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
+        print('📧 Verification email sent');
       }
+
+      print('✅ User account created: ${user?.uid}');
       return user;
     } on FirebaseAuthException catch (e) {
+      print('❌ Sign up error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
 
-  // Sign in (Email/Password)
+  // ✅ SINGLE Sign in with Email/Password method with proper verification check
   Future<User?> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
     try {
+      print('🔐 Attempting email/password sign-in...');
+
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       final user = result.user;
-      if (user != null && !user.emailVerified) {
-        throw Exception('Please verify your email before signing in');
+
+      print('✅ Firebase sign-in successful: ${user?.uid}');
+
+      // ✅ Force reload to get fresh user data
+      if (user != null) {
+        await user.reload();
+        final refreshedUser = _auth.currentUser;
+
+        print('📧 Email verified: ${refreshedUser?.emailVerified}');
+
+        if (refreshedUser != null && !refreshedUser.emailVerified) {
+          // Don't sign out immediately - let them verify first
+          print(
+            '⚠️ Email not verified, but keeping user signed in for verification flow',
+          );
+          // The AuthWrapper will redirect to VerifyEmailScreen
+        }
+
+        print('🔄 Notifying listeners of auth state change');
+        notifyListeners();
+        return refreshedUser;
       }
+
       return user;
     } on FirebaseAuthException catch (e) {
+      print('❌ Sign in error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
 
-  // Add these methods to your AuthService class
+  // Remember Me functionality
   Future<void> setRememberMe(bool remember) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('remember_me', remember);
+    print('💾 Remember me set to: $remember');
   }
 
   Future<bool> getRememberMe() async {
@@ -64,34 +95,41 @@ class AuthService with ChangeNotifier {
     return prefs.getBool('remember_me') ?? false;
   }
 
-  Future<bool> checkAuthState() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      await user.reload();
-      return user.emailVerified;
-    }
-    return false;
-  }
-
-  // Sign in with Google
+  // Google Sign-In
   Future<User?> signInWithGoogle() async {
     try {
+      print('🔐 Starting Google sign-in...');
+
       // Sign out first to prevent cached session issues
       await _googleSignIn.signOut();
 
       final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // User cancelled
+      if (googleUser == null) {
+        print('❌ Google sign-in cancelled by user');
+        return null; // User cancelled
+      }
+
+      print('✅ Google user obtained: ${googleUser.email}');
 
       final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       final result = await _auth.signInWithCredential(credential);
-      return result.user;
+      final user = result.user;
+
+      print('✅ Firebase credential sign-in successful: ${user?.uid}');
+      print('📧 Google user email verified: ${user?.emailVerified}');
+
+      notifyListeners();
+      return user;
     } on FirebaseAuthException catch (e) {
+      print('❌ Google sign-in Firebase error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     } catch (e) {
+      print('❌ Google sign-in general error: $e');
       throw Exception('Google sign-in failed: $e');
     }
   }
@@ -101,10 +139,11 @@ class AuthService with ChangeNotifier {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
       await user.sendEmailVerification();
+      print('📧 Email verification sent to: ${user.email}');
     }
   }
 
-  // Check if email verified (reloads user)
+  // Check if email is verified
   Future<bool> isEmailVerified() async {
     final user = _auth.currentUser;
     if (user != null) {
@@ -118,7 +157,9 @@ class AuthService with ChangeNotifier {
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
+      print('📧 Password reset email sent to: $email');
     } on FirebaseAuthException catch (e) {
+      print('❌ Password reset error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
@@ -133,6 +174,7 @@ class AuthService with ChangeNotifier {
       await user.updateDisplayName(displayName);
       await user.updatePhotoURL(photoURL);
       await user.reload();
+      notifyListeners();
     }
   }
 
@@ -141,6 +183,7 @@ class AuthService with ChangeNotifier {
     final user = _auth.currentUser;
     if (user != null) {
       await user.delete();
+      notifyListeners();
     }
   }
 
@@ -170,19 +213,20 @@ class AuthService with ChangeNotifier {
   // Sign out
   Future<void> signOut() async {
     try {
+      print('🚪 Signing out...');
       await _googleSignIn.signOut();
     } catch (_) {
       // Ignore Google sign-out errors
     }
     await _auth.signOut();
+    print('✅ Sign out complete');
+    notifyListeners();
   }
 
   // User info getters
   String? get userDisplayName => _auth.currentUser?.displayName;
   String? get userEmail => _auth.currentUser?.email;
   String? get userPhotoURL => _auth.currentUser?.photoURL;
-
-  // Simple sign-in checks
   bool get isSignedIn => _auth.currentUser != null;
 
   // Google sign-in status

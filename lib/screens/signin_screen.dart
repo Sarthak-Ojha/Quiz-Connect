@@ -26,7 +26,7 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
-  // ✅ SINGLE _submitForm method with debugging
+  // ✅ FIXED _submitForm method - Let AuthWrapper handle navigation
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -40,19 +40,20 @@ class _SigninScreenState extends State<SigninScreen> {
       );
 
       print('✅ Sign-in successful! User: ${user?.uid}');
-      print('📧 Email verified: ${user?.emailVerified}');
 
       if (_rememberMe) {
         await _authService.setRememberMe(true);
         print('💾 Remember me set');
       }
 
-      // ✅ NO MANUAL NAVIGATION - AuthWrapper will handle it automatically
+      // ✅ DON'T clear loading - AuthWrapper will handle redirect
       print('⏳ Waiting for AuthWrapper to redirect...');
     } catch (e) {
       print('❌ Sign-in error: $e');
-      if (!mounted) return;
+      // Only clear loading state on error
+      if (mounted) setState(() => _isLoading = false);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -65,17 +66,19 @@ class _SigninScreenState extends State<SigninScreen> {
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+    // ✅ No finally block - let AuthWrapper handle success
   }
 
   void _navigateToSignup() {
-    Navigator.of(context).pushReplacement(
+    Navigator.pushReplacement(
+      // ✅ CHANGED TO pushReplacement
+      context,
       MaterialPageRoute(builder: (context) => const SignupScreen()),
     );
   }
 
+  // ✅ FIXED _signInWithGoogle method - Let AuthWrapper handle navigation
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
@@ -84,13 +87,15 @@ class _SigninScreenState extends State<SigninScreen> {
       final user = await _authService.signInWithGoogle();
 
       print('✅ Google sign-in successful! User: ${user?.uid}');
-      print('📧 Email verified: ${user?.emailVerified}');
 
-      // AuthWrapper will handle navigation automatically
+      // ✅ DON'T clear loading - AuthWrapper will handle redirect
+      print('⏳ Waiting for AuthWrapper to redirect...');
     } catch (e) {
       print('❌ Google sign-in error: $e');
-      if (!mounted) return;
+      // Only clear loading state on error
+      if (mounted) setState(() => _isLoading = false);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -103,9 +108,8 @@ class _SigninScreenState extends State<SigninScreen> {
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+    // ✅ No finally block - let AuthWrapper handle success
   }
 
   void _showForgotPasswordDialog() {

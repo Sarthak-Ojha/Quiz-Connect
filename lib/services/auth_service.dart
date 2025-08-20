@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
 
   // Current Firebase user
   User? get currentUser => _auth.currentUser;
@@ -19,7 +18,7 @@ class AuthService with ChangeNotifier {
     String password,
   ) async {
     try {
-      print('🔐 Creating user account...');
+      debugPrint('🔐 Creating user account...');
 
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -29,24 +28,24 @@ class AuthService with ChangeNotifier {
 
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
-        print('📧 Verification email sent');
+        debugPrint('📧 Verification email sent');
       }
 
-      print('✅ User account created: ${user?.uid}');
+      debugPrint('✅ User account created: ${user?.uid}');
       return user;
     } on FirebaseAuthException catch (e) {
-      print('❌ Sign up error: ${e.code} - ${e.message}');
+      debugPrint('❌ Sign up error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
 
-  // ✅ SINGLE Sign in with Email/Password method with proper verification check
+  // Sign in with Email/Password
   Future<User?> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
     try {
-      print('🔐 Attempting email/password sign-in...');
+      debugPrint('🔐 Attempting email/password sign-in...');
 
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -54,31 +53,28 @@ class AuthService with ChangeNotifier {
       );
       final user = result.user;
 
-      print('✅ Firebase sign-in successful: ${user?.uid}');
+      debugPrint('✅ Firebase sign-in successful: ${user?.uid}');
 
-      // ✅ Force reload to get fresh user data
       if (user != null) {
         await user.reload();
         final refreshedUser = _auth.currentUser;
 
-        print('📧 Email verified: ${refreshedUser?.emailVerified}');
+        debugPrint('📧 Email verified: ${refreshedUser?.emailVerified}');
 
         if (refreshedUser != null && !refreshedUser.emailVerified) {
-          // Don't sign out immediately - let them verify first
-          print(
+          debugPrint(
             '⚠️ Email not verified, but keeping user signed in for verification flow',
           );
-          // The AuthWrapper will redirect to VerifyEmailScreen
         }
 
-        print('🔄 Notifying listeners of auth state change');
+        debugPrint('🔄 Notifying listeners of auth state change');
         notifyListeners();
         return refreshedUser;
       }
 
       return user;
     } on FirebaseAuthException catch (e) {
-      print('❌ Sign in error: ${e.code} - ${e.message}');
+      debugPrint('❌ Sign in error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
@@ -87,7 +83,7 @@ class AuthService with ChangeNotifier {
   Future<void> setRememberMe(bool remember) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('remember_me', remember);
-    print('💾 Remember me set to: $remember');
+    debugPrint('💾 Remember me set to: $remember');
   }
 
   Future<bool> getRememberMe() async {
@@ -95,41 +91,69 @@ class AuthService with ChangeNotifier {
     return prefs.getBool('remember_me') ?? false;
   }
 
-  // Google Sign-In
+  // Google Sign-In - UPDATED with your serverClientId
   Future<User?> signInWithGoogle() async {
     try {
-      print('🔐 Starting Google sign-in...');
+      debugPrint('🔐 Starting Google sign-in...');
 
-      // Sign out first to prevent cached session issues
-      await _googleSignIn.signOut();
+      // Step 1: Initialize Google Sign In with your Web Client ID
+      await GoogleSignIn.instance.initialize(
+        serverClientId:
+            '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
+      );
 
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        print('❌ Google sign-in cancelled by user');
-        return null; // User cancelled
+      // Step 2: Authenticate the user
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
+
+      debugPrint('✅ Google user obtained: ${googleUser.email}');
+
+      // Step 3: Get the authentication details from the request
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+
+      // Step 4: Get authorization headers with null safety
+      final Map<String, String>? authHeaders = await googleUser
+          .authorizationClient
+          .authorizationHeaders(['email', 'profile']);
+
+      // Handle null case for authorization headers
+      if (authHeaders == null) {
+        debugPrint('❌ Failed to get authorization headers');
+        throw Exception('Failed to get Google authorization');
       }
 
-      print('✅ Google user obtained: ${googleUser.email}');
+      // Step 5: Extract access token safely
+      final String? bearerToken = authHeaders['Authorization'];
+      final String? accessToken = bearerToken?.replaceFirst('Bearer ', '');
 
-      final googleAuth = await googleUser.authentication;
+      if (accessToken == null) {
+        debugPrint('❌ No access token found in authorization headers');
+        throw Exception('Failed to get access token from Google');
+      }
+
+      // Step 6: Create Firebase credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
+        accessToken: accessToken,
         idToken: googleAuth.idToken,
       );
 
+      // Step 7: Sign in to Firebase with the credential
       final result = await _auth.signInWithCredential(credential);
       final user = result.user;
 
-      print('✅ Firebase credential sign-in successful: ${user?.uid}');
-      print('📧 Google user email verified: ${user?.emailVerified}');
+      debugPrint('✅ Firebase credential sign-in successful: ${user?.uid}');
+      debugPrint('📧 Google user email verified: ${user?.emailVerified}');
 
       notifyListeners();
       return user;
+    } on GoogleSignInException catch (e) {
+      debugPrint('❌ Google sign-in error: ${e.code.name} - ${e.description}');
+      throw Exception('Google sign-in failed: ${e.description}');
     } on FirebaseAuthException catch (e) {
-      print('❌ Google sign-in Firebase error: ${e.code} - ${e.message}');
+      debugPrint('❌ Firebase auth error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     } catch (e) {
-      print('❌ Google sign-in general error: $e');
+      debugPrint('❌ Unexpected sign-in error: $e');
       throw Exception('Google sign-in failed: $e');
     }
   }
@@ -139,7 +163,7 @@ class AuthService with ChangeNotifier {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
       await user.sendEmailVerification();
-      print('📧 Email verification sent to: ${user.email}');
+      debugPrint('📧 Email verification sent to: ${user.email}');
     }
   }
 
@@ -157,9 +181,9 @@ class AuthService with ChangeNotifier {
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      print('📧 Password reset email sent to: $email');
+      debugPrint('📧 Password reset email sent to: $email');
     } on FirebaseAuthException catch (e) {
-      print('❌ Password reset error: ${e.code} - ${e.message}');
+      debugPrint('❌ Password reset error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
     }
   }
@@ -210,16 +234,20 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Sign out
+  // Sign out - Updated for v7.x
   Future<void> signOut() async {
     try {
-      print('🚪 Signing out...');
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Ignore Google sign-out errors
+      debugPrint('🚪 Signing out...');
+
+      // Sign out from Google
+      await GoogleSignIn.instance.signOut();
+    } catch (e) {
+      debugPrint('Google sign-out error: $e');
     }
+
+    // Sign out from Firebase
     await _auth.signOut();
-    print('✅ Sign out complete');
+    debugPrint('✅ Sign out complete');
     notifyListeners();
   }
 
@@ -231,7 +259,8 @@ class AuthService with ChangeNotifier {
 
   // Google sign-in status
   Future<bool> get isGoogleSignedIn async {
-    return await _googleSignIn.isSignedIn();
+    // Simplified approach - check Firebase auth state
+    return _auth.currentUser != null;
   }
 
   // Handle Firebase Auth exceptions

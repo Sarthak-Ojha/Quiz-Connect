@@ -23,15 +23,15 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
       vsync: this,
     );
 
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+    _slideAnimation = Tween(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
           CurvedAnimation(
             parent: _animationController,
             curve: Curves.easeOutCubic,
           ),
         );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
@@ -55,7 +55,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
             position: _slideAnimation,
             child: Column(
               children: [
-                // Top section with plant illustration
+                // Top section with quiz illustration
                 Expanded(
                   flex: 2,
                   child: Center(
@@ -113,13 +113,14 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Login Button
+                          // Login Button - ✅ CHANGED TO pushReplacement
                           SizedBox(
                             width: double.infinity,
                             height: 56,
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
+                                  // ✅ FIXED
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const SigninScreen(),
@@ -145,13 +146,14 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                           ),
                           const SizedBox(height: 16),
 
-                          // Register Button
+                          // Register Button - ✅ CHANGED TO pushReplacement
                           SizedBox(
                             width: double.infinity,
                             height: 56,
                             child: OutlinedButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
+                                  // ✅ FIXED
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => const SignupScreen(),

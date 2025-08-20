@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/auth_service.dart';
+import 'signin_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -29,7 +30,11 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _navigateToSignin() {
-    Navigator.of(context).pushReplacementNamed('/signin');
+    Navigator.pushReplacement(
+      // ✅ CHANGED TO pushReplacement
+      context,
+      MaterialPageRoute(builder: (context) => const SigninScreen()),
+    );
   }
 
   // Check if email domain is disposable/temporary
@@ -144,6 +149,7 @@ class _SignupScreenState extends State<SignupScreen> {
     return true;
   }
 
+  // ✅ FIXED _submitForm method
   Future<void> _submitForm() async {
     // Validate email first
     final emailError = await _validateEmailWithApi(
@@ -173,9 +179,11 @@ class _SignupScreenState extends State<SignupScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-
       if (mounted) _showEmailVerificationDialog();
     } catch (e) {
+      // Only clear loading on error
+      if (mounted) setState(() => _isLoading = false);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -189,9 +197,8 @@ class _SignupScreenState extends State<SignupScreen> {
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+    // ✅ No finally block - let dialog handle state
   }
 
   void _showEmailVerificationDialog() {
@@ -271,6 +278,7 @@ class _SignupScreenState extends State<SignupScreen> {
             onPressed: () async {
               await FirebaseAuth.instance.currentUser?.reload();
               final user = FirebaseAuth.instance.currentUser;
+
               if (user != null && user.emailVerified) {
                 Navigator.of(dialogContext).pop();
                 _navigateToSignin();
@@ -312,12 +320,18 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  // ✅ FIXED _signInWithGoogle method
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
       await _authService.signInWithGoogle();
-      if (!mounted) return;
+
+      // ✅ DON'T clear loading - AuthWrapper will handle redirect
+      print('⏳ Waiting for AuthWrapper to redirect...');
     } catch (e) {
+      // Only clear loading on error
+      if (mounted) setState(() => _isLoading = false);
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -331,9 +345,8 @@ class _SignupScreenState extends State<SignupScreen> {
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+    // ✅ No finally block - let AuthWrapper handle success
   }
 
   @override
@@ -422,12 +435,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             // Google Sign-In Button
                             OutlinedButton.icon(
                               onPressed: _isLoading ? null : _signInWithGoogle,
-                              icon: Image.asset(
-                                'assets/google_logo.png',
-                                width: 20,
-                                height: 20,
-                                fit: BoxFit.contain,
-                              ),
+                              icon: const Icon(Icons.g_mobiledata, size: 24),
                               label: const Text('Continue with Google'),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(

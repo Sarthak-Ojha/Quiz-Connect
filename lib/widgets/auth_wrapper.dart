@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../screens/home_screen.dart';
 import '../screens/auth_selection_screen.dart';
 import '../screens/verify_email_screen.dart';
 import '../screens/splash_screen.dart';
 
-class AuthWrapper extends StatefulWidget {
+class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
-  @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
-
-class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -44,16 +38,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error, size: 64, color: Colors.red),
-                  SizedBox(height: 16),
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
                   Text('Authentication Error: ${snapshot.error}'),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () {
-                      // Force rebuild
-                      setState(() {});
-                    },
-                    child: Text('Retry'),
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                    ),
+                    child: const Text('Retry'),
                   ),
                 ],
               ),
@@ -65,6 +58,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
         if (snapshot.hasData && snapshot.data != null) {
           final user = snapshot.data!;
           debugPrint('✅ AuthWrapper: User authenticated = ${user.uid}');
+          debugPrint('📧 AuthWrapper: Email verified = ${user.emailVerified}');
+          debugPrint(
+            '🔍 AuthWrapper: Provider data = ${user.providerData.map((p) => p.providerId).toList()}',
+          );
 
           // Check if email is verified OR if it's a Google sign-in user
           bool isEmailVerified = user.emailVerified;

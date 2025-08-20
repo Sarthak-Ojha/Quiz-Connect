@@ -8,10 +8,12 @@ import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/auth_selection_screen.dart';
 import 'screens/verify_email_screen.dart';
-import 'screens/home_screen.dart'; // ✅ ADD THIS IMPORT
+import 'screens/home_screen.dart';
 import 'widgets/exit_confirmation_wrapper.dart';
 import 'widgets/auth_wrapper.dart';
 import 'services/database_service.dart';
+import 'services/notification_service.dart';
+import 'services/theme_service.dart'; // ADD THIS LINE
 import 'utils/seed_questions.dart';
 
 void main() async {
@@ -31,6 +33,14 @@ void main() async {
     await Firebase.initializeApp();
     debugPrint('✅ Firebase initialized successfully');
 
+    // Initialize theme service - ADD THIS LINE
+    await ThemeService().initialize();
+    debugPrint('🎨 Theme service initialized successfully');
+
+    // Initialize notification service
+    await NotificationService().initialize();
+    debugPrint('📱 Notification service initialized successfully');
+
     final dbService = DatabaseService();
     await dbService.initializeDatabase();
     debugPrint('✅ Database initialized successfully');
@@ -45,7 +55,6 @@ void main() async {
 
     // Remove native splash after initialization
     FlutterNativeSplash.remove();
-
     runApp(const MyApp());
   } catch (e) {
     debugPrint('❌ Firebase initialization error: $e');
@@ -55,147 +64,304 @@ void main() async {
   }
 }
 
+// UPDATED MyApp class with theme provider
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Quiz Master',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1976D2),
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          elevation: 0,
-          scrolledUnderElevation: 2,
-          backgroundColor: Color(0xFF1976D2),
-          foregroundColor: Colors.white,
-          titleTextStyle: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 8,
-          shadowColor: Colors.black.withAlpha(25),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          color: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1976D2),
-            foregroundColor: Colors.white,
-            elevation: 2,
-            shadowColor: Colors.blue.withAlpha(77),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return ListenableBuilder(
+      listenable: ThemeService(),
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Quiz Master',
+          debugShowCheckedModeBanner: false,
+
+          // ✅ LIGHT THEME
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1976D2),
+              brightness: Brightness.light,
             ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+            appBarTheme: const AppBarTheme(
+              centerTitle: true,
+              elevation: 0,
+              scrolledUnderElevation: 2,
+              backgroundColor: Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              titleTextStyle: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              elevation: 8,
+              shadowColor: Colors.black.withAlpha(25),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              color: Colors.white,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shadowColor: Colors.blue.withAlpha(77),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF1976D2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: const BorderSide(color: Color(0xFF1976D2), width: 1.5),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1976D2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFFF5F7FA),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1976D2),
+                  width: 2,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 20,
+              ),
+              labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            ),
+            snackBarTheme: SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: const Color(0xFF1976D2),
+              contentTextStyle: const TextStyle(color: Colors.white),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Color(0xFF1976D2),
+              unselectedItemColor: Colors.grey,
+              backgroundColor: Colors.white,
+              elevation: 8,
             ),
           ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF1976D2),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+
+          // ✅ DARK THEME
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1976D2),
+              brightness: Brightness.dark,
             ),
-            side: const BorderSide(color: Color(0xFF1976D2), width: 1.5),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            scaffoldBackgroundColor: const Color(0xFF121212),
+            appBarTheme: const AppBarTheme(
+              centerTitle: true,
+              elevation: 0,
+              scrolledUnderElevation: 2,
+              backgroundColor: Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              titleTextStyle: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              elevation: 8,
+              shadowColor: Colors.black.withAlpha(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              color: const Color(0xFF1E1E1E),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shadowColor: Colors.blue.withAlpha(77),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF42A5F5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF42A5F5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF2A2A2A),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF424242)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF424242)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF42A5F5),
+                  width: 2,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.red, width: 2),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 20,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFFBDBDBD),
+                fontSize: 16,
+              ),
+              hintStyle: const TextStyle(
+                color: Color(0xFF757575),
+                fontSize: 16,
+              ),
+            ),
+            snackBarTheme: SnackBarThemeData(
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: const Color(0xFF1976D2),
+              contentTextStyle: const TextStyle(color: Colors.white),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: Color(0xFF42A5F5),
+              unselectedItemColor: Color(0xFF757575),
+              backgroundColor: Color(0xFF1E1E1E),
+              elevation: 8,
             ),
           ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF1976D2),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF5F7FA),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF1976D2), width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.red, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 20,
-          ),
-          labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-        ),
-        snackBarTheme: SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF1976D2),
-          contentTextStyle: const TextStyle(color: Colors.white),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: Color(0xFF1976D2),
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          elevation: 8,
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1976D2),
-          brightness: Brightness.dark,
-        ),
-      ),
-      themeMode: ThemeMode.system,
-      // ✅ Use AuthWrapper as home - this is correct
-      home: const AuthWrapper(),
-      routes: {
-        '/signin': (context) => const SigninScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/verify-email': (context) => const VerifyEmailScreen(),
-        '/splash': (context) => const SplashScreen(),
-        '/auth-selection': (context) => const AuthSelectionScreen(),
-        '/home': (context) => const HomeScreen(), // ✅ ADD HOME ROUTE
-      },
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(builder: (context) => const NotFoundScreen());
+
+          // ✅ USE THEME SERVICE
+          themeMode: ThemeService().themeMode,
+
+          // ✅ Use AuthWrapper as home
+          home: const AuthWrapper(),
+          routes: {
+            '/signin': (context) => const SigninScreen(),
+            '/signup': (context) => const SignupScreen(),
+            '/verify-email': (context) => const VerifyEmailScreen(),
+            '/splash': (context) => const SplashScreen(),
+            '/auth-selection': (context) => const AuthSelectionScreen(),
+            '/home': (context) => const HomeScreen(),
+          },
+          onUnknownRoute: (settings) {
+            return MaterialPageRoute(
+              builder: (context) => const NotFoundScreen(),
+            );
+          },
+        );
       },
     );
   }
@@ -204,7 +370,6 @@ class MyApp extends StatelessWidget {
 // Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {
   final String error;
-
   const ErrorApp({super.key, required this.error});
 
   @override
@@ -249,7 +414,6 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -334,7 +498,6 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(title: const Text('Page Not Found')),
       body: Center(
         child: Card(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 import '../services/auth_service.dart';
 import 'signin_screen.dart';
 
@@ -31,13 +32,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _navigateToSignin() {
     Navigator.pushReplacement(
-      // ✅ CHANGED TO pushReplacement
       context,
       MaterialPageRoute(builder: (context) => const SigninScreen()),
     );
   }
 
-  // Check if email domain is disposable/temporary
   Future<bool> _isDisposableEmail(String email) async {
     try {
       final domain = email.split('@')[1].toLowerCase();
@@ -47,76 +46,16 @@ class _SignupScreenState extends State<SignupScreen> {
             headers: {'Accept': 'application/json'},
           )
           .timeout(const Duration(seconds: 5));
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['disposable'] == true;
       }
-    } catch (e) {
-      print('Error checking disposable email: $e');
-    }
+    } catch (_) {}
     return false;
   }
 
-  // Enhanced email validation with real-time checking
-  Future<String?> _validateEmailWithApi(String email) async {
-    if (email.isEmpty) return 'Please enter your email';
-
-    // Basic format validation
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-    if (!emailRegex.hasMatch(email)) {
-      return 'Please enter a valid email format';
-    }
-
-    // Check against common fake patterns
-    if (!_isValidEmail(email)) {
-      return 'Please enter a real email address';
-    }
-
-    setState(() => _isValidatingEmail = true);
-    try {
-      // Check if it's a disposable email
-      final isDisposable = await _isDisposableEmail(email);
-      if (isDisposable) {
-        setState(() => _isValidatingEmail = false);
-        return 'Temporary/disposable emails are not allowed';
-      }
-
-      // Check against common invalid domains
-      final domain = email.split('@')[1].toLowerCase();
-      final blockedDomains = [
-        'tempmail.org',
-        '10minutemail.com',
-        'guerrillamail.com',
-        'mailinator.com',
-        'throwaway.email',
-        'temp-mail.org',
-        'example.com',
-        'test.com',
-        'invalid.com',
-        'fake.com',
-      ];
-
-      if (blockedDomains.contains(domain)) {
-        setState(() => _isValidatingEmail = false);
-        return 'This email provider is not allowed';
-      }
-    } catch (e) {
-      print('Email validation error: $e');
-    } finally {
-      setState(() => _isValidatingEmail = false);
-    }
-
-    return null;
-  }
-
-  // Enhanced client-side validation
-  bool _isValidEmail(String email) {
+  bool _isValidEmailPattern(String email) {
     final lowercaseEmail = email.toLowerCase();
-
-    // Block obvious fake patterns
     final invalidPatterns = [
       'test@',
       'fake@',
@@ -135,27 +74,63 @@ class _SignupScreenState extends State<SignupScreen> {
       'hjkl',
       'random',
       'abc123',
-      'aaaaa',
-      'bbbbb',
-      'ccccc',
-      'ddddd',
-      'eeeee',
     ];
-
-    for (String pattern in invalidPatterns) {
-      if (lowercaseEmail.contains(pattern)) return false;
+    for (final p in invalidPatterns) {
+      if (lowercaseEmail.contains(p)) return false;
     }
-
     return true;
   }
 
-  // ✅ FIXED _submitForm method
+  Future<String?> _validateEmailWithApi(String email) async {
+    if (email.isEmpty) return 'Please enter your email';
+
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (!emailRegex.hasMatch(email)) return 'Please enter a valid email format';
+
+    if (!_isValidEmailPattern(email)) {
+      return 'Please enter a real email address';
+    }
+
+    setState(() => _isValidatingEmail = true);
+    try {
+      final isDisposable = await _isDisposableEmail(email);
+      if (isDisposable) {
+        return 'Temporary/disposable emails are not allowed';
+      }
+
+      final domain = email.split('@')[1].toLowerCase();
+      const blockedDomains = {
+        'tempmail.org',
+        '10minutemail.com',
+        'guerrillamail.com',
+        'mailinator.com',
+        'throwaway.email',
+        'temp-mail.org',
+        'example.com',
+        'test.com',
+        'invalid.com',
+        'fake.com',
+      };
+      if (blockedDomains.contains(domain)) {
+        return 'This email provider is not allowed';
+      }
+    } catch (_) {
+      // Ignore network validation errors for UX
+    } finally {
+      if (mounted) setState(() => _isValidatingEmail = false);
+    }
+
+    return null;
+  }
+
   Future<void> _submitForm() async {
-    // Validate email first
     final emailError = await _validateEmailWithApi(
       _emailController.text.trim(),
     );
     if (emailError != null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -181,9 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       if (mounted) _showEmailVerificationDialog();
     } catch (e) {
-      // Only clear loading on error
       if (mounted) setState(() => _isLoading = false);
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -191,14 +164,13 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               const Icon(Icons.error, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text('Signup failed: ${e.toString()}')),
+              Expanded(child: Text('Signup failed: $e')),
             ],
           ),
           backgroundColor: Colors.red,
         ),
       );
     }
-    // ✅ No finally block - let dialog handle state
   }
 
   void _showEmailVerificationDialog() {
@@ -217,7 +189,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 _navigateToSignin();
               },
               icon: const Icon(Icons.close),
-              tooltip: 'Close',
               style: IconButton.styleFrom(
                 backgroundColor: Colors.grey.shade100,
                 foregroundColor: Colors.grey.shade700,
@@ -232,7 +203,7 @@ class _SignupScreenState extends State<SignupScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFF1976D2).withValues(alpha: 0.1),
+                color: const Color(0xFF1976D2).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -278,25 +249,25 @@ class _SignupScreenState extends State<SignupScreen> {
             onPressed: () async {
               await FirebaseAuth.instance.currentUser?.reload();
               final user = FirebaseAuth.instance.currentUser;
-
               if (user != null && user.emailVerified) {
+                if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
                 _navigateToSignin();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Email verified successfully! Please sign in.'),
-                        ],
-                      ),
-                      backgroundColor: Colors.green,
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Email verified successfully! Please sign in.'),
+                      ],
                     ),
-                  );
-                }
+                    backgroundColor: Colors.green,
+                  ),
+                );
               } else {
+                if (!dialogContext.mounted) return;
                 ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(
                     content: Row(
@@ -320,18 +291,13 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  // ✅ FIXED _signInWithGoogle method
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
       await _authService.signInWithGoogle();
-
-      // ✅ DON'T clear loading - AuthWrapper will handle redirect
-      print('⏳ Waiting for AuthWrapper to redirect...');
+      // AuthWrapper will redirect
     } catch (e) {
-      // Only clear loading on error
       if (mounted) setState(() => _isLoading = false);
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -339,14 +305,13 @@ class _SignupScreenState extends State<SignupScreen> {
             children: [
               const Icon(Icons.error, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
+              Expanded(child: Text('Google Sign-In failed: $e')),
             ],
           ),
           backgroundColor: Colors.red,
         ),
       );
     }
-    // ✅ No finally block - let AuthWrapper handle success
   }
 
   @override
@@ -385,7 +350,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   Card(
                     elevation: 12,
-                    shadowColor: Colors.black.withAlpha(25),
+                    shadowColor: Colors.black.withOpacity(0.1),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -397,12 +362,11 @@ class _SignupScreenState extends State<SignupScreen> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Logo/Icon
                             Container(
                               width: 80,
                               height: 70,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1976D2).withAlpha(25),
+                                color: const Color(0xFF1976D2).withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -412,8 +376,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
-
-                            // Title
                             Text(
                               'Create your\nAccount',
                               style: Theme.of(context).textTheme.headlineSmall
@@ -431,8 +393,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
-
-                            // Google Sign-In Button
                             OutlinedButton.icon(
                               onPressed: _isLoading ? null : _signInWithGoogle,
                               icon: const Icon(Icons.g_mobiledata, size: 24),
@@ -446,8 +406,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
-
-                            // Divider
                             Row(
                               children: [
                                 Expanded(
@@ -470,8 +428,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               ],
                             ),
                             const SizedBox(height: 24),
-
-                            // Email Field with Real-time Validation
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
@@ -505,8 +461,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-
-                            // Password Field
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
@@ -520,12 +474,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ? Icons.visibility_outlined
                                         : Icons.visibility_off_outlined,
                                   ),
-                                  onPressed: () {
-                                    setState(
-                                      () =>
-                                          _obscurePassword = !_obscurePassword,
-                                    );
-                                  },
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                 ),
                               ),
                               validator: (value) {
@@ -539,8 +490,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               },
                             ),
                             const SizedBox(height: 24),
-
-                            // Sign Up Button
                             ElevatedButton(
                               onPressed: (_isLoading || _isValidatingEmail)
                                   ? null
@@ -562,8 +511,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                   : const Text('Sign Up'),
                             ),
                             const SizedBox(height: 24),
-
-                            // Sign In Link
                             TextButton(
                               onPressed: _isLoading ? null : _navigateToSignin,
                               child: const Text(

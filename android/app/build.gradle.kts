@@ -59,24 +59,22 @@ android {
         }
     }
 
-    buildTypes {
-        debug {
-            signingConfig = signingConfigs.getByName("debug")
-            isDebuggable = true
-            isMinifyEnabled = false
-            isShrinkResources = false
-        }
+   buildTypes {
+    release {
+        isMinifyEnabled = true
+        isShrinkResources = true
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+        signingConfig = signingConfigs.getByName("debug") // Use debug for now
         
-        release {
-            // Use debug signing for testing phase
-            signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
-            
-            // Uncomment below line when you have proper release keystore
-            // signingConfig = signingConfigs.getByName("release")
-        }
+        // Add these for better APK optimization
+        isDebuggable = false
+        renderscriptOptimLevel = 3
     }
+}
+
 }
 
 flutter {

@@ -1,17 +1,13 @@
-// lib/widgets/exit_confirmation_wrapper.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class ExitConfirmationWrapper extends StatefulWidget {
-  // Changed to StatefulWidget
   final Widget child;
   final String title;
   final String message;
   final bool enableDoubleBackToExit;
 
   const ExitConfirmationWrapper({
-    // Now const is valid since all fields are final
     required this.child,
     this.title = 'Exit Quiz Master',
     this.message = 'Are you sure you want to exit the app?',
@@ -25,22 +21,18 @@ class ExitConfirmationWrapper extends StatefulWidget {
 }
 
 class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
-  DateTime? _lastBackPressed; // Now this is an instance variable of the State
+  DateTime? _lastBackPressed;
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // Updated for Material 3
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
-        // Fixed: Use onPopInvokedWithResult instead of deprecated onPopInvoked
         if (!didPop) {
           final shouldExit = widget.enableDoubleBackToExit
               ? await _handleDoubleBackToExit()
               : await _showExitDialog();
-
           if (shouldExit && mounted) {
-            // Use mounted directly in StatefulWidget
             SystemNavigator.pop();
           }
         }
@@ -50,8 +42,7 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
   }
 
   Future<bool> _showExitDialog() async {
-    if (!mounted) return false; // Check mounted before showing dialog
-
+    if (!mounted) return false;
     final shouldExit = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -61,7 +52,7 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
         icon: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.1),
+            color: Colors.orange.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -96,9 +87,6 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
             child: Text(
               'Cancel',
               style: TextStyle(
@@ -137,7 +125,6 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
         now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
       _lastBackPressed = now;
       if (mounted) {
-        // Check mounted before using context
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Row(

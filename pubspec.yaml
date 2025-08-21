@@ -52,13 +52,12 @@ flutter:
   assets:
     - assets/google_logo.png
     - assets/questions.json
-    
+
 flutter_native_splash:
   color: "#1976D2"
   image: assets/splash_icon.png
   android_12:
-    color: "#1976D2"
+    color: "#1976D2" 
     icon_background_color: "#1976D2"
   android: true
-  ios: true
   web: false

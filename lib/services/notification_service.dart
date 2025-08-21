@@ -1,9 +1,9 @@
-import 'dart:io';
+import 'dart:io'; // ✅ ADD THIS IMPORT
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -13,96 +13,146 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  // Channel configuration
+  static const String channelId = 'quiz_reminders';
+  static const String channelName = 'Quiz Reminders';
+  static const String channelDescription = 'Silent quiz reminder notifications';
+
   // Notification IDs for different times
   static const int morningNotificationId = 1001;
   static const int afternoonNotificationId = 1002;
   static const int eveningNotificationId = 1003;
 
-  /// Initialize the notification service
+  /// Initialize the notification service (Android-only, device local time)
   Future<void> initialize() async {
     try {
-      // Initialize timezone data
+      // Load timezone database - tz.local will reflect device time zone
       tz.initializeTimeZones();
-      tz.setLocalLocation(tz.getLocation('Asia/Kathmandu'));
 
-      // Initialize notifications
-      await _initializeNotifications();
+      debugPrint('📱 Device timezone: ${DateTime.now().timeZoneName}');
+      debugPrint('📱 TZ local time: ${tz.TZDateTime.now(tz.local)}');
 
-      // Request permissions
-      await _requestPermissions();
+      // Android-only initialization
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings settings = InitializationSettings(
+        android: androidSettings,
+      );
 
-      debugPrint('📱 Notification service initialized successfully');
+      await _notifications.initialize(
+        settings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
+
+      // Create notification channels
+      await createNotificationChannels();
+
+      // Request permissions for Android 13+
+      await _requestAndroidPermission();
+      await requestExactAlarmPermission();
+
+      final localTime = tz.TZDateTime.now(tz.local);
+      debugPrint('📱 Notification service initialized (Android-only)');
+      debugPrint('📱 Local timezone: ${localTime.timeZoneName}');
+      debugPrint('📱 Current local time: ${localTime.toString()}');
     } catch (e) {
       debugPrint('❌ Error initializing notification service: $e');
     }
   }
 
-  /// Initialize notification settings
-  Future<void> _initializeNotifications() async {
-    // Android settings - completely silent
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+  /// Create notification channels for Android
+  Future<void> createNotificationChannels() async {
+    if (!Platform.isAndroid) return;
 
-    // iOS settings - completely silent
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: false, // No sound
-        );
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
-    // Combined settings
-    const InitializationSettings settings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
+    if (androidPlugin == null) return;
+
+    // Quiz reminder channel (silent)
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        channelId,
+        channelName,
+        description: channelDescription,
+        importance: Importance.low, // Silent notifications
+        playSound: false,
+        enableVibration: false,
+        showBadge: true,
+        enableLights: false,
+      ),
     );
 
-    // Initialize with callback for when notification is tapped
-    await _notifications.initialize(
-      settings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
+    // Achievement channel (with sound)
+    await androidPlugin.createNotificationChannel(
+      const AndroidNotificationChannel(
+        'achievements',
+        'Achievements',
+        description: 'Quiz achievement notifications',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+        enableLights: true,
+      ),
     );
+
+    debugPrint('📱 Notification channels created successfully');
   }
 
   /// Handle notification tap when app is running
-  void _onNotificationTapped(NotificationResponse response) async {
-    debugPrint('Silent notification tapped: ${response.payload}');
-    // No vibration or sound - completely silent
+  void _onNotificationTapped(NotificationResponse response) {
+    debugPrint('📱 Notification tapped: ${response.payload}');
+    // Add navigation logic here if needed
+    // Example: Navigate to quiz screen
   }
 
-  /// Request necessary permissions
-  Future<void> _requestPermissions() async {
-    try {
-      if (Platform.isAndroid) {
-        final androidPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >();
-        await androidPlugin?.requestNotificationsPermission();
-      }
+  /// Request notification permission for Android 13+
+  Future<void> _requestAndroidPermission() async {
+    if (!Platform.isAndroid) return;
 
-      if (Platform.isIOS) {
-        final iosPlugin = _notifications
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
-        await iosPlugin?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: false, // No sound permission
-        );
-      }
+    try {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      final bool? granted = await androidPlugin
+          ?.requestNotificationsPermission();
+      debugPrint('📱 Notification permission granted: $granted');
     } catch (e) {
-      debugPrint('Error requesting permissions: $e');
+      debugPrint('❌ Error requesting Android notification permission: $e');
     }
   }
 
-  /// Enable silent notifications automatically
+  /// Request exact alarm permission for Android 12+
+  Future<void> requestExactAlarmPermission() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      await androidPlugin?.requestExactAlarmsPermission();
+      debugPrint('📱 Exact alarm permission requested');
+    } catch (e) {
+      debugPrint('❌ Error requesting exact alarm permission: $e');
+    }
+  }
+
+  /// Enable automatic silent notifications at device local times
   Future<void> enableSilentNotifications() async {
     try {
+      // Cancel all existing notifications first
       await _notifications.cancelAll();
+      debugPrint('📱 Cancelled all existing notifications');
 
-      await _scheduleDailyNotification(
+      // Schedule morning notification (8:00 AM local time)
+      await scheduleDailyAt(
         id: morningNotificationId,
         hour: 8,
         minute: 0,
@@ -110,7 +160,8 @@ class NotificationService {
         body: 'Start your day with Quiz Master! Test your knowledge.',
       );
 
-      await _scheduleDailyNotification(
+      // Schedule afternoon notification (2:00 PM local time)
+      await scheduleDailyAt(
         id: afternoonNotificationId,
         hour: 14,
         minute: 0,
@@ -118,7 +169,8 @@ class NotificationService {
         body: 'Time for a quick quiz! Challenge yourself.',
       );
 
-      await _scheduleDailyNotification(
+      // Schedule evening notification (5:00 PM local time)
+      await scheduleDailyAt(
         id: eveningNotificationId,
         hour: 17,
         minute: 0,
@@ -126,14 +178,21 @@ class NotificationService {
         body: 'End your day with knowledge! Play some quizzes.',
       );
 
-      debugPrint('📅 Silent notifications scheduled successfully');
+      debugPrint('📅 Daily notifications scheduled in device local time');
+
+      // Show current pending notifications for verification
+      final pending = await getPendingNotifications();
+      debugPrint('📅 Total pending notifications: ${pending.length}');
+      for (final notification in pending) {
+        debugPrint('   - ID ${notification.id}: ${notification.title}');
+      }
     } catch (e) {
       debugPrint('❌ Error enabling silent notifications: $e');
     }
   }
 
-  /// Schedule a single daily notification
-  Future<void> _scheduleDailyNotification({
+  /// Schedule a silent daily notification at specific local time
+  Future<void> scheduleDailyAt({
     required int id,
     required int hour,
     required int minute,
@@ -141,24 +200,187 @@ class NotificationService {
     required String body,
   }) async {
     try {
+      final scheduledTime = _nextInstanceLocal(hour, minute);
+
       await _notifications.zonedSchedule(
         id,
         title,
         body,
-        _nextInstanceOfTime(hour, minute),
-        _getCompletelysilentNotificationDetails(),
+        scheduledTime,
+        _getSilentNotificationDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
+        matchDateTimeComponents:
+            DateTimeComponents.time, // Repeats daily at local time
       );
+
+      debugPrint('⏰ Scheduled notification $id');
+      debugPrint('   Title: $title');
+      debugPrint(
+        '   Time: ${scheduledTime.toLocal()} (${scheduledTime.timeZoneName})',
+      );
+      debugPrint('   Next trigger: ${_formatDateTime(scheduledTime)}');
     } catch (e) {
       debugPrint('❌ Error scheduling notification $id: $e');
     }
   }
 
-  /// Get next instance of the specified time
-  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(
+  /// Show an instant notification (for testing purposes)
+  Future<void> showInstantNotification({
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      final int notificationId = Random().nextInt(1 << 31);
+
+      await _notifications.show(
+        notificationId,
+        title,
+        body,
+        _getSilentNotificationDetails(),
+        payload: payload ?? 'instant_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
+      debugPrint('📱 Instant notification shown');
+      debugPrint('   ID: $notificationId');
+      debugPrint('   Title: $title');
+      debugPrint('   Body: $body');
+    } catch (e) {
+      debugPrint('❌ Error showing instant notification: $e');
+    }
+  }
+
+  /// Cancel all scheduled notifications
+  Future<void> cancelAllNotifications() async {
+    try {
+      await _notifications.cancelAll();
+      debugPrint('📱 All notifications cancelled successfully');
+    } catch (e) {
+      debugPrint('❌ Error cancelling all notifications: $e');
+    }
+  }
+
+  /// Cancel a specific notification by ID
+  Future<void> cancelNotification(int id) async {
+    try {
+      await _notifications.cancel(id);
+      debugPrint('📱 Notification $id cancelled successfully');
+    } catch (e) {
+      debugPrint('❌ Error cancelling notification $id: $e');
+    }
+  }
+
+  /// Get list of all pending scheduled notifications
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    try {
+      final pending = await _notifications.pendingNotificationRequests();
+      debugPrint('📱 Found ${pending.length} pending notifications');
+
+      for (final notification in pending) {
+        debugPrint('   - ID: ${notification.id}');
+        debugPrint('     Title: ${notification.title}');
+        debugPrint('     Body: ${notification.body}');
+      }
+
+      return pending;
+    } catch (e) {
+      debugPrint('❌ Error getting pending notifications: $e');
+      return [];
+    }
+  }
+
+  /// Check if notifications are enabled for this app
+  Future<bool> areNotificationsEnabled() async {
+    try {
+      final androidPlugin = _notifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      final bool? enabled = await androidPlugin?.areNotificationsEnabled();
+      debugPrint('📱 Notifications enabled: $enabled');
+      return enabled ?? false;
+    } catch (e) {
+      debugPrint('❌ Error checking notification status: $e');
+      return false;
+    }
+  }
+
+  /// Disable all notifications (cancel and stop scheduling)
+  Future<void> disableNotifications() async {
+    try {
+      await cancelAllNotifications();
+      debugPrint('📱 All notifications disabled successfully');
+    } catch (e) {
+      debugPrint('❌ Error disabling notifications: $e');
+    }
+  }
+
+  /// Test notification functionality
+  Future<void> testNotifications() async {
+    try {
+      debugPrint('🧪 Starting notification test...');
+
+      // Show instant test notification
+      await showInstantNotification(
+        title: '🧪 Test Notification',
+        body: 'This is a test notification in silent mode.',
+        payload: 'test_notification',
+      );
+
+      // Schedule a test notification for 1 minute from now
+      final now = tz.TZDateTime.now(tz.local);
+      final testTime = now.add(const Duration(minutes: 1));
+
+      await _notifications.zonedSchedule(
+        9999, // Test notification ID
+        '⏰ Test Scheduled Notification',
+        'This notification was scheduled for 1 minute after test.',
+        testTime,
+        _getSilentNotificationDetails(),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+
+      debugPrint('🧪 Test notifications scheduled');
+      debugPrint('   Instant notification: Shown immediately');
+      debugPrint('   Scheduled notification: ${_formatDateTime(testTime)}');
+
+      // Show pending count
+      final pending = await getPendingNotifications();
+      debugPrint('🧪 Total pending after test: ${pending.length}');
+    } catch (e) {
+      debugPrint('❌ Error during notification test: $e');
+    }
+  }
+
+  /// Get notification statistics
+  Future<Map<String, dynamic>> getNotificationStats() async {
+    try {
+      final pending = await getPendingNotifications();
+      final enabled = await areNotificationsEnabled();
+      final localTime = tz.TZDateTime.now(tz.local);
+
+      return {
+        'enabled': enabled,
+        'pendingCount': pending.length,
+        'timezone': localTime.timeZoneName,
+        'currentLocalTime': localTime.toString(),
+        'pendingNotifications': pending
+            .map((n) => {'id': n.id, 'title': n.title, 'body': n.body})
+            .toList(),
+      };
+    } catch (e) {
+      debugPrint('❌ Error getting notification stats: $e');
+      return {'error': e.toString()};
+    }
+  }
+
+  // PRIVATE HELPER METHODS
+
+  /// Compute next local occurrence of hour:minute in device timezone
+  tz.TZDateTime _nextInstanceLocal(int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
@@ -167,71 +389,46 @@ class NotificationService {
       minute,
     );
 
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    // If the scheduled time has already passed today, schedule for tomorrow
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
     }
 
-    return scheduledDate;
+    // The timezone package handles DST transitions correctly
+    return scheduled;
   }
 
-  /// Get completely silent notification details
-  NotificationDetails _getCompletelysilentNotificationDetails() {
+  /// Get notification details configured for silent delivery
+  NotificationDetails _getSilentNotificationDetails() {
     return const NotificationDetails(
       android: AndroidNotificationDetails(
-        'quiz_reminders',
-        'Quiz Reminders',
-        channelDescription: 'Silent quiz reminder notifications',
-        importance: Importance.low, // Low importance = silent
-        priority: Priority.low, // Low priority = silent
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
+        importance: Importance.low, // Low = no popup, no sound
+        priority: Priority.low, // Low priority
         enableVibration: false, // No vibration
         playSound: false, // No sound
         silent: true, // Explicitly silent
-        showWhen: false, // Don't show time
-        icon: '@mipmap/ic_launcher',
-        color: Color(0xFF1976D2),
-      ),
-      iOS: DarwinNotificationDetails(
-        presentAlert: true, // Show notification
-        presentBadge: true, // Show badge
-        presentSound: false, // No sound
+        showWhen: false, // Don't show timestamp
+        ongoing: false, // Not persistent notification
+        autoCancel: true, // Auto dismiss when tapped
+        icon: '@mipmap/ic_launcher', // Use app icon
+        color: Color(0xFF1976D2), // Brand color for notification
+        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        category: AndroidNotificationCategory.reminder,
+        visibility: NotificationVisibility.private,
       ),
     );
   }
 
-  /// Show an instant notification (for testing)
-  Future<void> showInstantNotification({
-    required String title,
-    required String body,
-  }) async {
-    try {
-      await _notifications.show(
-        Random().nextInt(1000),
-        title,
-        body,
-        _getCompletelysilentNotificationDetails(),
-        payload: 'instant_notification',
-      );
-    } catch (e) {
-      debugPrint('❌ Error showing instant notification: $e');
-    }
-  }
-
-  /// Cancel all notifications
-  Future<void> cancelAllNotifications() async {
-    try {
-      await _notifications.cancelAll();
-    } catch (e) {
-      debugPrint('❌ Error cancelling all notifications: $e');
-    }
-  }
-
-  /// Get pending notifications (for debugging)
-  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
-    try {
-      return await _notifications.pendingNotificationRequests();
-    } catch (e) {
-      debugPrint('❌ Error getting pending notifications: $e');
-      return [];
-    }
+  /// Format datetime for logging
+  String _formatDateTime(tz.TZDateTime dateTime) {
+    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-'
+        '${dateTime.day.toString().padLeft(2, '0')} '
+        '${dateTime.hour.toString().padLeft(2, '0')}:'
+        '${dateTime.minute.toString().padLeft(2, '0')}:'
+        '${dateTime.second.toString().padLeft(2, '0')} '
+        '${dateTime.timeZoneName}';
   }
 }

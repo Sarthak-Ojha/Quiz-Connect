@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
-import '../services/theme_service.dart'; // ADD THIS LINE
+import '../services/theme_service.dart';
+import '../widgets/auth_wrapper.dart'; // Add this import
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,13 +15,12 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   final NotificationService _notificationService = NotificationService();
-  final ThemeService _themeService = ThemeService(); // ADD THIS LINE
+  final ThemeService _themeService = ThemeService();
   bool _isSigningOut = false;
 
   @override
   void initState() {
     super.initState();
-    // Enable silent notifications automatically
     _enableSilentNotifications();
   }
 
@@ -28,7 +28,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await _notificationService.enableSilentNotifications();
   }
 
-  // UPDATED toggle method using theme service
   Future<void> _toggleDarkMode(bool value) async {
     await _themeService.setThemeMode(value);
     if (mounted) {
@@ -63,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(context); // Close dialog first
               await _performSignOut();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -77,12 +76,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // 🔧 ENHANCED SIGN OUT METHOD
   Future<void> _performSignOut() async {
     setState(() => _isSigningOut = true);
-
     try {
+      debugPrint('🚪 Starting sign out process...');
+
+      // Sign out from Firebase Auth
       await _authService.signOut();
-      debugPrint('✅ Sign out successful - AuthWrapper will handle navigation');
+      debugPrint('✅ AuthService.signOut() completed');
+
+      // 🔧 CRITICAL FIX: Force immediate navigation with proper context
+      if (mounted) {
+        debugPrint('🧭 Forcing immediate navigation...');
+
+        // Method 1: Replace entire navigation stack with AuthWrapper
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false, // Remove ALL previous routes
+        );
+
+        // 🔧 ALTERNATIVE: If Method 1 doesn't work, try this:
+        // Navigator.of(context).pushNamedAndRemoveUntil(
+        //   '/',
+        //   (route) => false,
+        // );
+      }
     } catch (e) {
       debugPrint('❌ Sign out error: $e');
       if (mounted) {
@@ -110,7 +129,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    // UPDATED to use theme service with ListenableBuilder
     return ListenableBuilder(
       listenable: _themeService,
       builder: (context, child) {
@@ -268,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // About Section
+                // About Section (keeping rest unchanged)
                 Text(
                   'About',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(

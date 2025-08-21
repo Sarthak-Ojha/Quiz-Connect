@@ -26,33 +26,20 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
-  // ✅ FIXED _submitForm method - Let AuthWrapper handle navigation
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
     try {
-      print('🔐 Starting sign-in process...');
-
       final user = await _authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
-
-      print('✅ Sign-in successful! User: ${user?.uid}');
-
       if (_rememberMe) {
         await _authService.setRememberMe(true);
-        print('💾 Remember me set');
       }
-
-      // ✅ DON'T clear loading - AuthWrapper will handle redirect
-      print('⏳ Waiting for AuthWrapper to redirect...');
+      // AuthWrapper will redirect
     } catch (e) {
-      print('❌ Sign-in error: $e');
-      // Only clear loading state on error
       if (mounted) setState(() => _isLoading = false);
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -60,41 +47,29 @@ class _SigninScreenState extends State<SigninScreen> {
             children: [
               const Icon(Icons.error, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text('Error: ${e.toString()}')),
+              Expanded(child: Text('Error: $e')),
             ],
           ),
           backgroundColor: Colors.red,
         ),
       );
     }
-    // ✅ No finally block - let AuthWrapper handle success
   }
 
   void _navigateToSignup() {
     Navigator.pushReplacement(
-      // ✅ CHANGED TO pushReplacement
       context,
       MaterialPageRoute(builder: (context) => const SignupScreen()),
     );
   }
 
-  // ✅ FIXED _signInWithGoogle method - Let AuthWrapper handle navigation
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      print('🔐 Starting Google sign-in...');
-
-      final user = await _authService.signInWithGoogle();
-
-      print('✅ Google sign-in successful! User: ${user?.uid}');
-
-      // ✅ DON'T clear loading - AuthWrapper will handle redirect
-      print('⏳ Waiting for AuthWrapper to redirect...');
+      await _authService.signInWithGoogle();
+      // AuthWrapper will redirect
     } catch (e) {
-      print('❌ Google sign-in error: $e');
-      // Only clear loading state on error
       if (mounted) setState(() => _isLoading = false);
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -102,21 +77,19 @@ class _SigninScreenState extends State<SigninScreen> {
             children: [
               const Icon(Icons.error, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text('Google Sign-In failed: ${e.toString()}')),
+              Expanded(child: Text('Google Sign-In failed: $e')),
             ],
           ),
           backgroundColor: Colors.red,
         ),
       );
     }
-    // ✅ No finally block - let AuthWrapper handle success
   }
 
   void _showForgotPasswordDialog() {
     final resetEmailController = TextEditingController(
       text: _emailController.text,
     );
-
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -150,12 +123,10 @@ class _SigninScreenState extends State<SigninScreen> {
             onPressed: () async {
               final email = resetEmailController.text.trim();
               if (email.isEmpty) return;
-
               try {
                 await _authService.resetPassword(email);
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
-
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -172,11 +143,10 @@ class _SigninScreenState extends State<SigninScreen> {
               } catch (e) {
                 if (!dialogContext.mounted) return;
                 Navigator.of(dialogContext).pop();
-
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Error: ${e.toString()}'),
+                    content: Text('Error: $e'),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -208,7 +178,7 @@ class _SigninScreenState extends State<SigninScreen> {
             physics: const ClampingScrollPhysics(),
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withAlpha(25),
+              shadowColor: Colors.black.withOpacity(0.1),
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -221,12 +191,11 @@ class _SigninScreenState extends State<SigninScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Logo/Icon
                       Container(
                         width: 80,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withAlpha(25),
+                          color: const Color(0xFF1976D2).withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -236,8 +205,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // Title
                       Text(
                         'Sign in to your\nAccount',
                         style: Theme.of(context).textTheme.headlineSmall
@@ -256,8 +223,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-
-                      // Google Sign-In Button
                       OutlinedButton.icon(
                         onPressed: _isLoading ? null : _signInWithGoogle,
                         icon: const Icon(Icons.g_mobiledata, size: 24),
@@ -269,8 +234,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // Divider
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.grey.shade300)),
@@ -285,8 +248,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // Email Field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -304,8 +265,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Password Field
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -318,11 +277,9 @@ class _SigninScreenState extends State<SigninScreen> {
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
                             ),
-                            onPressed: () {
-                              setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              );
-                            },
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                         validator: (value) {
@@ -333,15 +290,12 @@ class _SigninScreenState extends State<SigninScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      // Remember Me & Forgot Password
                       Row(
                         children: [
                           Checkbox(
                             value: _rememberMe,
-                            onChanged: (value) {
-                              setState(() => _rememberMe = value ?? false);
-                            },
+                            onChanged: (value) =>
+                                setState(() => _rememberMe = value ?? false),
                           ),
                           const Text('Remember me'),
                           const Spacer(),
@@ -360,8 +314,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // Sign In Button
                       ElevatedButton(
                         onPressed: _isLoading ? null : _submitForm,
                         style: ElevatedButton.styleFrom(
@@ -379,8 +331,6 @@ class _SigninScreenState extends State<SigninScreen> {
                             : const Text('Log in'),
                       ),
                       const SizedBox(height: 24),
-
-                      // Sign Up Link
                       TextButton(
                         onPressed: _isLoading ? null : _navigateToSignup,
                         child: const Text('Don\'t have an account? Sign Up'),

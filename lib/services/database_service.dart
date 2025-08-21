@@ -1,20 +1,19 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/question.dart';
 import '../models/quiz_result.dart';
 
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'app_database.db';
-  static const int _databaseVersion = 3; // Keep this as 3
+  static const int _databaseVersion = 3;
 
-  // Tables
   static const String _usersTable = 'users';
   static const String _settingsTable = 'settings';
   static const String _questionsTable = 'questions';
   static const String _quizResultsTable = 'quiz_results';
 
-  // Singleton pattern
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   DatabaseService._internal();
@@ -26,7 +25,7 @@ class DatabaseService {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), _databaseName);
+    final path = join(await getDatabasesPath(), _databaseName);
     return await openDatabase(
       path,
       version: _databaseVersion,
@@ -36,7 +35,6 @@ class DatabaseService {
   }
 
   Future<void> _createDatabase(Database db, int version) async {
-    // Create users table
     await db.execute('''
       CREATE TABLE $_usersTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,10 +45,9 @@ class DatabaseService {
         emailVerified INTEGER DEFAULT 0,
         lastSignIn TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-      )
+      );
     ''');
 
-    // Create settings table
     await db.execute('''
       CREATE TABLE $_settingsTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,10 +55,9 @@ class DatabaseService {
         value TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-      )
+      );
     ''');
 
-    // Create questions table
     await db.execute('''
       CREATE TABLE $_questionsTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,10 +65,9 @@ class DatabaseService {
         question TEXT NOT NULL,
         options TEXT NOT NULL,
         correctIndex INTEGER NOT NULL
-      )
+      );
     ''');
 
-    // Create quiz results table
     await db.execute('''
       CREATE TABLE $_quizResultsTable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,23 +84,19 @@ class DatabaseService {
         completedAt TEXT NOT NULL,
         userAnswers TEXT NOT NULL,
         questions TEXT NOT NULL
-      )
+      );
     ''');
 
-    // Insert default settings
     await db.insert(_settingsTable, {'key': 'theme', 'value': 'light'});
     await db.insert(_settingsTable, {'key': 'notifications', 'value': 'true'});
   }
 
-  // ✅ FIXED: Enhanced onUpgrade with proper error handling
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Check if questions table exists before creating
-      final tablesResult = await db.rawQuery(
+      final tablesResult1 = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='$_questionsTable'",
       );
-
-      if (tablesResult.isEmpty) {
+      if (tablesResult1.isEmpty) {
         await db.execute('''
           CREATE TABLE $_questionsTable (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,18 +104,16 @@ class DatabaseService {
             question TEXT NOT NULL,
             options TEXT NOT NULL,
             correctIndex INTEGER NOT NULL
-          )
+          );
         ''');
       }
     }
 
     if (oldVersion < 3) {
-      // Check if quiz_results table exists before creating
-      final tablesResult = await db.rawQuery(
+      final tablesResult2 = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='$_quizResultsTable'",
       );
-
-      if (tablesResult.isEmpty) {
+      if (tablesResult2.isEmpty) {
         await db.execute('''
           CREATE TABLE $_quizResultsTable (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,31 +130,25 @@ class DatabaseService {
             completedAt TEXT NOT NULL,
             userAnswers TEXT NOT NULL,
             questions TEXT NOT NULL
-          )
+          );
         ''');
       }
     }
   }
 
-  // Initialize database
   Future<void> initializeDatabase() async {
     await database;
   }
 
-  // ===============================================================================
-  // QUIZ RESULTS METHODS
-  // ===============================================================================
-
-  // Save quiz result
+  // Quiz Results
   Future<int> saveQuizResult(QuizResult result) async {
     final db = await database;
     return await db.insert(_quizResultsTable, result.toMap());
   }
 
-  // Get all quiz results for a user
   Future<List<QuizResult>> getUserQuizResults(String userId) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _quizResultsTable,
       where: 'userId = ?',
       whereArgs: [userId],
@@ -174,13 +157,12 @@ class DatabaseService {
     return maps.map((map) => QuizResult.fromMap(map)).toList();
   }
 
-  // Get quiz results by category
   Future<List<QuizResult>> getUserQuizResultsByCategory(
     String userId,
     String categoryName,
   ) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _quizResultsTable,
       where: 'userId = ? AND categoryName = ?',
       whereArgs: [userId, categoryName],
@@ -189,49 +171,43 @@ class DatabaseService {
     return maps.map((map) => QuizResult.fromMap(map)).toList();
   }
 
-  // Get user statistics
-  Future<Map<String, dynamic>> getUserStats(String userId) async {
+  Future<Map<String, Object?>> getUserStats(String userId) async {
     final db = await database;
 
-    // Total quizzes completed
     final totalQuizzesResult = await db.rawQuery(
       'SELECT COUNT(*) as count FROM $_quizResultsTable WHERE userId = ?',
       [userId],
     );
-    final totalQuizzes = totalQuizzesResult.first['count'] as int;
+    final totalQuizzes = (totalQuizzesResult.first['count'] as int?) ?? 0;
 
-    // Total score
     final totalScoreResult = await db.rawQuery(
       'SELECT SUM(totalScore) as total FROM $_quizResultsTable WHERE userId = ?',
       [userId],
     );
     final totalScore = (totalScoreResult.first['total'] as int?) ?? 0;
 
-    // Average percentage
     final avgPercentageResult = await db.rawQuery(
       'SELECT AVG(percentage) as avg FROM $_quizResultsTable WHERE userId = ?',
       [userId],
     );
     final avgPercentage = (avgPercentageResult.first['avg'] as double?) ?? 0.0;
 
-    // Best score
     final bestScoreResult = await db.rawQuery(
       'SELECT MAX(totalScore) as best FROM $_quizResultsTable WHERE userId = ?',
       [userId],
     );
     final bestScore = (bestScoreResult.first['best'] as int?) ?? 0;
 
-    // Category stats
     final categoryStatsResult = await db.rawQuery(
       '''
-      SELECT 
+      SELECT
         categoryName,
         COUNT(*) as playCount,
         AVG(percentage) as avgPercentage,
         MAX(totalScore) as bestScore
-      FROM $_quizResultsTable 
-      WHERE userId = ? 
-      GROUP BY categoryName 
+      FROM $_quizResultsTable
+      WHERE userId = ?
+      GROUP BY categoryName
       ORDER BY playCount DESC
       ''',
       [userId],
@@ -243,19 +219,17 @@ class DatabaseService {
       'averagePercentage': avgPercentage,
       'bestScore': bestScore,
       'categoryStats': categoryStatsResult,
-      // For backward compatibility with your UserData model
       'quizzesCompleted': totalQuizzes,
-      'totalCoins': totalScore ~/ 2, // Derive coins from score
+      'totalCoins': totalScore ~/ 2,
     };
   }
 
-  // Get recent quiz results (last 10)
   Future<List<QuizResult>> getRecentQuizResults(
     String userId, {
     int limit = 10,
   }) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _quizResultsTable,
       where: 'userId = ?',
       whereArgs: [userId],
@@ -265,13 +239,11 @@ class DatabaseService {
     return maps.map((map) => QuizResult.fromMap(map)).toList();
   }
 
-  // Delete quiz result
   Future<int> deleteQuizResult(int id) async {
     final db = await database;
     return await db.delete(_quizResultsTable, where: 'id = ?', whereArgs: [id]);
   }
 
-  // Clear all quiz results for a user
   Future<int> clearUserQuizResults(String userId) async {
     final db = await database;
     return await db.delete(
@@ -281,23 +253,18 @@ class DatabaseService {
     );
   }
 
-  // ===============================================================================
-  // QUESTION METHODS
-  // ===============================================================================
-
-  // Insert a question
+  // Questions
   Future<int> insertQuestion(Question question) async {
     final db = await database;
     return await db.insert(_questionsTable, question.toMap());
   }
 
-  // Get questions by category
   Future<List<Question>> getQuestionsByCategory(
     String category, {
     int limit = 10,
   }) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _questionsTable,
       where: 'category = ?',
       whereArgs: [category],
@@ -306,17 +273,16 @@ class DatabaseService {
     return maps.map((map) => Question.fromMap(map)).toList();
   }
 
-  // Get random questions by category
   Future<List<Question>> getRandomQuestionsByCategory(
     String category, {
     int limit = 10,
   }) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery(
+    final List<Map<String, Object?>> maps = await db.rawQuery(
       '''
-      SELECT * FROM $_questionsTable 
-      WHERE category = ? 
-      ORDER BY RANDOM() 
+      SELECT * FROM $_questionsTable
+      WHERE category = ?
+      ORDER BY RANDOM()
       LIMIT ?
       ''',
       [category, limit],
@@ -324,19 +290,14 @@ class DatabaseService {
     return maps.map((m) => Question.fromMap(m)).toList();
   }
 
-  // Get all questions
   Future<List<Question>> getAllQuestions() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(_questionsTable);
+    final List<Map<String, Object?>> maps = await db.query(_questionsTable);
     return maps.map((map) => Question.fromMap(map)).toList();
   }
 
-  // ===============================================================================
-  // USER METHODS
-  // ===============================================================================
-
-  // User operations
-  Future<int> insertUser(Map<String, dynamic> user) async {
+  // Users (optional helpers)
+  Future<int> insertUser(Map<String, Object?> user) async {
     final db = await database;
     return await db.insert(
       _usersTable,
@@ -345,9 +306,9 @@ class DatabaseService {
     );
   }
 
-  Future<Map<String, dynamic>?> getUserByUid(String uid) async {
+  Future<Map<String, Object?>?> getUserByUid(String uid) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _usersTable,
       where: 'uid = ?',
       whereArgs: [uid],
@@ -355,12 +316,12 @@ class DatabaseService {
     return maps.isNotEmpty ? maps.first : null;
   }
 
-  Future<List<Map<String, dynamic>>> getAllUsers() async {
+  Future<List<Map<String, Object?>>> getAllUsers() async {
     final db = await database;
     return await db.query(_usersTable);
   }
 
-  Future<int> updateUser(String uid, Map<String, dynamic> user) async {
+  Future<int> updateUser(String uid, Map<String, Object?> user) async {
     final db = await database;
     return await db.update(
       _usersTable,
@@ -375,10 +336,7 @@ class DatabaseService {
     return await db.delete(_usersTable, where: 'uid = ?', whereArgs: [uid]);
   }
 
-  // ===============================================================================
-  // SETTINGS METHODS
-  // ===============================================================================
-
+  // Settings
   Future<int> insertSetting(String key, String value) async {
     final db = await database;
     return await db.insert(_settingsTable, {
@@ -390,19 +348,22 @@ class DatabaseService {
 
   Future<String?> getSetting(String key) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
+    final List<Map<String, Object?>> maps = await db.query(
       _settingsTable,
       columns: ['value'],
       where: 'key = ?',
       whereArgs: [key],
     );
-    return maps.isNotEmpty ? maps.first['value'] : null;
+    return maps.isNotEmpty ? (maps.first['value'] as String?) : null;
   }
 
   Future<Map<String, String>> getAllSettings() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(_settingsTable);
-    return {for (var map in maps) map['key']: map['value']};
+    final List<Map<String, Object?>> maps = await db.query(_settingsTable);
+    return {
+      for (var map in maps)
+        (map['key'] as String): (map['value'] as String? ?? ''),
+    };
   }
 
   Future<int> updateSetting(String key, String value) async {
@@ -420,10 +381,7 @@ class DatabaseService {
     return await db.delete(_settingsTable, where: 'key = ?', whereArgs: [key]);
   }
 
-  // ===============================================================================
-  // UTILITY METHODS
-  // ===============================================================================
-
+  // Utilities
   Future<void> clearAllData() async {
     final db = await database;
     await db.delete(_usersTable);

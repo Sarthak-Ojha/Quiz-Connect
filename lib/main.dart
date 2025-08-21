@@ -2,28 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
-// Import screens and services
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/auth_selection_screen.dart';
 import 'screens/verify_email_screen.dart';
 import 'screens/home_screen.dart';
+
 import 'widgets/exit_confirmation_wrapper.dart';
 import 'widgets/auth_wrapper.dart';
+
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
-import 'services/theme_service.dart'; // ADD THIS LINE
+import 'services/theme_service.dart';
+
 import 'utils/seed_questions.dart';
 
 void main() async {
-  // ✅ CRITICAL: This MUST be the very first line
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Handle native splash with correct binding
   FlutterNativeSplash.preserve(widgetsBinding: WidgetsBinding.instance);
 
-  // Improved error reporting
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint('Flutter Error: ${details.exception}');
     FlutterError.presentError(details);
@@ -33,11 +31,9 @@ void main() async {
     await Firebase.initializeApp();
     debugPrint('✅ Firebase initialized successfully');
 
-    // Initialize theme service - ADD THIS LINE
     await ThemeService().initialize();
     debugPrint('🎨 Theme service initialized successfully');
 
-    // Initialize notification service
     await NotificationService().initialize();
     debugPrint('📱 Notification service initialized successfully');
 
@@ -45,7 +41,6 @@ void main() async {
     await dbService.initializeDatabase();
     debugPrint('✅ Database initialized successfully');
 
-    // Prevent duplicate question inserts
     final seeded = await dbService.getSetting('questionsSeeded');
     if (seeded != 'true') {
       await seedQuestionsFromAsset();
@@ -53,18 +48,18 @@ void main() async {
       debugPrint('✅ Questions seeded successfully');
     }
 
-    // Remove native splash after initialization
     FlutterNativeSplash.remove();
     runApp(const MyApp());
   } catch (e) {
-    debugPrint('❌ Firebase initialization error: $e');
-    // Remove native splash on error
+    debugPrint('❌ Initialization error: $e');
     FlutterNativeSplash.remove();
     runApp(ErrorApp(error: e.toString()));
   }
 }
 
-// UPDATED MyApp class with theme provider
+/* Removed duplicate main() function to resolve 'main is already defined' error. 
+   NotificationService().initialize() and enableSilentNotifications() are already called in the first main(). */
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -76,8 +71,6 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Quiz Master',
           debugShowCheckedModeBanner: false,
-
-          // ✅ LIGHT THEME
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -99,7 +92,7 @@ class MyApp extends StatelessWidget {
             ),
             cardTheme: CardThemeData(
               elevation: 8,
-              shadowColor: Colors.black.withAlpha(25),
+              shadowColor: Colors.black.withOpacity(0.1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -110,7 +103,7 @@ class MyApp extends StatelessWidget {
                 backgroundColor: const Color(0xFF1976D2),
                 foregroundColor: Colors.white,
                 elevation: 2,
-                shadowColor: Colors.blue.withAlpha(77),
+                shadowColor: const Color(0xFF1976D2).withOpacity(0.3),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
@@ -206,8 +199,6 @@ class MyApp extends StatelessWidget {
               elevation: 8,
             ),
           ),
-
-          // ✅ DARK THEME
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -229,7 +220,7 @@ class MyApp extends StatelessWidget {
             ),
             cardTheme: CardThemeData(
               elevation: 8,
-              shadowColor: Colors.black.withAlpha(50),
+              shadowColor: Colors.black.withOpacity(0.2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -240,7 +231,7 @@ class MyApp extends StatelessWidget {
                 backgroundColor: const Color(0xFF1976D2),
                 foregroundColor: Colors.white,
                 elevation: 2,
-                shadowColor: Colors.blue.withAlpha(77),
+                shadowColor: const Color(0xFF1976D2).withOpacity(0.3),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
@@ -294,24 +285,21 @@ class MyApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFF424242)),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF424242)),
+              enabledBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Color(0xFF424242)),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Color(0xFF42A5F5),
-                  width: 2,
-                ),
+              focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Color(0xFF42A5F5), width: 2),
               ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.red),
+              errorBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.red),
               ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.red, width: 2),
+              focusedErrorBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.red, width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -342,11 +330,7 @@ class MyApp extends StatelessWidget {
               elevation: 8,
             ),
           ),
-
-          // ✅ USE THEME SERVICE
           themeMode: ThemeService().themeMode,
-
-          // ✅ Use AuthWrapper as home
           home: const AuthWrapper(),
           routes: {
             '/signin': (context) => const SigninScreen(),
@@ -367,7 +351,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Error App for Firebase initialization errors
 class ErrorApp extends StatelessWidget {
   final String error;
   const ErrorApp({super.key, required this.error});
@@ -388,7 +371,7 @@ class ErrorApp extends StatelessWidget {
           message: 'Failed to initialize the app. Please try restarting.',
           error: error,
           onRetry: () {
-            // Restart app logic could go here
+            // Optional: add a restart mechanism
           },
         ),
       ),
@@ -396,13 +379,11 @@ class ErrorApp extends StatelessWidget {
   }
 }
 
-// Error Screen Widget
 class ErrorScreen extends StatelessWidget {
   final String title;
   final String message;
   final String error;
   final VoidCallback? onRetry;
-
   const ErrorScreen({
     super.key,
     required this.title,
@@ -491,10 +472,8 @@ class ErrorScreen extends StatelessWidget {
   }
 }
 
-// 404 Not Found Screen
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

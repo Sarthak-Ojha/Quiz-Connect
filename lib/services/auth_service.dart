@@ -19,7 +19,6 @@ class AuthService with ChangeNotifier {
   ) async {
     try {
       debugPrint('🔐 Creating user account...');
-
       final result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -32,6 +31,7 @@ class AuthService with ChangeNotifier {
       }
 
       debugPrint('✅ User account created: ${user?.uid}');
+      notifyListeners();
       return user;
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ Sign up error: ${e.code} - ${e.message}');
@@ -46,7 +46,6 @@ class AuthService with ChangeNotifier {
   ) async {
     try {
       debugPrint('🔐 Attempting email/password sign-in...');
-
       final result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -54,24 +53,14 @@ class AuthService with ChangeNotifier {
       final user = result.user;
 
       debugPrint('✅ Firebase sign-in successful: ${user?.uid}');
-
       if (user != null) {
         await user.reload();
         final refreshedUser = _auth.currentUser;
-
         debugPrint('📧 Email verified: ${refreshedUser?.emailVerified}');
-
-        if (refreshedUser != null && !refreshedUser.emailVerified) {
-          debugPrint(
-            '⚠️ Email not verified, but keeping user signed in for verification flow',
-          );
-        }
-
-        debugPrint('🔄 Notifying listeners of auth state change');
-        notifyListeners();
-        return refreshedUser;
       }
 
+      debugPrint('🔄 Notifying listeners of auth state change');
+      notifyListeners();
       return user;
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ Sign in error: ${e.code} - ${e.message}');
@@ -79,65 +68,34 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Remember Me functionality
-  Future<void> setRememberMe(bool remember) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('remember_me', remember);
-    debugPrint('💾 Remember me set to: $remember');
-  }
-
-  Future<bool> getRememberMe() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('remember_me') ?? false;
-  }
-
-  // Google Sign-In - UPDATED with your serverClientId
+  // Google Sign-In - FIXED FOR google_sign_in ^7.1.1
   Future<User?> signInWithGoogle() async {
     try {
       debugPrint('🔐 Starting Google sign-in...');
 
-      // Step 1: Initialize Google Sign In with your Web Client ID
+      // Initialize Google Sign In with your Web Client ID
       await GoogleSignIn.instance.initialize(
         serverClientId:
             '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
       );
 
-      // Step 2: Authenticate the user
+      // Authenticate the user (replaces signIn() method)
       final GoogleSignInAccount googleUser = await GoogleSignIn.instance
           .authenticate();
-
       debugPrint('✅ Google user obtained: ${googleUser.email}');
 
-      // Step 3: Get the authentication details from the request
+      // Get the authentication details (synchronous, not async)
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-      // Step 4: Get authorization headers with null safety
-      final Map<String, String>? authHeaders = await googleUser
-          .authorizationClient
-          .authorizationHeaders(['email', 'profile']);
-
-      // Handle null case for authorization headers
-      if (authHeaders == null) {
-        debugPrint('❌ Failed to get authorization headers');
-        throw Exception('Failed to get Google authorization');
-      }
-
-      // Step 5: Extract access token safely
-      final String? bearerToken = authHeaders['Authorization'];
-      final String? accessToken = bearerToken?.replaceFirst('Bearer ', '');
-
-      if (accessToken == null) {
-        debugPrint('❌ No access token found in authorization headers');
-        throw Exception('Failed to get access token from Google');
-      }
-
-      // Step 6: Create Firebase credential
+      // 🔧 FIXED: Use only idToken for Firebase authentication
+      // The accessToken is no longer directly available on GoogleSignInAuthentication
       final credential = GoogleAuthProvider.credential(
-        accessToken: accessToken,
         idToken: googleAuth.idToken,
+        // Note: accessToken is not directly available in v7.1.1
+        // If you need it, use authorizeScopes() method separately
       );
 
-      // Step 7: Sign in to Firebase with the credential
+      // Sign in to Firebase with the credential
       final result = await _auth.signInWithCredential(credential);
       final user = result.user;
 
@@ -156,6 +114,18 @@ class AuthService with ChangeNotifier {
       debugPrint('❌ Unexpected sign-in error: $e');
       throw Exception('Google sign-in failed: $e');
     }
+  }
+
+  // Remember Me functionality
+  Future<void> setRememberMe(bool remember) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('remember_me', remember);
+    debugPrint('💾 Remember me set to: $remember');
+  }
+
+  Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('remember_me') ?? false;
   }
 
   // Send email verification
@@ -188,67 +158,28 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Update user profile
-  Future<void> updateUserProfile({
-    String? displayName,
-    String? photoURL,
-  }) async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      await user.updateDisplayName(displayName);
-      await user.updatePhotoURL(photoURL);
-      await user.reload();
-      notifyListeners();
-    }
-  }
-
-  // Delete user account
-  Future<void> deleteAccount() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      await user.delete();
-      notifyListeners();
-    }
-  }
-
-  // Re-authenticate for sensitive actions
-  Future<void> reauthenticateWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      final credential = EmailAuthProvider.credential(
-        email: email,
-        password: password,
-      );
-      await user.reauthenticateWithCredential(credential);
-    }
-  }
-
-  // Change password
-  Future<void> changePassword(String newPassword) async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      await user.updatePassword(newPassword);
-    }
-  }
-
-  // Sign out - Updated for v7.x
+  // Sign out - Enhanced
   Future<void> signOut() async {
     try {
       debugPrint('🚪 Signing out...');
 
       // Sign out from Google
-      await GoogleSignIn.instance.signOut();
-    } catch (e) {
-      debugPrint('Google sign-out error: $e');
-    }
+      try {
+        await GoogleSignIn.instance.signOut();
+        debugPrint('✅ Google sign-out successful');
+      } catch (e) {
+        debugPrint('⚠️ Google sign-out error (non-critical): $e');
+      }
 
-    // Sign out from Firebase
-    await _auth.signOut();
-    debugPrint('✅ Sign out complete');
-    notifyListeners();
+      // Sign out from Firebase
+      await _auth.signOut();
+      debugPrint('✅ Firebase sign-out successful');
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Sign out error: $e');
+      rethrow;
+    }
   }
 
   // User info getters
@@ -256,12 +187,6 @@ class AuthService with ChangeNotifier {
   String? get userEmail => _auth.currentUser?.email;
   String? get userPhotoURL => _auth.currentUser?.photoURL;
   bool get isSignedIn => _auth.currentUser != null;
-
-  // Google sign-in status
-  Future<bool> get isGoogleSignedIn async {
-    // Simplified approach - check Firebase auth state
-    return _auth.currentUser != null;
-  }
 
   // Handle Firebase Auth exceptions
   String _handleAuthException(FirebaseAuthException e) {

@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/theme_service.dart';
-import '../widgets/auth_wrapper.dart'; // Add this import
+import '../widgets/auth_wrapper.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    // Enable silent notifications automatically
     _enableSilentNotifications();
   }
 
@@ -62,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog first
+              Navigator.pop(context);
               await _performSignOut();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -76,7 +77,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // 🔧 ENHANCED SIGN OUT METHOD
   Future<void> _performSignOut() async {
     setState(() => _isSigningOut = true);
     try {
@@ -86,21 +86,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _authService.signOut();
       debugPrint('✅ AuthService.signOut() completed');
 
-      // 🔧 CRITICAL FIX: Force immediate navigation with proper context
+      // 🔧 CRITICAL FIX: Force immediate navigation
       if (mounted) {
-        debugPrint('🧭 Forcing immediate navigation...');
-
-        // Method 1: Replace entire navigation stack with AuthWrapper
+        debugPrint('🧭 Forcing immediate navigation to AuthWrapper...');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AuthWrapper()),
           (route) => false, // Remove ALL previous routes
         );
-
-        // 🔧 ALTERNATIVE: If Method 1 doesn't work, try this:
-        // Navigator.of(context).pushNamedAndRemoveUntil(
-        //   '/',
-        //   (route) => false,
-        // );
       }
     } catch (e) {
       debugPrint('❌ Sign out error: $e');
@@ -197,7 +189,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 // App Preferences Section
                 Text(
                   'App Preferences',
@@ -231,7 +222,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 // Quiz Settings Section
                 Text(
                   'Quiz Settings',
@@ -256,7 +246,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
                 // Account Section
                 Text(
                   'Account',
@@ -285,8 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // About Section (keeping rest unchanged)
+                // About Section
                 Text(
                   'About',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(

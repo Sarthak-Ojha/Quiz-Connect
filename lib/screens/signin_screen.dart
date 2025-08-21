@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../widgets/auth_wrapper.dart';
 import 'signup_screen.dart';
 
 class SigninScreen extends StatefulWidget {
@@ -14,7 +15,6 @@ class _SigninScreenState extends State<SigninScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
@@ -28,19 +28,30 @@ class _SigninScreenState extends State<SigninScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
     try {
       final user = await _authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
+
       if (_rememberMe) {
         await _authService.setRememberMe(true);
       }
-      // AuthWrapper will redirect
+
+      // 🔧 CRITICAL FIX: Force navigation after successful sign-in
+      if (mounted && user != null) {
+        debugPrint('🧭 Sign-in successful, forcing navigation to AuthWrapper');
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -66,11 +77,22 @@ class _SigninScreenState extends State<SigninScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signInWithGoogle();
-      // AuthWrapper will redirect
+      final user = await _authService.signInWithGoogle();
+
+      // 🔧 CRITICAL FIX: Force navigation after successful Google sign-in
+      if (mounted && user != null) {
+        debugPrint(
+          '🧭 Google sign-in successful, forcing navigation to AuthWrapper',
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../services/auth_service.dart';
+import '../widgets/auth_wrapper.dart';
 import 'signin_screen.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -18,7 +19,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
-
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isValidatingEmail = false;
@@ -83,12 +83,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<String?> _validateEmailWithApi(String email) async {
     if (email.isEmpty) return 'Please enter your email';
-
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     if (!emailRegex.hasMatch(email)) return 'Please enter a valid email format';
-
     if (!_isValidEmailPattern(email)) {
       return 'Please enter a real email address';
     }
@@ -147,7 +145,6 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
     try {
       await _authService.signUpWithEmailAndPassword(
@@ -294,11 +291,22 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signInWithGoogle();
-      // AuthWrapper will redirect
+      final user = await _authService.signInWithGoogle();
+
+      // 🔧 CRITICAL FIX: Force navigation after successful Google sign-up
+      if (mounted && user != null) {
+        debugPrint(
+          '🧭 Google sign-up successful, forcing navigation to AuthWrapper',
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false, // Remove all previous routes
+        );
+      }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(

@@ -210,16 +210,18 @@ class DailyChallengeCard extends StatelessWidget {
   IconData _getButtonIcon() {
     if (isCompleted) return Icons.check_circle;
     if (challenge.isExpired) return Icons.timer_off;
-    if (progress != null && progress!.questionsCompleted > 0)
+    if (progress != null && progress!.questionsCompleted > 0) {
       return Icons.play_arrow;
+    }
     return Icons.rocket_launch;
   }
 
   String _getButtonText() {
     if (isCompleted) return 'Done';
     if (challenge.isExpired) return 'Expired';
-    if (progress != null && progress!.questionsCompleted > 0)
+    if (progress != null && progress!.questionsCompleted > 0) {
       return 'Continue';
+    }
     return 'Start';
   }
 }

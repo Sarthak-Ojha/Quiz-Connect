@@ -1,9 +1,7 @@
 // lib/screens/ai_mode_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../services/ai_service.dart';
-import '../models/question.dart';
 import 'quiz_screen.dart';
 
 class AIModeScreen extends StatefulWidget {

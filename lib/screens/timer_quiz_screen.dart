@@ -30,6 +30,12 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
   int _remainingTime = 0;
   late AnimationController _animationController;
 
+  // Power-ups - each can only be used once per game
+  bool _fiftyFiftyUsed = false;
+  bool _skipUsed = false;
+  bool _extraTimeUsed = false;
+  List<int> _hiddenOptions = []; // For 50-50 power-up
+
   Question get _currentQuestion => widget.questions[_currentQuestionIndex];
   bool get _isLastQuestion =>
       _currentQuestionIndex == widget.questions.length - 1;
@@ -105,6 +111,7 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
         _currentQuestionIndex++;
         _selectedAnswer = null;
         _hasAnswered = false;
+        _hiddenOptions.clear(); // Reset hidden options for next question
       });
       _startTimer();
     }
@@ -134,6 +141,88 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
     } else {
       return Colors.green;
     }
+  }
+
+  void _useFiftyFifty() {
+    if (_fiftyFiftyUsed || _hasAnswered) return;
+
+    setState(() {
+      _fiftyFiftyUsed = true;
+
+      // Find two wrong answers to hide
+      List<int> wrongIndices = [];
+      for (int i = 0; i < _currentQuestion.options.length; i++) {
+        if (i != _currentQuestion.correctIndex) {
+          wrongIndices.add(i);
+        }
+      }
+
+      // Randomly select 2 wrong answers to hide
+      wrongIndices.shuffle();
+      _hiddenOptions = wrongIndices.take(2).toList();
+    });
+  }
+
+  void _useSkip() {
+    if (_skipUsed || _hasAnswered) return;
+
+    setState(() {
+      _skipUsed = true;
+      _hasAnswered = true;
+      _selectedAnswer = ''; // Empty for skipped
+    });
+
+    _timer.cancel();
+    _animationController.stop();
+
+    // Auto proceed after brief delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _proceedToNext();
+    });
+  }
+
+  void _useExtraTime() {
+    if (_extraTimeUsed || _hasAnswered) return;
+
+    setState(() {
+      _extraTimeUsed = true;
+      _remainingTime += 10; // Add 10 seconds
+    });
+  }
+
+  Widget _buildPowerUpButton({
+    required IconData icon,
+    required String label,
+    required bool isUsed,
+    required VoidCallback? onTap,
+    required Color color,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isUsed ? Colors.grey.shade300 : color.withValues(alpha: 0.1),
+          border: Border.all(color: isUsed ? Colors.grey : color, width: 2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isUsed ? Colors.grey : color, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isUsed ? Colors.grey : color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -276,6 +365,12 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
                   final option = _currentQuestion.options[index];
                   final isSelected = _selectedAnswer == option;
                   final isCorrectAnswer = option == correctAnswer;
+                  final isHidden = _hiddenOptions.contains(index);
+
+                  // Don't show hidden options (for 50-50)
+                  if (isHidden) {
+                    return const SizedBox.shrink();
+                  }
 
                   // Determine colors and icons based on state
                   Color? backgroundColor;
@@ -371,7 +466,44 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
               ),
             ),
 
-            const SizedBox(height: 16),
+            // Power-ups row at bottom
+            if (!_hasAnswered) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // 50-50 Power-up
+                    _buildPowerUpButton(
+                      icon: Icons.filter_2,
+                      label: '50-50',
+                      isUsed: _fiftyFiftyUsed,
+                      onTap: _fiftyFiftyUsed ? null : _useFiftyFifty,
+                      color: Colors.blue,
+                    ),
+                    // Skip Power-up
+                    _buildPowerUpButton(
+                      icon: Icons.skip_next_rounded,
+                      label: 'Skip',
+                      isUsed: _skipUsed,
+                      onTap: _skipUsed ? null : _useSkip,
+                      color: Colors.purple,
+                    ),
+                    // Extra Time Power-up
+                    _buildPowerUpButton(
+                      icon: Icons.timer_10,
+                      label: '+10s',
+                      isUsed: _extraTimeUsed,
+                      onTap: _extraTimeUsed ? null : _useExtraTime,
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 16)
           ],
         ),
       ),

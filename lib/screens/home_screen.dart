@@ -308,13 +308,11 @@ class _CategoryPageState extends State<CategoryPage>
         final challenge = await _streakService.getTodaysChallenge();
         UserChallengeProgress? progress;
         
-        if (challenge != null) {
-          progress = await _streakService.getUserChallengeProgress(
-            user.uid, 
-            challenge.challengeId,
-          );
-        }
-        
+        progress = await _streakService.getUserChallengeProgress(
+          user.uid, 
+          challenge.challengeId,
+        );
+              
         if (mounted) {
           setState(() {
             _userStreak = streak;

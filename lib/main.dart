@@ -65,10 +65,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: ThemeService(),
-      builder: (context, child) {
-        return MaterialApp(
+    return MaterialApp(
           title: 'Quiz Master',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
@@ -199,138 +196,7 @@ class MyApp extends StatelessWidget {
               elevation: 8,
             ),
           ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1976D2),
-              brightness: Brightness.dark,
-            ),
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            appBarTheme: const AppBarTheme(
-              centerTitle: true,
-              elevation: 0,
-              scrolledUnderElevation: 2,
-              backgroundColor: Color(0xFF1976D2),
-              foregroundColor: Colors.white,
-              titleTextStyle: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            cardTheme: CardThemeData(
-              elevation: 8,
-              shadowColor: Colors.black.withOpacity(0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              color: const Color(0xFF1E1E1E),
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1976D2),
-                foregroundColor: Colors.white,
-                elevation: 2,
-                shadowColor: const Color(0xFF1976D2).withOpacity(0.3),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            outlinedButtonTheme: OutlinedButtonThemeData(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF42A5F5),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                side: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF42A5F5),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: const Color(0xFF2A2A2A),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF424242)),
-              ),
-              enabledBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Color(0xFF424242)),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Color(0xFF42A5F5), width: 2),
-              ),
-              errorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.red),
-              ),
-              focusedErrorBorder: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.red, width: 2),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 20,
-              ),
-              labelStyle: const TextStyle(
-                color: Color(0xFFBDBDBD),
-                fontSize: 16,
-              ),
-              hintStyle: const TextStyle(
-                color: Color(0xFF757575),
-                fontSize: 16,
-              ),
-            ),
-            snackBarTheme: SnackBarThemeData(
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: const Color(0xFF1976D2),
-              contentTextStyle: const TextStyle(color: Colors.white),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: Color(0xFF42A5F5),
-              unselectedItemColor: Color(0xFF757575),
-              backgroundColor: Color(0xFF1E1E1E),
-              elevation: 8,
-            ),
-          ),
-          themeMode: ThemeService().themeMode,
+          themeMode: ThemeMode.light,
           home: const AuthWrapper(),
           routes: {
             '/signin': (context) => const SigninScreen(),
@@ -346,8 +212,6 @@ class MyApp extends StatelessWidget {
             );
           },
         );
-      },
-    );
   }
 }
 

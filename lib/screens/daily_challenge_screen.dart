@@ -6,7 +6,6 @@ import '../models/quiz_result.dart';
 import '../services/streak_service.dart';
 import '../services/database_service.dart';
 import 'quiz_result_screen.dart';
-import 'quiz_screen.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
   final DailyChallenge challenge;

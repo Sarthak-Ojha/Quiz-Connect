@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
-import '../services/notification_service.dart';
-import '../services/theme_service.dart';
 import '../widgets/auth_wrapper.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -14,32 +12,8 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
-  final NotificationService _notificationService = NotificationService();
-  final ThemeService _themeService = ThemeService();
   bool _isSigningOut = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // Enable silent notifications automatically
-    _enableSilentNotifications();
-  }
-
-  Future<void> _enableSilentNotifications() async {
-    await _notificationService.enableSilentNotifications();
-  }
-
-  Future<void> _toggleDarkMode(bool value) async {
-    await _themeService.setThemeMode(value);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(value ? 'Dark mode enabled' : 'Light mode enabled'),
-          backgroundColor: value ? Colors.grey[800] : const Color(0xFF1976D2),
-        ),
-      );
-    }
-  }
 
   void _showSignOutDialog() {
     showDialog(
@@ -78,41 +52,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _performSignOut() async {
+    // Do async work first
+    bool success = false;
+    String? errorMessage;
+    
     setState(() => _isSigningOut = true);
+    
     try {
       debugPrint('🚪 Starting sign out process...');
-
-      // Sign out from Firebase Auth
+      
+      // All async work here
       await _authService.signOut();
       debugPrint('✅ AuthService.signOut() completed');
-
-      // 🔧 CRITICAL FIX: Force immediate navigation
-      if (mounted) {
+      success = true;
+    } catch (e) {
+      debugPrint('❌ Sign out error: $e');
+      errorMessage = e.toString();
+    }
+    
+    // Update state synchronously based on async results
+    if (mounted) {
+      setState(() => _isSigningOut = false);
+      
+      if (success) {
         debugPrint('🧭 Forcing immediate navigation to AuthWrapper...');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const AuthWrapper()),
           (route) => false, // Remove ALL previous routes
         );
-      }
-    } catch (e) {
-      debugPrint('❌ Sign out error: $e');
-      if (mounted) {
+      } else if (errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 const Icon(Icons.error, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Sign out failed: $e')),
+                Expanded(child: Text('Sign out failed: $errorMessage')),
               ],
             ),
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSigningOut = false);
       }
     }
   }
@@ -121,10 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    return ListenableBuilder(
-      listenable: _themeService,
-      builder: (context, child) {
-        return Scaffold(
+    return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
             title: const Text('Settings'),
@@ -185,39 +162,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // App Preferences Section
-                Text(
-                  'App Preferences',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1976D2),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  child: ListTile(
-                    leading: Icon(
-                      _themeService.isDarkMode
-                          ? Icons.dark_mode
-                          : Icons.light_mode,
-                      color: _themeService.isDarkMode
-                          ? Colors.orange
-                          : Colors.amber,
-                    ),
-                    title: const Text('Dark Mode'),
-                    subtitle: Text(
-                      _themeService.isDarkMode
-                          ? 'Dark theme enabled'
-                          : 'Light theme enabled',
-                    ),
-                    trailing: Switch(
-                      value: _themeService.isDarkMode,
-                      onChanged: _toggleDarkMode,
-                      activeColor: const Color(0xFF1976D2),
                     ),
                   ),
                 ),
@@ -324,8 +268,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         );
-      },
-    );
   }
 
   void _showQuizRulesDialog() {
@@ -415,7 +357,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text('• Timed and untimed modes'),
             Text('• Progress tracking'),
             Text('• Detailed score history'),
-            Text('• Smart notifications'),
             Text('• Dark/Light theme support'),
             SizedBox(height: 12),
             Text('Built with Flutter & Firebase'),
@@ -448,7 +389,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'How we use your information:\n'
             '• To provide personalized quiz experiences\n'
             '• To track and display your progress\n'
-            '• To send helpful reminders\n'
             '• To improve app functionality\n\n'
             'Your data is stored securely and is never shared with third parties without your consent.',
           ),

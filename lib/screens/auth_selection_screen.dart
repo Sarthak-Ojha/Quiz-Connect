@@ -47,7 +47,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4FC3F7),
+      backgroundColor: const Color(0xFF1976D2),
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,

@@ -12,6 +12,7 @@ import 'settings_screen.dart';
 import 'timer_quiz_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
+
 class UserData {
   final String displayName;
   final String email;
@@ -31,9 +32,9 @@ class UserData {
 }
 
 /* -------------------------------- HOME SCREEN -------------------------------- */
+
 class HomeScreen extends StatefulWidget {
   final int initialTabIndex;
-
   const HomeScreen({super.key, this.initialTabIndex = 0});
 
   @override
@@ -89,22 +90,31 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
+        leading: user?.photoURL != null
+            ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(user!.photoURL!),
+                ),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CircleAvatar(
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
         title: const Text('Quiz Master'),
+        centerTitle: true,
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // User profile photo (if available)
-          if (user?.photoURL != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundImage: NetworkImage(user!.photoURL!),
-              ),
-            ),
-
-          // Settings button
+          // Keep only the Settings button
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Settings',
@@ -115,25 +125,6 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-
-          // Sign out button
-          _isSigningOut
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.logout),
-                  tooltip: 'Sign Out',
-                  onPressed: _signOut,
-                ),
         ],
       ),
       body: IndexedStack(index: _selectedIndex, children: _pages),
@@ -230,7 +221,6 @@ class _CategoryPageState extends State<CategoryPage>
     await Future.delayed(const Duration(milliseconds: 500));
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) throw Exception('No user logged in');
-
     return UserData(
       displayName: currentUser.displayName ?? 'Quiz Master',
       email: currentUser.email ?? '',
@@ -383,9 +373,7 @@ class _CategoryPageState extends State<CategoryPage>
         category.name,
         limit: 100,
       );
-
       if (!mounted) return;
-
       if (allQuestions.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -399,7 +387,6 @@ class _CategoryPageState extends State<CategoryPage>
 
       allQuestions.shuffle();
       final selectedQuestions = allQuestions.take(questionCount).toList();
-
       if (selectedQuestions.length < questionCount) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -486,7 +473,6 @@ class _CategoryPageState extends State<CategoryPage>
       }
 
       if (!mounted) return;
-
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -887,7 +873,6 @@ class _ScoresPageState extends State<ScoresPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const Center(child: Text('Please sign in to view your scores'));
@@ -913,7 +898,6 @@ class _ScoresPageState extends State<ScoresPage>
               ),
             ),
           ),
-
           // Quiz Results Section
           SliverToBoxAdapter(
             child: Padding(
@@ -933,9 +917,7 @@ class _ScoresPageState extends State<ScoresPage>
               ),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
           // Quiz Results List
           FutureBuilder<List<QuizResult>>(
             future: _quizResultsFuture,
@@ -1063,7 +1045,6 @@ class _ScoresPageState extends State<ScoresPage>
               );
             },
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
@@ -1239,7 +1220,6 @@ class _ScoresPageState extends State<ScoresPage>
                 ],
               ),
               const SizedBox(height: 12),
-
               // Stats Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1270,7 +1250,6 @@ class _ScoresPageState extends State<ScoresPage>
                   ),
                 ],
               ),
-
               if (result.isTimerMode) ...[
                 const SizedBox(height: 8),
                 Container(
@@ -1341,7 +1320,6 @@ class _ScoresPageState extends State<ScoresPage>
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-
     if (difference.inDays == 0) {
       return 'Today ${_formatTime(date)}';
     } else if (difference.inDays == 1) {
@@ -1390,7 +1368,6 @@ class _ScoresPageState extends State<ScoresPage>
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
               Expanded(
                 child: SingleChildScrollView(
                   controller: scrollController,
@@ -1422,7 +1399,6 @@ class _ScoresPageState extends State<ScoresPage>
           ),
         ),
         const SizedBox(height: 20),
-
         // Category Info
         Container(
           width: double.infinity,
@@ -1473,9 +1449,7 @@ class _ScoresPageState extends State<ScoresPage>
             ],
           ),
         ),
-
         const SizedBox(height: 20),
-
         // Performance Summary
         Row(
           children: [
@@ -1500,9 +1474,7 @@ class _ScoresPageState extends State<ScoresPage>
             ),
           ],
         ),
-
         const SizedBox(height: 12),
-
         Row(
           children: [
             Expanded(
@@ -1526,9 +1498,7 @@ class _ScoresPageState extends State<ScoresPage>
             ),
           ],
         ),
-
         const SizedBox(height: 20),
-
         // Percentage and Grade
         Container(
           width: double.infinity,
@@ -1573,9 +1543,7 @@ class _ScoresPageState extends State<ScoresPage>
             ],
           ),
         ),
-
         const SizedBox(height: 20),
-
         // Action Button
         SizedBox(
           width: double.infinity,
@@ -1736,7 +1704,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             const SizedBox(height: 16),
-
             // Timer info
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1761,9 +1728,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
             // Question Count Slider
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1797,7 +1762,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     activeTrackColor: const Color(0xFF1976D2),
@@ -1839,7 +1803,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                     },
                   ),
                 ),
-
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1863,9 +1826,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
             // Random/Choose Categories buttons
             Row(
               children: [
@@ -1900,7 +1861,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
               ],
             ),
-
             // Category selection chips
             if (!_isRandom) ...[
               const SizedBox(height: 14),
@@ -1937,9 +1897,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 }),
               ),
             ],
-
             const SizedBox(height: 20),
-
             // Start Quiz button
             SizedBox(
               width: double.infinity,

@@ -53,6 +53,7 @@ flutter:
   assets:
     - assets/google_logo.png
     - assets/questions.json
+    - assets/icon/icon.png
 
 flutter_native_splash:
   color: "#1976D2"

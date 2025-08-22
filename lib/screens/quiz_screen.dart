@@ -1,8 +1,12 @@
 // lib/screens/quiz_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/question.dart';
 import '../models/quiz_category.dart';
+import '../models/quiz_result.dart';
+import '../services/database_service.dart';
+import '../services/streak_service.dart';
 import 'quiz_result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -25,6 +29,8 @@ class _QuizScreenState extends State<QuizScreen> {
   String? _selectedAnswer;
   bool _hasAnswered = false;
   int _score = 0;
+  final StreakService _streakService = StreakService();
+  final DatabaseService _dbService = DatabaseService();
 
   Question get _currentQuestion => widget.questions[_currentQuestionIndex];
   bool get _isLastQuestion =>
@@ -65,20 +71,67 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  void _showResults() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => QuizResultScreen(
+  Future<void> _showResults() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Update streak when quiz is completed
+        final updatedStreak = await _streakService.updateUserStreak(user.uid);
+        
+        // Create and save quiz result
+        final percentage = (_score / widget.questions.length) * 100;
+        final quizResult = QuizResult(
+          userId: user.uid,
+          categoryName: widget.category.name,
+          categoryColor: widget.category.color.value.toRadixString(16),
           totalQuestions: widget.questions.length,
           correctAnswers: _score,
-          questions: widget.questions,
-          userAnswers: _userAnswers,
-          category: widget.category,
+          wrongAnswers: widget.questions.length - _score,
+          totalScore: _score * 20, // 20 points per correct answer
+          percentage: percentage,
           isTimerMode: false,
-        ),
-      ),
-    );
+          completedAt: DateTime.now(),
+          userAnswers: _userAnswers,
+          questions: widget.questions.map((q) => q.question).toList(),
+        );
+
+        await _dbService.saveQuizResult(quizResult);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => QuizResultScreen(
+                result: quizResult,
+                questions: widget.questions,
+                streakInfo: {
+                  'currentStreak': updatedStreak.streakCount,
+                  'isNewRecord': updatedStreak.streakCount == updatedStreak.maxStreak,
+                  'pointsEarned': 25, // Base streak points
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Fallback to old result screen if there's an error
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => QuizResultScreen(
+              totalQuestions: widget.questions.length,
+              correctAnswers: _score,
+              questions: widget.questions,
+              userAnswers: _userAnswers,
+              category: widget.category,
+              isTimerMode: false,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override

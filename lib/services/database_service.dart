@@ -3,16 +3,21 @@ import 'package:path/path.dart';
 
 import '../models/question.dart';
 import '../models/quiz_result.dart';
+import '../models/user_streak.dart';
+import '../models/daily_challenge.dart';
 
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'app_database.db';
-  static const int _databaseVersion = 3;
+  static const int _databaseVersion = 4;
 
   static const String _usersTable = 'users';
   static const String _settingsTable = 'settings';
   static const String _questionsTable = 'questions';
   static const String _quizResultsTable = 'quiz_results';
+  static const String _userStreaksTable = 'user_streaks';
+  static const String _dailyChallengesTable = 'daily_challenges';
+  static const String _userChallengeProgressTable = 'user_challenge_progress';
 
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
@@ -87,6 +92,51 @@ class DatabaseService {
       );
     ''');
 
+    await db.execute('''
+      CREATE TABLE $_userStreaksTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT UNIQUE NOT NULL,
+        streakCount INTEGER DEFAULT 0,
+        lastActive TEXT,
+        maxStreak INTEGER DEFAULT 0,
+        currentStreakStartDate TEXT,
+        totalDaysActive INTEGER DEFAULT 0,
+        totalPoints INTEGER DEFAULT 0,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $_dailyChallengesTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        challengeId TEXT UNIQUE NOT NULL,
+        date TEXT NOT NULL,
+        questionIds TEXT NOT NULL,
+        difficulty TEXT NOT NULL,
+        rewardPoints INTEGER NOT NULL,
+        isActive INTEGER DEFAULT 1,
+        expiresAt TEXT NOT NULL,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE $_userChallengeProgressTable (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT NOT NULL,
+        challengeId TEXT NOT NULL,
+        questionsCompleted INTEGER DEFAULT 0,
+        totalQuestions INTEGER NOT NULL,
+        isCompleted INTEGER DEFAULT 0,
+        pointsEarned INTEGER DEFAULT 0,
+        completedAt TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(userId, challengeId)
+      );
+    ''');
+
     await db.insert(_settingsTable, {'key': 'theme', 'value': 'light'});
     await db.insert(_settingsTable, {'key': 'notifications', 'value': 'true'});
   }
@@ -130,6 +180,69 @@ class DatabaseService {
             completedAt TEXT NOT NULL,
             userAnswers TEXT NOT NULL,
             questions TEXT NOT NULL
+          );
+        ''');
+      }
+    }
+
+    if (oldVersion < 4) {
+      // Add streak and challenge tables
+      final streakTableResult = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='$_userStreaksTable'",
+      );
+      if (streakTableResult.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $_userStreaksTable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT UNIQUE NOT NULL,
+            streakCount INTEGER DEFAULT 0,
+            lastActive TEXT,
+            maxStreak INTEGER DEFAULT 0,
+            currentStreakStartDate TEXT,
+            totalDaysActive INTEGER DEFAULT 0,
+            totalPoints INTEGER DEFAULT 0,
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+          );
+        ''');
+      }
+
+      final challengeTableResult = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='$_dailyChallengesTable'",
+      );
+      if (challengeTableResult.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $_dailyChallengesTable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challengeId TEXT UNIQUE NOT NULL,
+            date TEXT NOT NULL,
+            questionIds TEXT NOT NULL,
+            difficulty TEXT NOT NULL,
+            rewardPoints INTEGER NOT NULL,
+            isActive INTEGER DEFAULT 1,
+            expiresAt TEXT NOT NULL,
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+          );
+        ''');
+      }
+
+      final progressTableResult = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='$_userChallengeProgressTable'",
+      );
+      if (progressTableResult.isEmpty) {
+        await db.execute('''
+          CREATE TABLE $_userChallengeProgressTable (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            challengeId TEXT NOT NULL,
+            questionsCompleted INTEGER DEFAULT 0,
+            totalQuestions INTEGER NOT NULL,
+            isCompleted INTEGER DEFAULT 0,
+            pointsEarned INTEGER DEFAULT 0,
+            completedAt TEXT,
+            createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(userId, challengeId)
           );
         ''');
       }
@@ -381,6 +494,245 @@ class DatabaseService {
     return await db.delete(_settingsTable, where: 'key = ?', whereArgs: [key]);
   }
 
+  // User Streaks
+  Future<UserStreak?> getUserStreak(String userId) async {
+    final db = await database;
+    final List<Map<String, Object?>> maps = await db.query(
+      _userStreaksTable,
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+    return maps.isNotEmpty ? UserStreak.fromMap(maps.first) : null;
+  }
+
+  Future<int> insertOrUpdateUserStreak(UserStreak streak) async {
+    final db = await database;
+    return await db.insert(
+      _userStreaksTable,
+      streak.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<UserStreak> updateStreakOnActivity(String userId) async {
+    final db = await database;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    UserStreak? existingStreak = await getUserStreak(userId);
+    
+    if (existingStreak == null) {
+      // First time user - create new streak
+      final newStreak = UserStreak(
+        userId: userId,
+        streakCount: 1,
+        lastActive: today,
+        maxStreak: 1,
+        currentStreakStartDate: today,
+        totalDaysActive: 1,
+        totalPoints: 25,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await insertOrUpdateUserStreak(newStreak);
+      return newStreak;
+    }
+
+    final lastActiveDate = existingStreak.lastActive != null 
+        ? DateTime(existingStreak.lastActive!.year, existingStreak.lastActive!.month, existingStreak.lastActive!.day)
+        : null;
+    
+    if (lastActiveDate != null && lastActiveDate.isAtSameMomentAs(today)) {
+      // Same day activity - no streak change
+      return existingStreak;
+    }
+
+    int newStreakCount;
+    DateTime? newStreakStartDate;
+    int newTotalDaysActive = existingStreak.totalDaysActive + 1;
+    int bonusPoints = 25; // Base daily points
+
+    if (lastActiveDate != null && today.difference(lastActiveDate).inDays == 1) {
+      // Consecutive day - increment streak
+      newStreakCount = existingStreak.streakCount + 1;
+      newStreakStartDate = existingStreak.currentStreakStartDate;
+      
+      // Streak multiplier bonus
+      if (newStreakCount >= 7) {
+        bonusPoints += (newStreakCount ~/ 7) * 25;
+      }
+    } else {
+      // Missed days or first activity - reset streak
+      newStreakCount = 1;
+      newStreakStartDate = today;
+    }
+
+    final newMaxStreak = newStreakCount > existingStreak.maxStreak 
+        ? newStreakCount 
+        : existingStreak.maxStreak;
+
+    final updatedStreak = existingStreak.copyWith(
+      streakCount: newStreakCount,
+      lastActive: today,
+      maxStreak: newMaxStreak,
+      currentStreakStartDate: newStreakStartDate,
+      totalDaysActive: newTotalDaysActive,
+      totalPoints: existingStreak.totalPoints + bonusPoints,
+      updatedAt: now,
+    );
+
+    await insertOrUpdateUserStreak(updatedStreak);
+    return updatedStreak;
+  }
+
+  // Daily Challenges
+  Future<DailyChallenge?> getDailyChallengeByDate(DateTime date) async {
+    final db = await database;
+    final dateString = date.toIso8601String().split('T')[0];
+    final List<Map<String, Object?>> maps = await db.query(
+      _dailyChallengesTable,
+      where: 'date = ? AND isActive = 1',
+      whereArgs: [dateString],
+    );
+    return maps.isNotEmpty ? DailyChallenge.fromMap(maps.first) : null;
+  }
+
+  Future<DailyChallenge?> getTodaysDailyChallenge() async {
+    return await getDailyChallengeByDate(DateTime.now());
+  }
+
+  Future<int> insertDailyChallenge(DailyChallenge challenge) async {
+    final db = await database;
+    return await db.insert(_dailyChallengesTable, challenge.toMap());
+  }
+
+  Future<DailyChallenge> generateDailyChallenge() async {
+    final today = DateTime.now();
+    final existing = await getDailyChallengeByDate(today);
+    if (existing != null) return existing;
+
+    // Get random questions from different categories
+    final allQuestions = await getAllQuestions();
+    if (allQuestions.isEmpty) {
+      throw Exception('No questions available for daily challenge');
+    }
+
+    allQuestions.shuffle();
+    final selectedQuestions = allQuestions.take(5).toList();
+    
+    // Determine difficulty based on day of week
+    final dayOfWeek = today.weekday;
+    String difficulty;
+    int rewardPoints;
+    
+    if (dayOfWeek >= 1 && dayOfWeek <= 3) {
+      difficulty = 'easy';
+      rewardPoints = 100;
+    } else if (dayOfWeek >= 4 && dayOfWeek <= 5) {
+      difficulty = 'medium';
+      rewardPoints = 150;
+    } else {
+      difficulty = 'hard';
+      rewardPoints = 200;
+    }
+
+    final challenge = DailyChallenge(
+      challengeId: 'daily_${today.toIso8601String().split('T')[0]}',
+      date: today,
+      questionIds: selectedQuestions.map((q) => q.id!).toList(),
+      difficulty: difficulty,
+      rewardPoints: rewardPoints,
+      isActive: true,
+      expiresAt: DateTime(today.year, today.month, today.day, 23, 59, 59),
+      createdAt: today,
+    );
+
+    await insertDailyChallenge(challenge);
+    return challenge;
+  }
+
+  // User Challenge Progress
+  Future<UserChallengeProgress?> getUserChallengeProgress(String userId, String challengeId) async {
+    final db = await database;
+    final List<Map<String, Object?>> maps = await db.query(
+      _userChallengeProgressTable,
+      where: 'userId = ? AND challengeId = ?',
+      whereArgs: [userId, challengeId],
+    );
+    return maps.isNotEmpty ? UserChallengeProgress.fromMap(maps.first) : null;
+  }
+
+  Future<int> insertOrUpdateChallengeProgress(UserChallengeProgress progress) async {
+    final db = await database;
+    return await db.insert(
+      _userChallengeProgressTable,
+      progress.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<UserChallengeProgress> startDailyChallenge(String userId, String challengeId, int totalQuestions) async {
+    final existing = await getUserChallengeProgress(userId, challengeId);
+    if (existing != null) return existing;
+
+    final now = DateTime.now();
+    final progress = UserChallengeProgress(
+      userId: userId,
+      challengeId: challengeId,
+      questionsCompleted: 0,
+      totalQuestions: totalQuestions,
+      isCompleted: false,
+      pointsEarned: 0,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await insertOrUpdateChallengeProgress(progress);
+    return progress;
+  }
+
+  Future<UserChallengeProgress> updateChallengeProgress(
+    String userId, 
+    String challengeId, 
+    int questionsCompleted,
+    {int? pointsEarned}
+  ) async {
+    final existing = await getUserChallengeProgress(userId, challengeId);
+    if (existing == null) {
+      throw Exception('Challenge progress not found');
+    }
+
+    final now = DateTime.now();
+    final isCompleted = questionsCompleted >= existing.totalQuestions;
+    
+    final updatedProgress = UserChallengeProgress(
+      id: existing.id,
+      userId: userId,
+      challengeId: challengeId,
+      questionsCompleted: questionsCompleted,
+      totalQuestions: existing.totalQuestions,
+      isCompleted: isCompleted,
+      pointsEarned: pointsEarned ?? existing.pointsEarned,
+      completedAt: isCompleted ? now : existing.completedAt,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+    );
+
+    await insertOrUpdateChallengeProgress(updatedProgress);
+    return updatedProgress;
+  }
+
+  Future<List<UserChallengeProgress>> getUserCompletedChallenges(String userId) async {
+    final db = await database;
+    final List<Map<String, Object?>> maps = await db.query(
+      _userChallengeProgressTable,
+      where: 'userId = ? AND isCompleted = 1',
+      whereArgs: [userId],
+      orderBy: 'completedAt DESC',
+    );
+    return maps.map((map) => UserChallengeProgress.fromMap(map)).toList();
+  }
+
   // Utilities
   Future<void> clearAllData() async {
     final db = await database;
@@ -388,6 +740,9 @@ class DatabaseService {
     await db.delete(_settingsTable);
     await db.delete(_questionsTable);
     await db.delete(_quizResultsTable);
+    await db.delete(_userStreaksTable);
+    await db.delete(_dailyChallengesTable);
+    await db.delete(_userChallengeProgressTable);
   }
 
   Future<void> closeDatabase() async {

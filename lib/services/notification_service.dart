@@ -47,9 +47,8 @@ class NotificationService {
       // Create notification channels
       await createNotificationChannels();
 
-      // Request permissions for Android 13+
-      await _requestAndroidPermission();
-      await requestExactAlarmPermission();
+      // Skip permission requests during initialization to avoid blocking app startup
+      // Permissions will be requested when user first interacts with notifications
 
       final localTime = tz.TZDateTime.now(tz.local);
       debugPrint('📱 Notification service initialized (Android-only)');
@@ -144,9 +143,27 @@ class NotificationService {
     }
   }
 
+  /// Request permissions when needed (called explicitly by user action)
+  Future<bool> requestPermissions() async {
+    try {
+      await _requestAndroidPermission();
+      await requestExactAlarmPermission();
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error requesting permissions: $e');
+      return false;
+    }
+  }
+
   /// Enable automatic silent notifications at device local times
   Future<void> enableSilentNotifications() async {
     try {
+      // Request permissions first
+      final hasPermissions = await requestPermissions();
+      if (!hasPermissions) {
+        debugPrint('❌ Cannot enable notifications without permissions');
+        return;
+      }
       // Cancel all existing notifications first
       await _notifications.cancelAll();
       debugPrint('📱 Cancelled all existing notifications');
@@ -313,6 +330,159 @@ class NotificationService {
       debugPrint('📱 All notifications disabled successfully');
     } catch (e) {
       debugPrint('❌ Error disabling notifications: $e');
+    }
+  }
+
+  /// Show streak achievement notification
+  Future<void> showStreakAchievement({
+    required int streakCount,
+    required bool isNewRecord,
+  }) async {
+    try {
+      String title;
+      String body;
+      
+      if (isNewRecord) {
+        title = '🔥 New Streak Record!';
+        body = 'Amazing! You\'ve reached a $streakCount-day streak - your best yet!';
+      } else {
+        title = '🔥 Streak Milestone!';
+        body = 'Congratulations on your $streakCount-day learning streak!';
+      }
+
+      await _notifications.show(
+        Random().nextInt(1 << 31),
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'achievements',
+            'Achievements',
+            channelDescription: 'Quiz achievement notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            icon: '@mipmap/ic_launcher',
+            color: Color(0xFFFF6B35),
+            largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+          ),
+        ),
+        payload: 'streak_achievement_$streakCount',
+      );
+
+      debugPrint('🏆 Streak achievement notification shown: $streakCount days');
+    } catch (e) {
+      debugPrint('❌ Error showing streak achievement: $e');
+    }
+  }
+
+  /// Show daily challenge completion notification
+  Future<void> showChallengeCompletion({
+    required int pointsEarned,
+    required String difficulty,
+  }) async {
+    try {
+      final title = '🎯 Daily Challenge Complete!';
+      final body = 'Well done! You earned $pointsEarned points on the $difficulty challenge.';
+
+      await _notifications.show(
+        Random().nextInt(1 << 31),
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'achievements',
+            'Achievements',
+            channelDescription: 'Quiz achievement notifications',
+            importance: Importance.high,
+            priority: Priority.high,
+            enableVibration: true,
+            playSound: true,
+            icon: '@mipmap/ic_launcher',
+            color: Color(0xFF1976D2),
+            largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+          ),
+        ),
+        payload: 'challenge_complete_$pointsEarned',
+      );
+
+      debugPrint('🎯 Challenge completion notification shown: $pointsEarned points');
+    } catch (e) {
+      debugPrint('❌ Error showing challenge completion: $e');
+    }
+  }
+
+  /// Schedule streak reminder notifications
+  Future<void> scheduleStreakReminders() async {
+    try {
+      // Cancel existing streak reminders
+      await cancelNotification(2001);
+      await cancelNotification(2002);
+      await cancelNotification(2003);
+
+      // Morning streak reminder (9:00 AM)
+      await scheduleDailyAt(
+        id: 2001,
+        hour: 9,
+        minute: 0,
+        title: '🔥 Keep Your Streak Alive!',
+        body: 'Start your day with a quiz to maintain your learning streak!',
+      );
+
+      // Evening streak reminder (7:00 PM)
+      await scheduleDailyAt(
+        id: 2002,
+        hour: 19,
+        minute: 0,
+        title: '⚡ Don\'t Break Your Streak!',
+        body: 'Complete today\'s challenge before it expires!',
+      );
+
+      // Late evening final reminder (9:00 PM)
+      await scheduleDailyAt(
+        id: 2003,
+        hour: 21,
+        minute: 0,
+        title: '🚨 Last Chance!',
+        body: 'Your streak is at risk! Take a quick quiz now.',
+      );
+
+      debugPrint('🔥 Streak reminder notifications scheduled');
+    } catch (e) {
+      debugPrint('❌ Error scheduling streak reminders: $e');
+    }
+  }
+
+  /// Show motivational notification based on streak status
+  Future<void> showMotivationalNotification({
+    required int currentStreak,
+    required int daysUntilMilestone,
+  }) async {
+    try {
+      String title;
+      String body;
+
+      if (currentStreak == 0) {
+        title = '🚀 Start Your Journey!';
+        body = 'Begin your learning streak today with Quiz Master!';
+      } else if (daysUntilMilestone <= 2) {
+        title = '🎯 Almost There!';
+        body = 'Just $daysUntilMilestone more ${daysUntilMilestone == 1 ? 'day' : 'days'} to reach your next milestone!';
+      } else {
+        title = '💪 Keep Going Strong!';
+        body = 'You\'re doing great with your $currentStreak-day streak!';
+      }
+
+      await showInstantNotification(
+        title: title,
+        body: body,
+        payload: 'motivation_$currentStreak',
+      );
+
+      debugPrint('💪 Motivational notification shown for $currentStreak-day streak');
+    } catch (e) {
+      debugPrint('❌ Error showing motivational notification: $e');
     }
   }
 

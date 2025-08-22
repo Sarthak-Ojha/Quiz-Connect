@@ -9,23 +9,29 @@ import '../services/database_service.dart';
 import 'home_screen.dart';
 
 class QuizResultScreen extends StatefulWidget {
-  final int totalQuestions;
-  final int correctAnswers;
+  final int? totalQuestions;
+  final int? correctAnswers;
   final List<Question> questions;
-  final List<String> userAnswers;
+  final List<String>? userAnswers;
   final QuizCategory? category;
-  final bool isTimerMode;
+  final bool? isTimerMode;
   final int timerSeconds;
+  final QuizResult? result;
+  final bool isChallenge;
+  final Map<String, dynamic>? streakInfo;
 
   const QuizResultScreen({
     super.key,
-    required this.totalQuestions,
-    required this.correctAnswers,
+    this.totalQuestions,
+    this.correctAnswers,
     required this.questions,
-    required this.userAnswers,
+    this.userAnswers,
     this.category,
-    required this.isTimerMode,
+    this.isTimerMode,
     this.timerSeconds = 0,
+    this.result,
+    this.isChallenge = false,
+    this.streakInfo,
   });
 
   @override
@@ -36,11 +42,16 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   bool _isSaving = false;
   bool _resultSaved = false;
 
-  int get wrongAnswers => widget.totalQuestions - widget.correctAnswers;
-  double get percentage =>
-      (widget.correctAnswers / widget.totalQuestions) * 100;
-  int get totalScore =>
-      widget.correctAnswers * 10; // 10 points per correct answer
+  int get wrongAnswers => (widget.result?.wrongAnswers ?? 
+      (widget.totalQuestions! - widget.correctAnswers!));
+  double get percentage => widget.result?.percentage ?? 
+      ((widget.correctAnswers! / widget.totalQuestions!) * 100);
+  int get totalScore => widget.result?.totalScore ?? 
+      (widget.correctAnswers! * 10); // 10 points per correct answer
+  int get totalQuestions => widget.result?.totalQuestions ?? widget.totalQuestions!;
+  int get correctAnswers => widget.result?.correctAnswers ?? widget.correctAnswers!;
+  List<String> get userAnswers => widget.result?.userAnswers ?? widget.userAnswers!;
+  bool get isTimerMode => widget.result?.isTimerMode ?? widget.isTimerMode!;
 
   @override
   void initState() {
@@ -49,7 +60,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   }
 
   Future<void> _saveQuizResult() async {
-    if (_resultSaved) return;
+    if (_resultSaved || widget.result != null) return; // Skip if result already provided
 
     setState(() => _isSaving = true);
     try {
@@ -57,19 +68,19 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       if (user != null) {
         final quizResult = QuizResult(
           userId: user.uid,
-          categoryName: widget.isTimerMode
+          categoryName: isTimerMode
               ? 'Quick Mode'
               : (widget.category?.name ?? 'Unknown'),
           categoryColor: widget.category?.color.value.toRadixString(16),
-          totalQuestions: widget.totalQuestions,
-          correctAnswers: widget.correctAnswers,
+          totalQuestions: totalQuestions,
+          correctAnswers: correctAnswers,
           wrongAnswers: wrongAnswers,
           totalScore: totalScore,
           percentage: percentage,
-          isTimerMode: widget.isTimerMode,
+          isTimerMode: isTimerMode,
           timerSeconds: widget.timerSeconds,
           completedAt: DateTime.now(),
-          userAnswers: widget.userAnswers,
+          userAnswers: userAnswers,
           questions: widget.questions.map((q) => q.question).toList(),
         );
 
@@ -173,7 +184,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
 
                       // Title
                       Text(
-                        widget.isTimerMode
+                        isTimerMode
                             ? 'Quick Mode Results'
                             : '${widget.category?.name} Results',
                         style: Theme.of(context).textTheme.headlineSmall
@@ -430,7 +441,7 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
       MaterialPageRoute(
         builder: (context) => ReviewAnswersScreen(
           questions: widget.questions,
-          userAnswers: widget.userAnswers,
+          userAnswers: userAnswers,
           category: widget.category,
         ),
       ),

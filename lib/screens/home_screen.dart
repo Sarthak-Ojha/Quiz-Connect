@@ -7,9 +7,16 @@ import '../services/database_service.dart';
 import '../models/quiz_category.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
+import '../models/user_streak.dart';
+import '../models/daily_challenge.dart';
+import '../services/streak_service.dart';
+import '../widgets/streak_widget.dart';
+import '../widgets/daily_challenge_card.dart';
 import 'quiz_screen.dart';
 import 'settings_screen.dart';
 import 'timer_quiz_screen.dart';
+import 'daily_challenge_screen.dart';
+import 'streak_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
 
@@ -44,6 +51,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
   final AuthService _authService = AuthService();
+  final StreakService _streakService = StreakService();
   bool _isSigningOut = false;
   late final List<Widget> _pages;
 
@@ -59,6 +67,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
+
+  Future<UserStreak?> _getStreakData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      return await _streakService.getUserStreak(user.uid);
+    }
+    return null;
+  }
 
   Future<void> _signOut() async {
     setState(() => _isSigningOut = true);
@@ -108,13 +124,60 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-        title: const Text('Quiz Master'),
+        title: Text(user?.displayName ?? 'User'),
         centerTitle: true,
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // Keep only the Settings button
+          // Streak icon with number
+          FutureBuilder<UserStreak?>(
+            future: _getStreakData(),
+            builder: (context, snapshot) {
+              final streakCount = snapshot.data?.streakCount ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.local_fire_department),
+                    tooltip: 'Streak',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StreakScreen()),
+                      );
+                    },
+                  ),
+                  if (streakCount > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          '$streakCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          // Settings button
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: 'Settings',
@@ -168,6 +231,11 @@ class _CategoryPageState extends State<CategoryPage>
   late Future<UserData> _userDataFuture;
   final List<String> _modes = ['Category Mode', 'Quick Mode'];
   String _selectedMode = 'Category Mode';
+  final StreakService _streakService = StreakService();
+  
+  UserStreak? _userStreak;
+  DailyChallenge? _dailyChallenge;
+  UserChallengeProgress? _challengeProgress;
 
   static const List<QuizCategory> _categories = [
     QuizCategory(
@@ -215,6 +283,7 @@ class _CategoryPageState extends State<CategoryPage>
   void initState() {
     super.initState();
     _userDataFuture = _fetchUserData();
+    _loadStreakAndChallengeData();
   }
 
   Future<UserData> _fetchUserData() async {
@@ -231,8 +300,38 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  Future<void> _refreshUserData() async =>
-      setState(() => _userDataFuture = _fetchUserData());
+  Future<void> _loadStreakAndChallengeData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final streak = await _streakService.getUserStreak(user.uid);
+        final challenge = await _streakService.getTodaysChallenge();
+        UserChallengeProgress? progress;
+        
+        if (challenge != null) {
+          progress = await _streakService.getUserChallengeProgress(
+            user.uid, 
+            challenge.challengeId,
+          );
+        }
+        
+        if (mounted) {
+          setState(() {
+            _userStreak = streak;
+            _dailyChallenge = challenge;
+            _challengeProgress = progress;
+          });
+        }
+      } catch (e) {
+        print('Error loading streak and challenge data: $e');
+      }
+    }
+  }
+
+  Future<void> _refreshUserData() async {
+    setState(() => _userDataFuture = _fetchUserData());
+    await _loadStreakAndChallengeData();
+  }
 
   void _showStartQuizDialog(BuildContext context, QuizCategory category) {
     int chosenQuestionCount = 15;
@@ -400,13 +499,18 @@ class _CategoryPageState extends State<CategoryPage>
       }
 
       if (mounted) {
-        Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) =>
                 QuizScreen(questions: selectedQuestions, category: category),
           ),
         );
+        
+        // Refresh streak data after completing quiz
+        if (result != null) {
+          await _loadStreakAndChallengeData();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -549,14 +653,13 @@ class _CategoryPageState extends State<CategoryPage>
               ),
             );
           } else if (snapshot.hasData) {
-            final userData = snapshot.data!;
             return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildWelcomeSection(context, userData),
+                  _buildDailyChallengeSection(context),
                   const SizedBox(height: 32),
                   _buildModesSection(context),
                   if (_selectedMode == 'Category Mode') ...[
@@ -577,101 +680,6 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context, UserData userData) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 8,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1976D2).withValues(alpha: 0.05),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1976D2).withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.waving_hand,
-                      color: Color(0xFF1976D2),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back,',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: Colors.grey.shade600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          userData.displayName,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1976D2),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF1976D2).withValues(alpha: 0.1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.psychology,
-                      color: Color(0xFF1976D2),
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Ready for your next challenge?',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF1976D2),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildModesSection(BuildContext context) {
     return Column(
@@ -813,6 +821,121 @@ class _CategoryPageState extends State<CategoryPage>
         ),
       ),
     );
+  }
+
+  Widget _buildStreakSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.local_fire_department, color: Color(0xFFFF6B35), size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'Your Streak',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFFF6B35),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildDailyChallengeSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.emoji_events, color: Color(0xFF1976D2), size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'Daily Challenge',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF1976D2),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_dailyChallenge != null)
+          DailyChallengeCard(
+            challenge: _dailyChallenge!,
+            progress: _challengeProgress,
+            isCompleted: _challengeProgress?.isCompleted ?? false,
+            onTap: () => _startDailyChallenge(context),
+          )
+        else
+          Card(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const Icon(Icons.hourglass_empty, size: 48, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading today\'s challenge...',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _startDailyChallenge(BuildContext context) async {
+    if (_dailyChallenge == null) return;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please sign in to start the challenge')),
+        );
+        return;
+      }
+
+      // Update streak when starting challenge
+      await _streakService.updateUserStreak(user.uid);
+      
+      // Get challenge questions
+      final questions = await _streakService.getChallengeQuestions(_dailyChallenge!);
+      
+      if (mounted) {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DailyChallengeScreen(
+              challenge: _dailyChallenge!,
+              questions: questions,
+            ),
+          ),
+        );
+        
+        // Refresh data after completing challenge
+        if (result != null) {
+          await _loadStreakAndChallengeData();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error starting challenge: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildQuickModeOptions(BuildContext context) {

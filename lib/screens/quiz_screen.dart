@@ -11,12 +11,16 @@ import 'quiz_result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   final List<Question> questions;
-  final QuizCategory category;
+  final QuizCategory? category;
+  final bool isAIMode;
+  final String? aiTopic;
 
   const QuizScreen({
     super.key,
     required this.questions,
-    required this.category,
+    this.category,
+    this.isAIMode = false,
+    this.aiTopic,
   });
 
   @override
@@ -82,8 +86,8 @@ class _QuizScreenState extends State<QuizScreen> {
         final percentage = (_score / widget.questions.length) * 100;
         final quizResult = QuizResult(
           userId: user.uid,
-          categoryName: widget.category.name,
-          categoryColor: widget.category.color.value.toRadixString(16),
+          categoryName: widget.isAIMode ? widget.aiTopic ?? 'AI Quiz' : widget.category?.name ?? 'Quiz',
+          categoryColor: widget.isAIMode ? 'FF6B73' : (widget.category?.color.value.toRadixString(16) ?? 'FF6B73'),
           totalQuestions: widget.questions.length,
           correctAnswers: _score,
           wrongAnswers: widget.questions.length - _score,
@@ -142,8 +146,8 @@ class _QuizScreenState extends State<QuizScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(widget.category.name),
-        backgroundColor: widget.category.color,
+        title: Text(widget.isAIMode ? 'AI Quiz: ${widget.aiTopic}' : (widget.category?.name ?? 'Quiz')),
+        backgroundColor: widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF)),
         foregroundColor: Colors.white,
         elevation: 0,
         // Removed score display from app bar
@@ -157,7 +161,7 @@ class _QuizScreenState extends State<QuizScreen> {
             LinearProgressIndicator(
               value: (_currentQuestionIndex + 1) / widget.questions.length,
               backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(widget.category.color),
+              valueColor: AlwaysStoppedAnimation<Color>(widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF))),
             ),
             const SizedBox(height: 16),
 
@@ -165,7 +169,7 @@ class _QuizScreenState extends State<QuizScreen> {
             Text(
               'Question ${_currentQuestionIndex + 1} of ${widget.questions.length}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: widget.category.color,
+                color: widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF)),
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -219,11 +223,9 @@ class _QuizScreenState extends State<QuizScreen> {
                     }
                   } else if (isSelected) {
                     // Selected but not answered yet
-                    backgroundColor = widget.category.color.withValues(
-                      alpha: 0.1,
-                    );
-                    borderColor = widget.category.color;
-                    textColor = widget.category.color;
+                    backgroundColor = (widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF))).withOpacity(0.1);
+                    borderColor = widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF));
+                    textColor = widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF));
                   }
 
                   return Card(

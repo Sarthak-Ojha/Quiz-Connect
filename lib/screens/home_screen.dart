@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../widgets/daily_challenge_card.dart';
+import '../models/daily_challenge.dart';
+import '../models/user_streak.dart';
 import '../models/quiz_category.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
-import '../models/user_streak.dart';
-import '../models/daily_challenge.dart';
 import '../services/streak_service.dart';
-import '../widgets/streak_widget.dart';
-import '../widgets/daily_challenge_card.dart';
+import 'streak_screen.dart';
+import 'ai_mode_screen.dart';
 import 'quiz_screen.dart';
 import 'settings_screen.dart';
 import 'timer_quiz_screen.dart';
 import 'daily_challenge_screen.dart';
-import 'streak_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
 
@@ -229,7 +229,7 @@ class CategoryPage extends StatefulWidget {
 class _CategoryPageState extends State<CategoryPage>
     with AutomaticKeepAliveClientMixin {
   late Future<UserData> _userDataFuture;
-  final List<String> _modes = ['Category Mode', 'Quick Mode'];
+  final List<String> _modes = ['Category Mode', 'Quick Mode', 'AI Mode'];
   String _selectedMode = 'Category Mode';
   final StreakService _streakService = StreakService();
   
@@ -665,9 +665,12 @@ class _CategoryPageState extends State<CategoryPage>
                   if (_selectedMode == 'Category Mode') ...[
                     const SizedBox(height: 24),
                     _buildCategoriesSection(context),
-                  ] else ...[
+                  ] else if (_selectedMode == 'Quick Mode') ...[
                     const SizedBox(height: 16),
                     _buildQuickModeOptions(context),
+                  ] else if (_selectedMode == 'AI Mode') ...[
+                    const SizedBox(height: 16),
+                    _buildAIModeSection(context),
                   ],
                 ],
               ),
@@ -949,6 +952,135 @@ class _CategoryPageState extends State<CategoryPage>
           questionCount,
         );
       },
+    );
+  }
+
+  Widget _buildAIModeSection(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6B73FF).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.psychology,
+                    color: Color(0xFF6B73FF),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI-Powered Quiz',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF6B73FF),
+                        ),
+                      ),
+                      Text(
+                        'Generate custom questions on any topic',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6B73FF).withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF6B73FF).withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, 
+                        color: Color(0xFF6B73FF), size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Features:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 16),
+                      SizedBox(width: 8),
+                      Text('10 AI-generated questions'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 16),
+                      SizedBox(width: 8),
+                      Text('Custom topics of your choice'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 16),
+                      SizedBox(width: 8),
+                      Text('Powered by Google Gemini AI'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.psychology),
+                label: const Text('Start AI Quiz'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AIModeScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B73FF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -2050,4 +2182,5 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
       ),
     );
   }
+
 }

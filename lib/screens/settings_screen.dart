@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../services/user_profile_service.dart';
 import '../widgets/auth_wrapper.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,37 +14,79 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
+  String? _customDisplayName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomDisplayName();
+  }
+
+  Future<void> _loadCustomDisplayName() async {
+    final customName = await UserProfileService.getCustomDisplayName();
+    if (mounted) {
+      setState(() {
+        _customDisplayName = customName;
+      });
+    }
+  }
+
+  Future<void> _saveCustomDisplayName(String name) async {
+    await UserProfileService.saveCustomDisplayName(name);
+    setState(() {
+      _customDisplayName = name;
+    });
+  }
+
+  String _getDisplayName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (_customDisplayName != null && _customDisplayName!.isNotEmpty) {
+      return _customDisplayName!;
+    }
+    return user?.displayName ?? 'Quiz Master';
+  }
 
 
   void _showSignOutDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.logout, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Sign Out'),
-          ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Sign Out?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1976D2),
+          ),
+          textAlign: TextAlign.center,
         ),
         content: const Text(
           'Are you sure you want to sign out of your account?',
+          textAlign: TextAlign.center,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'No',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-          ElevatedButton(
+          TextButton(
             onPressed: () async {
               Navigator.pop(context);
               await _performSignOut();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text(
-              'Sign Out',
-              style: TextStyle(color: Colors.white),
+              'Yes',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
             ),
           ),
         ],
@@ -123,14 +166,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           radius: 30,
                           backgroundColor: const Color(0xFF1976D2),
                           backgroundImage: user?.photoURL != null
-                              ? NetworkImage(user!.photoURL!)
+                              ? NetworkImage(
+                                  user!.photoURL!,
+                                )
                               : null,
                           child: user?.photoURL == null
                               ? Text(
-                                  user?.displayName
-                                          ?.substring(0, 1)
-                                          .toUpperCase() ??
-                                      'U',
+                                  (user?.displayName?.isNotEmpty == true)
+                                      ? user!.displayName!.substring(0, 1).toUpperCase()
+                                      : 'U',
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
@@ -145,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user?.displayName ?? 'Quiz Master',
+                                _getDisplayName(),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -160,6 +204,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          onPressed: _showEditNameDialog,
+                          icon: const Icon(
+                            Icons.edit,
+                            color: Color(0xFF1976D2),
+                          ),
+                          tooltip: 'Edit Name',
                         ),
                       ],
                     ),
@@ -268,6 +320,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         );
+  }
+
+  void _showEditNameDialog() {
+    final TextEditingController nameController = TextEditingController();
+    nameController.text = _getDisplayName();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.edit, color: Color(0xFF1976D2)),
+            SizedBox(width: 8),
+            Text('Edit Display Name'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your preferred display name:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Display Name',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
+              ),
+              maxLength: 30,
+              textCapitalization: TextCapitalization.words,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isNotEmpty) {
+                await _saveCustomDisplayName(newName);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Display name updated successfully!'),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showQuizRulesDialog() {

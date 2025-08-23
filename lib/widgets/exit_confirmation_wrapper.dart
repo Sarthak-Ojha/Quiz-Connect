@@ -47,20 +47,8 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 10,
-        icon: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.exit_to_app,
-            color: Colors.orange.shade700,
-            size: 28,
-          ),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
         title: Text(
           widget.title,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -69,48 +57,31 @@ class _ExitConfirmationWrapperState extends State<ExitConfirmationWrapper> {
           ),
           textAlign: TextAlign.center,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.help_outline, size: 48, color: Colors.grey.shade600),
-            const SizedBox(height: 16),
-            Text(
-              widget.message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(height: 1.4),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        content: Text(
+          widget.message,
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
         ),
-        actionsPadding: const EdgeInsets.all(16),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'Cancel',
+            child: const Text(
+              'No',
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          ElevatedButton(
+          TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 2,
-            ),
             child: const Text(
-              'Exit',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              'Yes',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
             ),
           ),
         ],

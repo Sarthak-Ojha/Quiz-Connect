@@ -38,9 +38,15 @@ class QuizResultScreen extends StatefulWidget {
   State<QuizResultScreen> createState() => _QuizResultScreenState();
 }
 
-class _QuizResultScreenState extends State<QuizResultScreen> {
+class _QuizResultScreenState extends State<QuizResultScreen>
+    with TickerProviderStateMixin {
   bool _isSaving = false;
   bool _resultSaved = false;
+  late AnimationController _animationController;
+  late AnimationController _progressController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _progressAnimation;
 
   int get wrongAnswers => (widget.result?.wrongAnswers ?? 
       (widget.totalQuestions! - widget.correctAnswers!));
@@ -56,7 +62,47 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
   @override
   void initState() {
     super.initState();
+    _initAnimations();
     _saveQuizResult();
+    _startAnimations();
+  }
+
+  void _initAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    );
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: percentage / 100).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeOutCubic),
+    );
+  }
+
+  void _startAnimations() {
+    _animationController.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _progressController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _progressController.dispose();
+    super.dispose();
   }
 
   Future<void> _saveQuizResult() async {
@@ -94,345 +140,386 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
     }
   }
 
+  String get _performanceMessage {
+    if (percentage >= 90) return 'Outstanding! 🏆';
+    if (percentage >= 80) return 'Excellent! 🌟';
+    if (percentage >= 70) return 'Great Job! 👏';
+    if (percentage >= 60) return 'Good Work! 👍';
+    if (percentage >= 50) return 'Keep Trying! 💪';
+    return 'Practice More! 📚';
+  }
+
+  Color get _performanceColor {
+    if (percentage >= 80) return Colors.green;
+    if (percentage >= 60) return Colors.orange;
+    return Colors.red;
+  }
+
   @override
   Widget build(BuildContext context) {
-    const buttonColor = Color(0xFF1976D2);
-
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Card(
-                elevation: 16,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: _fadeAnimation,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeAnimation.value,
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Save Status Indicator
-                      if (_isSaving)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                      // Header Card
+                      Card(
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _performanceColor.withOpacity(0.1),
+                                _performanceColor.withOpacity(0.05),
+                              ],
+                            ),
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                          child: Column(
                             children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                              // Performance Icon
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: _performanceColor.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  percentage >= 80 ? Icons.emoji_events :
+                                  percentage >= 60 ? Icons.thumb_up :
+                                  Icons.trending_up,
+                                  size: 40,
+                                  color: _performanceColor,
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(height: 16),
+                              
+                              // Performance Message
                               Text(
-                                'Saving result...',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        )
-                      else if (_resultSaved)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                                size: 16,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Result saved!',
+                                _performanceMessage,
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: _performanceColor,
                                 ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              
+                              // Category Name
+                              Text(
+                                isTimerMode
+                                    ? 'Quick Mode Results'
+                                    : '${widget.category?.name ?? 'Quiz'} Results',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ],
                           ),
                         ),
-
-                      const SizedBox(height: 16),
-
-                      // Title
-                      Text(
-                        isTimerMode
-                            ? 'Quick Mode Results'
-                            : '${widget.category?.name} Results',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: buttonColor,
-                            ),
-                        textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
 
-                      // Circular Progress Indicator
-                      SizedBox(
-                        width: 200,
-                        height: 200,
-                        child: Stack(
-                          children: [
-                            // Background circle
-                            SizedBox.expand(
-                              child: CircularProgressIndicator(
-                                value: 1.0,
-                                strokeWidth: 12,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.grey.shade200,
-                                ),
-                              ),
-                            ),
-                            // Progress circle
-                            SizedBox.expand(
-                              child: CircularProgressIndicator(
-                                value: percentage / 100,
-                                strokeWidth: 12,
-                                valueColor: const AlwaysStoppedAnimation(
-                                  buttonColor,
-                                ),
-                              ),
-                            ),
-                            // Center content
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '$totalScore pt',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: buttonColor,
+                      // Score Card
+                      Card(
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              // Animated Progress Circle
+                              AnimatedBuilder(
+                                animation: _progressAnimation,
+                                builder: (context, child) {
+                                  return SizedBox(
+                                    width: 180,
+                                    height: 180,
+                                    child: Stack(
+                                      children: [
+                                        // Background circle
+                                        SizedBox.expand(
+                                          child: CircularProgressIndicator(
+                                            value: 1.0,
+                                            strokeWidth: 12,
+                                            valueColor: AlwaysStoppedAnimation(
+                                              Colors.grey.shade200,
+                                            ),
+                                          ),
                                         ),
+                                        // Progress circle
+                                        SizedBox.expand(
+                                          child: CircularProgressIndicator(
+                                            value: _progressAnimation.value,
+                                            strokeWidth: 12,
+                                            valueColor: AlwaysStoppedAnimation(
+                                              _performanceColor,
+                                            ),
+                                          ),
+                                        ),
+                                        // Center content
+                                        Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                '$totalScore',
+                                                style: TextStyle(
+                                                  fontSize: 36,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: _performanceColor,
+                                                ),
+                                              ),
+                                              Text(
+                                                'POINTS',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.grey[600],
+                                                  letterSpacing: 1.2,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                '${percentage.toStringAsFixed(1)}%',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.grey[700],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+
+                              const SizedBox(height: 24),
+                              
+                              // Stats Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildModernStatItem(
+                                    'Total',
+                                    totalQuestions.toString(),
+                                    Icons.quiz_outlined,
+                                    const Color(0xFF1976D2),
                                   ),
-                                  Text(
-                                    '${percentage.toStringAsFixed(1)}%',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(color: Colors.grey.shade600),
+                                  _buildModernStatItem(
+                                    'Correct',
+                                    correctAnswers.toString(),
+                                    Icons.check_circle_outline,
+                                    Colors.green,
+                                  ),
+                                  _buildModernStatItem(
+                                    'Wrong',
+                                    wrongAnswers.toString(),
+                                    Icons.cancel_outlined,
+                                    Colors.red,
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
 
-                      // Stats Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildStatItem(
-                            context,
-                            'Total Questions',
-                            widget.totalQuestions.toString(),
-                            Icons.quiz,
-                            buttonColor,
-                          ),
-                          _buildStatItem(
-                            context,
-                            'Correct',
-                            widget.correctAnswers.toString(),
-                            Icons.check_circle,
-                            Colors.green,
-                          ),
-                          _buildStatItem(
-                            context,
-                            'Wrong',
-                            wrongAnswers.toString(),
-                            Icons.cancel,
-                            Colors.red,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Action Buttons in 2x2 Grid Layout
-                      Column(
-                        children: [
-                          // Row 1: Play Again | Review Answer
-                          Row(
+                      // Action Buttons
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(
-                                      context,
-                                    ).popUntil((route) => route.isFirst);
-                                  },
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Play Again'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: buttonColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                              // Primary Actions
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildModernButton(
+                                      'Play Again',
+                                      Icons.refresh_rounded,
+                                      const Color(0xFF1976D2),
+                                      () => Navigator.of(context).popUntil((route) => route.isFirst),
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    _showReviewAnswers(context);
-                                  },
-                                  icon: const Icon(Icons.visibility),
-                                  label: const Text('Review Answer'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: buttonColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _buildModernButton(
+                                      'Review',
+                                      Icons.visibility_outlined,
+                                      Colors.orange,
+                                      () => _showReviewAnswers(context),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Row 2: Home | My Scores
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const HomeScreen(),
+                              const SizedBox(height: 12),
+                              // Secondary Actions
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildModernButton(
+                                      'Home',
+                                      Icons.home_outlined,
+                                      Colors.green,
+                                      () => Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                                        (route) => false,
                                       ),
-                                      (route) => false,
-                                    );
-                                  },
-                                  icon: const Icon(Icons.home),
-                                  label: const Text('Home'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: buttonColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    // Navigate to My Scores tab with initialTabIndex: 1
-                                    Navigator.of(context).pushAndRemoveUntil(
-                                      MaterialPageRoute(
-                                        builder: (context) => const HomeScreen(
-                                          initialTabIndex: 1,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: _buildModernButton(
+                                      'My Scores',
+                                      Icons.analytics_outlined,
+                                      Colors.purple,
+                                      () => Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (context) => const HomeScreen(initialTabIndex: 1),
                                         ),
+                                        (route) => false,
                                       ),
-                                      (route) => false,
-                                    );
-                                  },
-                                  icon: const Icon(Icons.history),
-                                  label: const Text('My Scores'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: buttonColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Save Status
+                      if (_isSaving || _resultSaved)
+                        Container(
+                          margin: const EdgeInsets.only(top: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _resultSaved ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _resultSaved ? Colors.green : Colors.orange,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_isSaving)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              else
+                                const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isSaving ? 'Saving result...' : 'Result saved!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _resultSaved ? Colors.green : Colors.orange,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildModernStatItem(String label, String value, IconData icon, Color color) {
     return Column(
       children: [
-        Icon(icon, color: color, size: 24),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
         const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          style: TextStyle(
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: color,
           ),
         ),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildModernButton(String text, IconData icon, Color color, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 2,
+      ),
     );
   }
 

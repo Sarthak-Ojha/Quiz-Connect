@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/daily_challenge.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
+import '../models/user_challenge_progress.dart';
 import '../services/streak_service.dart';
 import '../services/database_service.dart';
 import 'quiz_result_screen.dart';
@@ -241,7 +242,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: _getDifficultyColor().withOpacity(0.1),
+        backgroundColor: Colors.white,
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -256,7 +257,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
     }
 
     return Scaffold(
-      backgroundColor: _getDifficultyColor().withOpacity(0.05),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: _getDifficultyColor(),
         foregroundColor: Colors.white,

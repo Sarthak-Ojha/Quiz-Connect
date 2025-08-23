@@ -1,16 +1,19 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart';
-import '../services/database_service.dart';
-import '../widgets/daily_challenge_card.dart';
-import '../models/daily_challenge.dart';
-import '../models/user_streak.dart';
 import '../models/quiz_category.dart';
+import '../models/daily_challenge.dart';
+import '../models/user_challenge_progress.dart';
+import '../models/user_streak.dart';
+import '../services/auth_service.dart';
+import '../services/streak_service.dart';
+import '../services/database_service.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
-import '../services/streak_service.dart';
+import '../widgets/daily_challenge_card.dart';
+import '../services/user_profile_service.dart';
 import 'streak_screen.dart';
 import 'ai_mode_screen.dart';
 import 'quiz_screen.dart';
@@ -54,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final StreakService _streakService = StreakService();
   bool _isSigningOut = false;
   late final List<Widget> _pages;
+  String _displayName = 'User';
 
   @override
   void initState() {
@@ -64,14 +68,52 @@ class _HomeScreenState extends State<HomeScreen> {
       const ScoresPage(),
       const LeaderboardPage(),
     ];
+    _loadDisplayName();
+    
+    // Listen for display name changes
+    UserProfileService.displayNameNotifier.addListener(_onDisplayNameChanged);
   }
 
-  void _onItemTapped(int index) => setState(() => _selectedIndex = index);
+  @override
+  void dispose() {
+    UserProfileService.displayNameNotifier.removeListener(_onDisplayNameChanged);
+    super.dispose();
+  }
+
+  Future<void> _loadDisplayName() async {
+    final name = await UserProfileService.getDisplayName();
+    if (mounted) {
+      setState(() {
+        _displayName = name;
+      });
+    }
+  }
+
+  void _onDisplayNameChanged() {
+    _loadDisplayName();
+  }
+
+  void _onItemTapped(int index) {
+    if (_selectedIndex != index) {
+      setState(() => _selectedIndex = index);
+    }
+  }
+
+  UserStreak? _cachedStreak;
+  DateTime? _lastStreakFetch;
 
   Future<UserStreak?> _getStreakData() async {
+    // Cache streak data for 30 seconds to reduce database calls
+    if (_cachedStreak != null && _lastStreakFetch != null &&
+        DateTime.now().difference(_lastStreakFetch!).inSeconds < 30) {
+      return _cachedStreak;
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      return await _streakService.getUserStreak(user.uid);
+      _cachedStreak = await _streakService.getUserStreak(user.uid);
+      _lastStreakFetch = DateTime.now();
+      return _cachedStreak;
     }
     return null;
   }
@@ -100,10 +142,64 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showExitConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Exit App?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1976D2),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Are you sure you want to exit the app?',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'No',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              SystemNavigator.pop();
+            },
+            child: const Text(
+              'Yes',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          _showExitConfirmationDialog();
+        }
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         leading: user?.photoURL != null
@@ -124,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-        title: Text(user?.displayName ?? 'User'),
+        title: Text(_displayName),
         centerTitle: true,
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
@@ -211,6 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -749,6 +846,8 @@ class _CategoryPageState extends State<CategoryPage>
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 16,
@@ -768,56 +867,58 @@ class _CategoryPageState extends State<CategoryPage>
   }
 
   Widget _buildCategoryCard(BuildContext context, QuizCategory category) {
-    return Card(
-      elevation: 6,
-      shadowColor: category.color.withValues(alpha: 0.2),
-      child: InkWell(
-        onTap: () => _showStartQuizDialog(context, category),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                category.color.withValues(alpha: 0.1),
-                category.color.withValues(alpha: 0.05),
+    return RepaintBoundary(
+      child: Card(
+        elevation: 6,
+        shadowColor: category.color.withValues(alpha: 0.2),
+        child: InkWell(
+          onTap: () => _showStartQuizDialog(context, category),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  category.color.withValues(alpha: 0.1),
+                  category.color.withValues(alpha: 0.05),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: category.color.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(category.icon, size: 32, color: category.color),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  category.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    category.description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(category.icon, size: 32, color: category.color),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                category.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  category.description,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
           ),
         ),
       ),

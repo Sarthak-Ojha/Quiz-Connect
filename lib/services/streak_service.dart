@@ -1,7 +1,8 @@
 import '../models/user_streak.dart';
 import '../models/daily_challenge.dart';
 import '../models/question.dart';
-import 'database_service.dart';
+import '../models/user_challenge_progress.dart';
+import '../services/database_service.dart';
 import 'notification_service.dart';
 
 class StreakService {
@@ -16,16 +17,7 @@ class StreakService {
   Future<UserStreak> updateUserStreak(String userId) async {
     final updatedStreak = await _dbService.updateStreakOnActivity(userId);
     
-    // Check for milestone achievements and show notifications
-    final isNewRecord = updatedStreak.streakCount == updatedStreak.maxStreak;
-    final isMilestone = await isStreakMilestone(updatedStreak.streakCount);
-    
-    if (isMilestone || isNewRecord) {
-      await _notificationService.showStreakAchievement(
-        streakCount: updatedStreak.streakCount,
-        isNewRecord: isNewRecord,
-      );
-    }
+    // Streak notifications disabled - no notifications for streak achievements
     
     return updatedStreak;
   }

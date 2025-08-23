@@ -40,6 +40,7 @@ dependencies:
   # Utilities
   intl: ^0.20.2
   http: ^1.1.0
+  url_launcher: ^6.2.5
 
 dev_dependencies:
   flutter_test:
@@ -55,14 +56,17 @@ flutter:
     - assets/questions.json
     - assets/icon/icon.png
 
-flutter_native_splash:
-  color: "#1976D2"
-  image: assets/splash_icon.png
-  android_12:
-    color: "#1976D2" 
-    icon_background_color: "#1976D2"
-  android: true
-  web: false
+# flutter_native_splash:
+#   color: "#1976D2"
+#   image: assets/icon/icon.png
+#   android_12:
+#     color: "#1976D2" 
+#     icon_background_color: "#1976D2"
+#   android: true
+#   web: false
+#   android_gravity: center
+#   ios_content_mode: center
+#   fullscreen: true
 
 flutter_icons:
   android: true

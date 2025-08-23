@@ -13,28 +13,28 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isInitialLoad = true;
+
   @override
   Widget build(BuildContext context) {
-    debugPrint('🔍 AuthWrapper: Building with current auth state');
 
     return StreamBuilder<User?>(
       // 🔧 CRITICAL: Use the proper stream type
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 🔧 ADD: Debug logging for stream states
-        debugPrint(
-          '🔍 AuthWrapper: Connection state: ${snapshot.connectionState}',
-        );
-        debugPrint('🔍 AuthWrapper: Has data: ${snapshot.hasData}');
-        debugPrint('🔍 AuthWrapper: User: ${snapshot.data?.email}');
+        // Removed debug prints to improve performance
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          debugPrint('🔍 AuthWrapper: Showing splash screen (waiting)');
+        // Only show splash screen on the very first load
+        if (snapshot.connectionState == ConnectionState.waiting && _isInitialLoad) {
           return const SplashScreen();
         }
 
+        // Mark that we've completed the initial load
+        if (snapshot.connectionState != ConnectionState.waiting) {
+          _isInitialLoad = false;
+        }
+
         if (snapshot.hasError) {
-          debugPrint('❌ AuthWrapper: Error - ${snapshot.error}');
           return Scaffold(
             body: Center(
               child: Column(
@@ -56,22 +56,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (snapshot.hasData && snapshot.data != null) {
           final user = snapshot.data!;
-          debugPrint('✅ AuthWrapper: User authenticated - ${user.email}');
 
           final isGoogleUser = user.providerData.any(
             (p) => p.providerId == 'google.com',
           );
 
           if (user.emailVerified || isGoogleUser) {
-            debugPrint('🏠 AuthWrapper: Navigating to HomeScreen');
             return const HomeScreen();
           } else {
-            debugPrint('📧 AuthWrapper: Navigating to VerifyEmailScreen');
             return const VerifyEmailScreen();
           }
         }
-
-        debugPrint('🔓 AuthWrapper: No user, showing AuthSelectionScreen');
         return const AuthSelectionScreen();
       },
     );

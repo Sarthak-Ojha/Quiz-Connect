@@ -130,8 +130,10 @@ class AuthService with ChangeNotifier {
 
   // Send email verification
   Future<void> sendEmailVerification() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.emailVerified) {
+      // You can implement custom email service here if needed
+      // For now, using Firebase default
       await user.sendEmailVerification();
       debugPrint('📧 Email verification sent to: ${user.email}');
     }
@@ -139,7 +141,7 @@ class AuthService with ChangeNotifier {
 
   // Check if email is verified
   Future<bool> isEmailVerified() async {
-    final user = _auth.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await user.reload();
       return user.emailVerified;

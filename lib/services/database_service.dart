@@ -5,6 +5,7 @@ import '../models/question.dart';
 import '../models/quiz_result.dart';
 import '../models/user_streak.dart';
 import '../models/daily_challenge.dart';
+import '../models/user_challenge_progress.dart';
 
 class DatabaseService {
   static Database? _database;

@@ -74,39 +74,6 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _authService.signInWithGoogle();
-
-      // 🔧 CRITICAL FIX: Force navigation after successful Google sign-in
-      if (mounted && user != null) {
-        debugPrint(
-          '🧭 Google sign-in successful, forcing navigation to AuthWrapper',
-        );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          (route) => false, // Remove all previous routes
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Google Sign-In failed: $e')),
-            ],
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
   void _showForgotPasswordDialog() {
     final resetEmailController = TextEditingController(
@@ -195,13 +162,17 @@ class _SigninScreenState extends State<SigninScreen> {
         ),
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Center(
             child: Card(
               elevation: 12,
               shadowColor: Colors.black.withOpacity(0.1),
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -245,31 +216,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-                      OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: const Icon(Icons.g_mobiledata, size: 24),
-                        label: const Text('Continue with Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: Colors.grey.shade300),
-                          foregroundColor: Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey.shade300)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'Or',
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: Colors.grey.shade300)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

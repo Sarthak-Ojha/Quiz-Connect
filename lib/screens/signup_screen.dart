@@ -176,29 +176,14 @@ class _SignupScreenState extends State<SignupScreen> {
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Verify Your Email'),
-            IconButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _navigateToSignin();
-              },
-              icon: const Icon(Icons.close),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.grey.shade100,
-                foregroundColor: Colors.grey.shade700,
-              ),
-            ),
-          ],
-        ),
+        contentPadding: const EdgeInsets.all(24),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Email icon
             Container(
-              width: 60,
-              height: 60,
+              width: 70,
+              height: 70,
               decoration: BoxDecoration(
                 color: const Color(0xFF1976D2).withOpacity(0.1),
                 shape: BoxShape.circle,
@@ -206,121 +191,170 @@ class _SignupScreenState extends State<SignupScreen> {
               child: const Icon(
                 Icons.mark_email_unread,
                 color: Color(0xFF1976D2),
-                size: 30,
+                size: 35,
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'We\'ve sent a verification email to ${_emailController.text}',
+            const SizedBox(height: 24),
+            
+            // Title
+            const Text(
+              'We have sent you an email',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            
+            // Email address
             Text(
-              'Please check your email and click the verification link. The verification link will expire in 24 hours.',
-              style: TextStyle(color: Colors.grey.shade600),
+              _emailController.text,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            
+            // Instructions
+            const Text(
+              'Please check your email and click the verification link to verify your account.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            
+            // Spam folder reminder
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.orange.shade600,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Check your spam folder too if you don\'t see the email',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Resend email button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () async {
+                  await _authService.sendEmailVerification();
+                  if (!dialogContext.mounted) return;
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Verification email sent!'),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: Color(0xFF1976D2)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Didn\'t receive email yet? Send Again',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1976D2),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Check verification button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  await FirebaseAuth.instance.currentUser?.reload();
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null && user.emailVerified) {
+                    if (!dialogContext.mounted) return;
+                    Navigator.of(dialogContext).pop();
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                      (route) => false,
+                    );
+                  } else {
+                    if (!dialogContext.mounted) return;
+                    ScaffoldMessenger.of(dialogContext).showSnackBar(
+                      const SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(Icons.error, color: Colors.white),
+                            SizedBox(width: 8),
+                            Text('Email not verified yet. Please check your email and try again.'),
+                          ],
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1976D2),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'I\'ve verified my email',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await _authService.sendEmailVerification();
-              if (!dialogContext.mounted) return;
-              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                const SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Verification email sent!'),
-                    ],
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: const Text('Resend Email'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.currentUser?.reload();
-              final user = FirebaseAuth.instance.currentUser;
-              if (user != null && user.emailVerified) {
-                if (!dialogContext.mounted) return;
-                Navigator.of(dialogContext).pop();
-                _navigateToSignin();
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text('Email verified successfully! Please sign in.'),
-                      ],
-                    ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                if (!dialogContext.mounted) return;
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(
-                    content: Row(
-                      children: [
-                        Icon(Icons.error, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(
-                          'Email not verified yet. Please check your email and try again.',
-                        ),
-                      ],
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('I\'ve Verified'),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _authService.signInWithGoogle();
-
-      // 🔧 CRITICAL FIX: Force navigation after successful Google sign-up
-      if (mounted && user != null) {
-        debugPrint(
-          '🧭 Google sign-up successful, forcing navigation to AuthWrapper',
-        );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          (route) => false, // Remove all previous routes
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Google Sign-In failed: $e')),
-            ],
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -338,199 +372,150 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(
             left: 20,
             right: 20,
             top: 20,
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight:
-                  MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  40,
-            ),
-            child: IntrinsicHeight(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Card(
-                    elevation: 12,
-                    shadowColor: Colors.black.withOpacity(0.1),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 28,
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1976D2).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.person_add,
-                                size: 50,
-                                color: Color(0xFF1976D2),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Create your\nAccount',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade800,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Sign up to get started with Quiz Master',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey.shade600),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
-                            OutlinedButton.icon(
-                              onPressed: _isLoading ? null : _signInWithGoogle,
-                              icon: const Icon(Icons.g_mobiledata, size: 24),
-                              label: const Text('Continue with Google'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                side: BorderSide(color: Colors.grey.shade300),
-                                foregroundColor: Colors.grey.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(color: Colors.grey.shade300),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    'Or',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(color: Colors.grey.shade300),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: const Icon(Icons.email_outlined),
-                                suffixIcon: _isValidatingEmail
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: Padding(
-                                          padding: EdgeInsets.all(12),
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
-                                helperText:
-                                    'We verify email addresses to prevent spam',
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@') ||
-                                    !value.contains('.')) {
-                                  return 'Please enter a valid email format';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                helperText: 'At least 6 characters',
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton(
-                              onPressed: (_isLoading || _isValidatingEmail)
-                                  ? null
-                                  : _submitForm,
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text('Sign Up'),
-                            ),
-                            const SizedBox(height: 24),
-                            TextButton(
-                              onPressed: _isLoading ? null : _navigateToSignin,
-                              child: const Text(
-                                'Already have an account? Sign In',
-                              ),
-                            ),
-                          ],
+          child: Center(
+            child: Card(
+              elevation: 12,
+              shadowColor: Colors.black.withOpacity(0.1),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 28,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person_add,
+                          size: 50,
+                          color: Color(0xFF1976D2),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Create your\nAccount',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Sign up to get started with Quiz Master',
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: Colors.grey.shade600),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          suffixIcon: _isValidatingEmail
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                          helperText:
+                              'We verify email addresses to prevent spam',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@') ||
+                              !value.contains('.')) {
+                            return 'Please enter a valid email format';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          helperText: 'At least 6 characters',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: (_isLoading || _isValidatingEmail)
+                            ? null
+                            : _submitForm,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Sign Up'),
+                      ),
+                      const SizedBox(height: 24),
+                      TextButton(
+                        onPressed: _isLoading ? null : _navigateToSignin,
+                        child: const Text(
+                          'Already have an account? Sign In',
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

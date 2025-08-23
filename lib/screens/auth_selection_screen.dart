@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'signin_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
+import '../widgets/auth_wrapper.dart';
 import 'signup_screen.dart';
+import 'signin_screen.dart';
 
 class AuthSelectionScreen extends StatefulWidget {
   const AuthSelectionScreen({super.key});
@@ -19,7 +22,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
@@ -47,148 +50,346 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1976D2),
+      backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: SlideTransition(
             position: _slideAnimation,
-            child: Column(
-              children: [
-                // Top section with quiz illustration
-                Expanded(
-                  flex: 2,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  const Spacer(flex: 1),
+
+                  // Welcome Illustration Area
+                  Container(
+                    height: 300,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 5,
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
                       children: [
-                        Container(
-                          width: 180,
-                          height: 180,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
+                        // Background pattern
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF4CAF50).withOpacity(0.1),
+                                  const Color(0xFF2196F3).withOpacity(0.1),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.quiz,
-                            size: 80,
-                            color: Color(0xFF4FC3F7),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Quiz Master',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+
+                        // Illustration elements
+                        Positioned(
+                          top: 40,
+                          left: 60,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF4CAF50),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.psychology,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          top: 60,
+                          right: 40,
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2196F3).withOpacity(0.8),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.quiz,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                        ),
+
+                        // Person illustrations (simplified)
+                        Positioned(
+                          bottom: 40,
+                          left: 40,
+                          child: Container(
+                            width: 50,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF9800),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFFFCC80),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Container(
+                                  width: 30,
+                                  height: 35,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF9800),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          bottom: 40,
+                          right: 60,
+                          child: Container(
+                            width: 50,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF9C27B0),
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE1BEE7),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Container(
+                                  width: 30,
+                                  height: 35,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF9C27B0),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Question marks floating
+                        Positioned(
+                          top: 30,
+                          left: 30,
+                          child: Text(
+                            '?',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF4CAF50).withOpacity(0.6),
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          top: 50,
+                          right: 20,
+                          child: Text(
+                            '?',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2196F3).withOpacity(0.6),
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                // Bottom section with buttons
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
+                  const SizedBox(height: 40),
+
+                  // Welcome Text
+                  const Text(
+                    'Welcome',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
+                      letterSpacing: 0.5,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Login Button - ✅ CHANGED TO pushReplacement
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  // ✅ FIXED
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SigninScreen(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2C3E50),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                'Login',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                  ),
 
-                          // Register Button - ✅ CHANGED TO pushReplacement
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  // ✅ FIXED
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SignupScreen(),
-                                  ),
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF2C3E50),
-                                side: const BorderSide(
-                                  color: Color(0xFF2C3E50),
-                                  width: 2,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-                                'Register',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Create a new account',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+
+                  const Spacer(flex: 1),
+
+                  // Login Button
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SigninScreen(),
                           ),
-                        ],
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shadowColor: const Color(0xFF2E7D32).withOpacity(0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'LOGIN',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+
+                  // Register Button
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignupScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shadowColor: const Color(0xFF2E7D32).withOpacity(0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'REGISTER',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Google Sign In Button
+                  Container(
+                    width: double.infinity,
+                    height: 56,
+                    margin: const EdgeInsets.only(bottom: 32),
+                    child: OutlinedButton.icon(
+                      onPressed: () => _signInWithGoogle(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                        side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        backgroundColor: Colors.white,
+                        elevation: 1,
+                      ),
+                      icon: Image.asset(
+                        'assets/google_logo.png',
+                        height: 24,
+                        width: 24,
+                        cacheWidth: 48,
+                        cacheHeight: 48,
+                      ),
+                      label: const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final AuthService authService = AuthService();
+      final User? user = await authService.signInWithGoogle();
+
+      if (user != null && mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to sign in with Google: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

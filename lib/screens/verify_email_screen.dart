@@ -100,6 +100,65 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
     super.dispose();
   }
 
+  Future<void> _checkEmailVerification() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.reload();
+        final refreshedUser = FirebaseAuth.instance.currentUser;
+        
+        if (refreshedUser?.emailVerified ?? false) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Email verified successfully! Redirecting...'),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text('Email not verified yet. Please check your email and click the verification link.'),
+                  ],
+                ),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error checking verification: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _sendVerificationEmail() async {
     if (_isLoading || !_canResend) return;
     setState(() => _isLoading = true);
@@ -249,215 +308,80 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 40),
-
                         // Email Icon
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF1976D2), Color(0xFF1565C0)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFF1976D2,
-                                ).withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.mark_email_unread,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Card Container
-                        Card(
-                          margin: EdgeInsets.zero,
-                          child: Padding(
-                            padding: const EdgeInsets.all(32),
-                            child: Column(
-                              children: [
-                                // Title
-                                Text(
-                                  'Verify Your Email',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey.shade800,
-                                      ),
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Email Address
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF1976D2,
-                                    ).withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF1976D2,
-                                      ).withValues(alpha: 0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    userEmail,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF1976D2),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 24),
-
-                                // Description
-                                Text(
-                                  'We\'ve sent a verification link to your email address. '
-                                  'Please check your inbox and click the link to verify your account.',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyLarge
-                                      ?.copyWith(
-                                        color: Colors.grey.shade600,
-                                        height: 1.5,
-                                      ),
-                                ),
-
-                                const SizedBox(height: 32),
-
-                                // Resend Email Button
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    onPressed: _canResend && !_isLoading
-                                        ? _sendVerificationEmail
-                                        : null,
-                                    icon: _isLoading
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Icon(Icons.send),
-                                    label: Text(
-                                      _isLoading
-                                          ? 'Sending...'
-                                          : _canResend
-                                          ? (_isEmailSent
-                                                ? 'Resend Email'
-                                                : 'Send Verification Email')
-                                          : 'Resend in ${_resendCooldown}s',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 24),
-
-                                // Status Indicator
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.blue.shade200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.blue.shade400,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Expanded(
-                                        child: Text(
-                                          'Checking for verification automatically...',
-                                          style: TextStyle(
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        const Icon(
+                          Icons.email,
+                          size: 80,
+                          color: Color(0xFF1976D2),
                         ),
 
                         const SizedBox(height: 24),
 
-                        // Help Section
-                        Card(
-                          color: Colors.grey.shade50,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.help_outline,
-                                      color: Colors.grey.shade600,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Need Help?',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.grey.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  '• Check your spam/junk folder\n'
-                                  '• Make sure the email address is correct\n'
-                                  '• Wait a few minutes for the email to arrive\n'
-                                  '• Contact support if you continue having issues',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
+                        // Title
+                        Text(
+                          'Verify Your Email',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Description
+                        Text(
+                          'We sent an email to $userEmail.\nCheck your inbox and spam folder.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.grey.shade600,
+                                height: 1.4,
+                              ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // I've Verified Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _checkEmailVerification,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1976D2),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text(
+                              "I've Verified",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Resend Email Button
+                        TextButton(
+                          onPressed: _canResend && !_isLoading
+                              ? _sendVerificationEmail
+                              : null,
+                          child: Text(
+                            _isLoading
+                                ? 'Sending...'
+                                : _canResend
+                                ? 'Resend Email'
+                                : 'Resend in ${_resendCooldown}s',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF1976D2),
                             ),
                           ),
                         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/daily_challenge.dart';
+import '../models/user_challenge_progress.dart';
 
 class DailyChallengeCard extends StatelessWidget {
   final DailyChallenge challenge;

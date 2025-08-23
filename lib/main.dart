@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
@@ -10,7 +9,6 @@ import 'screens/verify_email_screen.dart';
 import 'screens/home_screen.dart';
 
 import 'widgets/exit_confirmation_wrapper.dart';
-import 'widgets/auth_wrapper.dart';
 
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
@@ -20,7 +18,6 @@ import 'utils/seed_questions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: WidgetsBinding.instance);
 
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint('Flutter Error: ${details.exception}');
@@ -36,6 +33,10 @@ void main() async {
 
     await NotificationService().initialize();
     debugPrint('📱 Notification service initialized successfully');
+    
+    // Enable daily challenge notifications at 8AM, 2PM, and 5PM
+    await NotificationService().enableDailyChallengeNotifications();
+    debugPrint('📅 Daily challenge notifications enabled');
 
     final dbService = DatabaseService();
     await dbService.initializeDatabase();
@@ -48,11 +49,9 @@ void main() async {
       debugPrint('✅ Questions seeded successfully');
     }
 
-    FlutterNativeSplash.remove();
     runApp(const MyApp());
   } catch (e) {
     debugPrint('❌ Initialization error: $e');
-    FlutterNativeSplash.remove();
     runApp(ErrorApp(error: e.toString()));
   }
 }
@@ -197,7 +196,11 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: ThemeMode.light,
-          home: const AuthWrapper(),
+          home: const ExitConfirmationWrapper(
+            title: 'Exit Quiz Master?',
+            message: 'Are you sure you want to exit the app?',
+            child: SplashScreen(),
+          ),
           routes: {
             '/signin': (context) => const SigninScreen(),
             '/signup': (context) => const SignupScreen(),

@@ -170,18 +170,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   user!.photoURL!,
                                 )
                               : null,
-                          child: user?.photoURL == null
-                              ? Text(
-                                  (user?.displayName?.isNotEmpty == true)
-                                      ? user!.displayName!.substring(0, 1).toUpperCase()
-                                      : 'U',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                )
+                          onBackgroundImageError: user?.photoURL != null
+                              ? (exception, stackTrace) {
+                                  // Handle network errors silently
+                                }
                               : null,
+                          child: Text(
+                            (user?.displayName?.isNotEmpty == true)
+                                ? user!.displayName!.substring(0, 1).toUpperCase()
+                                : 'U',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(

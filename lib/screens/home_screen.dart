@@ -207,6 +207,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: CircleAvatar(
                   backgroundImage: NetworkImage(user!.photoURL!),
+                  onBackgroundImageError: (exception, stackTrace) {
+                    // Handle network errors silently
+                  },
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               )
             : Padding(
@@ -364,12 +372,6 @@ class _CategoryPageState extends State<CategoryPage>
       icon: Icons.computer,
       color: Color(0xFF00BCD4),
       description: 'Tech and innovation',
-    ),
-    QuizCategory(
-      name: 'Current Affairs',
-      icon: Icons.newspaper,
-      color: Color(0xFF9C27B0),
-      description: 'Stay updated with the latest events',
     ),
   ];
 
@@ -2046,168 +2048,74 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            Colors.blue.shade50,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Quick Mode Settings',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 16),
-            // Timer info
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.timer, color: Colors.orange.shade700, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Timer: 15s per question',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.orange.shade800,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Question Count Slider
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Number of Questions:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1976D2).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF1976D2)),
-                      ),
-                      child: Text(
-                        '$_questionCount Questions',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1976D2),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF1976D2),
-                    inactiveTrackColor: const Color(
-                      0xFF1976D2,
-                    ).withValues(alpha: 0.3),
-                    thumbColor: const Color(0xFF1976D2),
-                    overlayColor: const Color(
-                      0xFF1976D2,
-                    ).withValues(alpha: 0.2),
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 12.0,
-                      pressedElevation: 8.0,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 24.0,
-                    ),
-                    trackHeight: 6.0,
-                    valueIndicatorShape:
-                        const PaddleSliderValueIndicatorShape(),
-                    valueIndicatorColor: const Color(0xFF1976D2),
-                    valueIndicatorTextStyle: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    showValueIndicator: ShowValueIndicator.always,
-                  ),
-                  child: Slider(
-                    value: _questionCount.toDouble(),
-                    min: 1,
-                    max: 50,
-                    divisions: 49,
-                    label: '$_questionCount',
-                    onChanged: (double value) {
-                      setState(() {
-                        _questionCount = value.round();
-                      });
-                    },
-                  ),
-                ),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '1',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '50',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Random/Choose Categories buttons
+            // Header with icon and title
             Row(
               children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.orange.shade400, Colors.orange.shade600],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.flash_on,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: ToggleButtons(
-                    isSelected: [_isRandom, !_isRandom],
-                    borderRadius: BorderRadius.circular(8),
-                    onPressed: (idx) {
-                      setState(() => _isRandom = idx == 0);
-                    },
-                    selectedColor: Colors.white,
-                    fillColor: const Color(0xFF1976D2),
-                    borderColor: const Color(0xFF1976D2),
-                    color: const Color(0xFF1976D2),
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          "Random",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Quick Mode',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                          color: Color(0xFF1976D2),
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          "Choose Categories",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      Text(
+                        'Fast-paced quiz with timer',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -2215,50 +2123,446 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                 ),
               ],
             ),
-            // Category selection chips
-            if (!_isRandom) ...[
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(widget.categories.length, (i) {
-                  final cat = widget.categories[i];
-                  final selected = _selectedIndexes.contains(i);
-                  return FilterChip(
-                    label: Text(cat.name),
-                    selected: selected,
-                    selectedColor: cat.color.withValues(alpha: 0.2),
-                    onSelected: (_) {
-                      setState(() {
-                        if (selected) {
-                          _selectedIndexes.remove(i);
-                        } else {
-                          _selectedIndexes.add(i);
-                        }
-                      });
-                    },
-                    avatar: Icon(
-                      cat.icon,
-                      color: selected ? cat.color : Colors.grey,
-                    ),
-                    labelStyle: TextStyle(
-                      color: selected ? cat.color : Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    backgroundColor: Colors.grey.shade100,
-                    checkmarkColor: cat.color,
-                  );
-                }),
-              ),
-            ],
-            const SizedBox(height: 20),
-            // Start Quiz button
-            SizedBox(
+            const SizedBox(height: 24),
+            
+            // Timer info card
+            Container(
               width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange.shade50, Colors.orange.shade100],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.timer,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Timer Challenge',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange.shade800,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '15 seconds per question',
+                          style: TextStyle(
+                            color: Colors.orange.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Question Count Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Questions',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF1976D2),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF1976D2),
+                              const Color(0xFF1976D2).withValues(alpha: 0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '$_questionCount',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: const Color(0xFF1976D2),
+                      inactiveTrackColor: Colors.grey.shade300,
+                      thumbColor: const Color(0xFF1976D2),
+                      overlayColor: const Color(0xFF1976D2).withValues(alpha: 0.2),
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 14.0,
+                        pressedElevation: 8.0,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 28.0,
+                      ),
+                      trackHeight: 8.0,
+                      valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
+                      valueIndicatorColor: const Color(0xFF1976D2),
+                      valueIndicatorTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      showValueIndicator: ShowValueIndicator.always,
+                    ),
+                    child: Slider(
+                      value: _questionCount.toDouble(),
+                      min: 1,
+                      max: 50,
+                      divisions: 49,
+                      label: '$_questionCount',
+                      onChanged: (double value) {
+                        setState(() {
+                          _questionCount = value.round();
+                        });
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '1 Question',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '50 Questions',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Category Selection Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Category Selection',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFF1976D2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _isRandom = true),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: _isRandom
+                                  ? LinearGradient(
+                                      colors: [
+                                        const Color(0xFF1976D2),
+                                        const Color(0xFF1976D2).withValues(alpha: 0.8),
+                                      ],
+                                    )
+                                  : null,
+                              color: _isRandom ? null : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _isRandom
+                                    ? const Color(0xFF1976D2)
+                                    : Colors.grey.shade300,
+                                width: 2,
+                              ),
+                              boxShadow: _isRandom
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.shuffle,
+                                  color: _isRandom ? Colors.white : Colors.grey.shade600,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Random',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _isRandom ? Colors.white : Colors.grey.shade700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _isRandom = false),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: !_isRandom
+                                  ? LinearGradient(
+                                      colors: [
+                                        const Color(0xFF1976D2),
+                                        const Color(0xFF1976D2).withValues(alpha: 0.8),
+                                      ],
+                                    )
+                                  : null,
+                              color: !_isRandom ? null : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: !_isRandom
+                                    ? const Color(0xFF1976D2)
+                                    : Colors.grey.shade300,
+                                width: 2,
+                              ),
+                              boxShadow: !_isRandom
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.category,
+                                  color: !_isRandom ? Colors.white : Colors.grey.shade600,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Choose',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: !_isRandom ? Colors.white : Colors.grey.shade700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Category selection chips
+                  if (!_isRandom) ...[
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Select Categories:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: List.generate(widget.categories.length, (i) {
+                        final cat = widget.categories[i];
+                        final selected = _selectedIndexes.contains(i);
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (selected) {
+                                _selectedIndexes.remove(i);
+                              } else {
+                                _selectedIndexes.add(i);
+                              }
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: selected
+                                  ? LinearGradient(
+                                      colors: [
+                                        cat.color.withValues(alpha: 0.8),
+                                        cat.color,
+                                      ],
+                                    )
+                                  : null,
+                              color: selected ? null : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(25),
+                              border: Border.all(
+                                color: selected ? cat.color : Colors.grey.shade300,
+                                width: 2,
+                              ),
+                              boxShadow: selected
+                                  ? [
+                                      BoxShadow(
+                                        color: cat.color.withValues(alpha: 0.3),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  cat.icon,
+                                  color: selected ? Colors.white : cat.color,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  cat.name,
+                                  style: TextStyle(
+                                    color: selected ? Colors.white : cat.color,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (selected) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            
+            // Start Quiz button
+            Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.orange.shade400, Colors.orange.shade600],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.timer),
+                icon: const Icon(Icons.play_arrow, size: 24),
                 label: Text(
-                  'Start Quick Quiz ($_questionCount Q • 15s per question)',
+                  'Start Quick Quiz ($_questionCount Questions)',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 onPressed: _isRandom || _selectedIndexes.isNotEmpty
                     ? () {
@@ -2271,8 +2575,12 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),

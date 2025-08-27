@@ -35,7 +35,7 @@ class _LazyWidgetState extends State<LazyWidget> {
           });
         }
       },
-      child: _isVisible 
+      child: _isVisible
           ? _cachedWidget!
           : widget.placeholder ?? const SizedBox.shrink(),
     );
@@ -44,6 +44,7 @@ class _LazyWidgetState extends State<LazyWidget> {
 
 /// Simple visibility detector for lazy loading
 class VisibilityDetector extends StatefulWidget {
+  @override
   final Key key;
   final Widget child;
   final Function(VisibilityInfo) onVisibilityChanged;
@@ -73,11 +74,11 @@ class _VisibilityDetectorState extends State<VisibilityDetector> {
       final size = renderBox.size;
       final position = renderBox.localToGlobal(Offset.zero);
       final screenSize = MediaQuery.of(context).size;
-      
+
       // Simple visibility check
-      final isVisible = position.dy < screenSize.height && 
-                       position.dy + size.height > 0;
-      
+      final isVisible =
+          position.dy < screenSize.height && position.dy + size.height > 0;
+
       if (isVisible) {
         widget.onVisibilityChanged(VisibilityInfo(visibleFraction: 1.0));
       }
@@ -92,7 +93,7 @@ class _VisibilityDetectorState extends State<VisibilityDetector> {
 
 class VisibilityInfo {
   final double visibleFraction;
-  
+
   const VisibilityInfo({required this.visibleFraction});
 }
 
@@ -113,7 +114,6 @@ class OptimizedListItem extends StatefulWidget {
 
 class _OptimizedListItemState extends State<OptimizedListItem>
     with AutomaticKeepAliveClientMixin {
-  
   @override
   bool get wantKeepAlive => widget.keepAlive;
 

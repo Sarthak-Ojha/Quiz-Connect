@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_profile_service.dart';
 import '../widgets/auth_wrapper.dart';
+import '../utils/seed_questions.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
+  bool _isReseeding = false;
   String? _customDisplayName;
 
   @override
@@ -136,6 +138,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _forceReseedQuestions() async {
+    setState(() => _isReseeding = true);
+    
+    try {
+      await forceReseedQuestions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Questions reseeded successfully! Age categories should now work.'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error reseeding questions: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isReseeding = false);
       }
     }
   }
@@ -270,6 +314,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : 'Sign out of your account',
                     ),
                     onTap: _isSigningOut ? null : _showSignOutDialog,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Developer Section
+                Text(
+                  'Developer Tools',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1976D2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Card(
+                  child: ListTile(
+                    leading: _isReseeding
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, color: Color(0xFF1976D2)),
+                    title: Text(_isReseeding ? 'Reseeding Database...' : 'Reseed Questions'),
+                    subtitle: Text(
+                      _isReseeding
+                          ? 'Please wait while questions are reloaded'
+                          : 'Force reload all quiz questions from assets',
+                    ),
+                    onTap: _isReseeding ? null : _forceReseedQuestions,
                   ),
                 ),
                 const SizedBox(height: 24),

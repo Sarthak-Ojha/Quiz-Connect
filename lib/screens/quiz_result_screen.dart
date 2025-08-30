@@ -117,7 +117,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
           categoryName: isTimerMode
               ? 'Quick Mode'
               : (widget.category?.name ?? 'Unknown'),
-          categoryColor: widget.category?.color.value.toRadixString(16),
+          categoryColor: widget.category?.color.toARGB32().toRadixString(16) ?? 'FF1976D2',
           totalQuestions: totalQuestions,
           correctAnswers: correctAnswers,
           wrongAnswers: wrongAnswers,
@@ -186,8 +186,8 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                _performanceColor.withOpacity(0.1),
-                                _performanceColor.withOpacity(0.05),
+                                _performanceColor.withValues(alpha: 0.1),
+                                _performanceColor.withValues(alpha: 0.05),
                               ],
                             ),
                           ),
@@ -198,7 +198,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                                 width: 80,
                                 height: 80,
                                 decoration: BoxDecoration(
-                                  color: _performanceColor.withOpacity(0.1),
+                                  color: _performanceColor.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -427,7 +427,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                           margin: const EdgeInsets.only(top: 16),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: _resultSaved ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                            color: _resultSaved ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: _resultSaved ? Colors.green : Colors.orange,
@@ -474,7 +474,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),
@@ -599,11 +599,11 @@ class ReviewAnswersScreen extends StatelessWidget {
                     IconData? icon;
 
                     if (isCorrectAnswer) {
-                      backgroundColor = Colors.green.withOpacity(0.1);
+                      backgroundColor = Colors.green.withValues(alpha: 0.1);
                       textColor = Colors.green.shade700;
                       icon = Icons.check_circle;
                     } else if (isUserAnswer && !isCorrect) {
-                      backgroundColor = Colors.red.withOpacity(0.1);
+                      backgroundColor = Colors.red.withValues(alpha: 0.1);
                       textColor = Colors.red.shade700;
                       icon = Icons.cancel;
                     }
@@ -645,7 +645,7 @@ class ReviewAnswersScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(

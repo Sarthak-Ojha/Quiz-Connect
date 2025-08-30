@@ -160,7 +160,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       final quizResult = QuizResult(
         userId: user.uid,
         categoryName: 'Daily Challenge',
-        categoryColor: _getDifficultyColor().value.toRadixString(16),
+        categoryColor: _getDifficultyColor().toARGB32().toRadixString(16),
         totalQuestions: widget.questions.length,
         correctAnswers: _correctAnswers,
         wrongAnswers: widget.questions.length - _correctAnswers,
@@ -271,7 +271,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -303,7 +303,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
               color: _getDifficultyColor(),
               boxShadow: [
                 BoxShadow(
-                  color: _getDifficultyColor().withOpacity(0.3),
+                  color: _getDifficultyColor().withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -335,7 +335,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                   value:
                       (_currentQuestionIndex + (_isAnswered ? 1 : 0)) /
                       widget.questions.length,
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: Colors.white.withValues(alpha: 0.3),
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   minHeight: 6,
                 ),
@@ -378,7 +378,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                   end: Alignment.bottomRight,
                   colors: [
                     Colors.white,
-                    _getDifficultyColor().withOpacity(0.05),
+                    _getDifficultyColor().withValues(alpha: 0.05),
                   ],
                 ),
               ),
@@ -425,7 +425,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                     textColor = Colors.red.shade700;
                   }
                 } else if (isSelected) {
-                  cardColor = _getDifficultyColor().withOpacity(0.1);
+                  cardColor = _getDifficultyColor().withValues(alpha: 0.1);
                   borderColor = _getDifficultyColor();
                   textColor = _getDifficultyColor();
                 }
@@ -450,7 +450,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: borderColor.withOpacity(0.2),
+                                color: borderColor.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: borderColor),
                               ),
@@ -476,13 +476,13 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
                               ),
                             ),
                             if (_isAnswered && isCorrect)
-                              Icon(
+                              const Icon(
                                 Icons.check_circle,
                                 color: Colors.green,
                                 size: 24,
                               ),
                             if (_isAnswered && isSelected && !isCorrect)
-                              Icon(Icons.cancel, color: Colors.red, size: 24),
+                              const Icon(Icons.cancel, color: Colors.red, size: 24),
                           ],
                         ),
                       ),

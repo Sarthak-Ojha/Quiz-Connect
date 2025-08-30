@@ -172,7 +172,7 @@ class _SigninScreenState extends State<SigninScreen> {
           child: Center(
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withOpacity(0.1),
+              shadowColor: Colors.black.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -188,7 +188,7 @@ class _SigninScreenState extends State<SigninScreen> {
                         width: 80,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

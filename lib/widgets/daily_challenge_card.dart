@@ -25,7 +25,7 @@ class DailyChallengeCard extends StatelessWidget {
 
     return Card(
       elevation: 8,
-      shadowColor: _getDifficultyColor().withOpacity(0.3),
+      shadowColor: _getDifficultyColor().withValues(alpha: 0.3),
       child: InkWell(
         onTap: canAttempt ? onTap : null,
         borderRadius: BorderRadius.circular(16),
@@ -36,8 +36,8 @@ class DailyChallengeCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                _getDifficultyColor().withOpacity(0.1),
-                _getDifficultyColor().withOpacity(0.05),
+                _getDifficultyColor().withValues(alpha: 0.1),
+                _getDifficultyColor().withValues(alpha: 0.05),
               ],
             ),
           ),
@@ -48,7 +48,7 @@ class DailyChallengeCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _getDifficultyColor().withOpacity(0.2),
+                  color: _getDifficultyColor().withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -80,7 +80,7 @@ class DailyChallengeCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _getDifficultyColor().withOpacity(0.2),
+                            color: _getDifficultyColor().withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -98,7 +98,7 @@ class DailyChallengeCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       LinearProgressIndicator(
                         value: progressPercentage / 100,
-                        backgroundColor: _getDifficultyColor().withOpacity(0.2),
+                        backgroundColor: _getDifficultyColor().withValues(alpha: 0.2),
                         valueColor: AlwaysStoppedAnimation<Color>(_getDifficultyColor()),
                         minHeight: 4,
                       ),
@@ -118,7 +118,7 @@ class DailyChallengeCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

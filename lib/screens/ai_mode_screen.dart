@@ -113,7 +113,7 @@ class _AIModeScreenState extends State<AIModeScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFF1976D2).withOpacity(0.1),
+                      const Color(0xFF1976D2).withValues(alpha: 0.1),
                       Colors.white,
                     ],
                   ),
@@ -123,7 +123,7 @@ class _AIModeScreenState extends State<AIModeScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1976D2).withOpacity(0.1),
+                        color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -219,7 +219,7 @@ class _AIModeScreenState extends State<AIModeScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white.withOpacity(0.7),
+                                Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ),
@@ -268,7 +268,7 @@ class _AIModeScreenState extends State<AIModeScreen> {
                 return ActionChip(
                   label: Text(topic),
                   onPressed: () => _selectSuggestedTopic(topic),
-                  backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                  backgroundColor: const Color(0xFF1976D2).withValues(alpha: 0.1),
                   labelStyle: const TextStyle(
                     color: Color(0xFF1976D2),
                     fontWeight: FontWeight.w600,

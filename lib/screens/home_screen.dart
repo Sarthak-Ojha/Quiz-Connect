@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = FirebaseAuth.instance.currentUser;
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
           _showExitConfirmationDialog();
         }
@@ -337,12 +337,12 @@ class _CategoryPageState extends State<CategoryPage>
   final List<String> _modes = ['Category Mode', 'Quick Mode', 'AI Mode'];
   String _selectedMode = 'Category Mode';
   final StreakService _streakService = StreakService();
-  
   UserStreak? _userStreak;
+  
   DailyChallenge? _dailyChallenge;
   UserChallengeProgress? _challengeProgress;
 
-  static const List<QuizCategory> _categories = [
+  static const List<QuizCategory> _subjectCategories = [
     QuizCategory(
       name: 'Science',
       icon: Icons.science,
@@ -372,6 +372,33 @@ class _CategoryPageState extends State<CategoryPage>
       icon: Icons.computer,
       color: Color(0xFF00BCD4),
       description: 'Tech and innovation',
+    ),
+  ];
+
+  static const List<QuizCategory> _ageCategories = [
+    QuizCategory(
+      name: 'Kids (6-12)',
+      icon: Icons.child_friendly,
+      color: Color(0xFFE91E63),
+      description: 'Fun questions for children',
+    ),
+    QuizCategory(
+      name: 'Teens (13-17)',
+      icon: Icons.school,
+      color: Color(0xFF9C27B0),
+      description: 'Questions for teenagers',
+    ),
+    QuizCategory(
+      name: 'Adults (18+)',
+      icon: Icons.person,
+      color: Color(0xFF673AB7),
+      description: 'Challenging adult questions',
+    ),
+    QuizCategory(
+      name: 'Seniors (60+)',
+      icon: Icons.elderly,
+      color: Color(0xFF795548),
+      description: 'Questions for senior citizens',
     ),
   ];
 
@@ -632,7 +659,9 @@ class _CategoryPageState extends State<CategoryPage>
       final List<Question> allQuestions = [];
 
       if (isRandom) {
-        for (final category in _categories) {
+        // Include both subject and age categories for random mode
+        final allCategories = [..._subjectCategories, ..._ageCategories];
+        for (final category in allCategories) {
           final questions = await dbService.getRandomQuestionsByCategory(
             category.name,
             limit: 50,
@@ -826,6 +855,7 @@ class _CategoryPageState extends State<CategoryPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Subject Categories Section
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Row(
@@ -833,7 +863,7 @@ class _CategoryPageState extends State<CategoryPage>
               const Icon(Icons.category, color: Color(0xFF1976D2), size: 28),
               const SizedBox(width: 8),
               Text(
-                'Choose a Category',
+                'Subject Categories',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF1976D2),
@@ -856,9 +886,51 @@ class _CategoryPageState extends State<CategoryPage>
                 mainAxisSpacing: 16,
                 childAspectRatio: 1.1,
               ),
-              itemCount: _categories.length,
+              itemCount: _subjectCategories.length,
               itemBuilder: (context, index) {
-                final category = _categories[index];
+                final category = _subjectCategories[index];
+                return _buildCategoryCard(context, category);
+              },
+            );
+          },
+        ),
+        
+        const SizedBox(height: 32),
+        
+        // Age Categories Section
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.groups, color: Color(0xFFE91E63), size: 28),
+              const SizedBox(width: 8),
+              Text(
+                'Age Categories',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFE91E63),
+                ),
+              ),
+            ],
+          ),
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              addAutomaticKeepAlives: false,
+              addRepaintBoundaries: false,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              itemCount: _ageCategories.length,
+              itemBuilder: (context, index) {
+                final category = _ageCategories[index];
                 return _buildCategoryCard(context, category);
               },
             );
@@ -1043,8 +1115,9 @@ class _CategoryPageState extends State<CategoryPage>
   }
 
   Widget _buildQuickModeOptions(BuildContext context) {
+    final allCategories = [..._subjectCategories, ..._ageCategories];
     return _QuickModeOptions(
-      categories: _categories,
+      categories: allCategories,
       onStartQuiz: (selectedCategories, isRandom, questionCount) async {
         await _startQuickModeQuiz(
           context,

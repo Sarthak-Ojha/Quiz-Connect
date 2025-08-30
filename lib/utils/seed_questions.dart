@@ -14,6 +14,21 @@ Future<void> seedQuestionsFromAsset() async {
     return;
   }
 
+  await _performSeeding(dbService);
+}
+
+Future<void> forceReseedQuestions() async {
+  final dbService = DatabaseService();
+  debugPrint('[FORCE-SEED] Force reseeding questions...');
+  
+  // Reset the seeded flag
+  await dbService.deleteSetting('questionsSeeded');
+  
+  await _performSeeding(dbService);
+}
+
+Future<void> _performSeeding(DatabaseService dbService) async {
+
   final db = await dbService.database;
   await db.delete('questions');
   debugPrint('[SEED] Existing rows deleted.');
@@ -70,6 +85,15 @@ Future<void> seedQuestionsFromAsset() async {
     );
     final count = countResult.first['count'];
     debugPrint('[SEED] SQLite now reports $count total question rows.');
+
+    // Show category breakdown
+    final categoryResult = await db.rawQuery(
+      'SELECT category, COUNT(*) as count FROM questions GROUP BY category ORDER BY category',
+    );
+    debugPrint('[SEED] Questions by category:');
+    for (final row in categoryResult) {
+      debugPrint('[SEED] - ${row['category']}: ${row['count']} questions');
+    }
 
     await dbService.insertSetting('questionsSeeded', 'true');
     debugPrint('[SEED] Flag set — seeding complete.');

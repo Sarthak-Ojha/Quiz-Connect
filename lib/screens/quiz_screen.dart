@@ -87,7 +87,7 @@ class _QuizScreenState extends State<QuizScreen> {
         final quizResult = QuizResult(
           userId: user.uid,
           categoryName: widget.isAIMode ? widget.aiTopic ?? 'AI Quiz' : widget.category?.name ?? 'Quiz',
-          categoryColor: widget.isAIMode ? 'FF6B73' : (widget.category?.color.value.toRadixString(16) ?? 'FF6B73'),
+          categoryColor: widget.isAIMode ? 'FF6B73' : (widget.category?.color.toARGB32().toRadixString(16) ?? 'FF6B73'),
           totalQuestions: widget.questions.length,
           correctAnswers: _score,
           wrongAnswers: widget.questions.length - _score,
@@ -223,7 +223,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     }
                   } else if (isSelected) {
                     // Selected but not answered yet
-                    backgroundColor = (widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF))).withOpacity(0.1);
+                    backgroundColor = (widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF))).withValues(alpha: 0.1);
                     borderColor = widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF));
                     textColor = widget.isAIMode ? const Color(0xFF6B73FF) : (widget.category?.color ?? const Color(0xFF6B73FF));
                   }

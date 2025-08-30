@@ -71,7 +71,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
+                          color: Colors.grey.withValues(alpha: 0.1),
                           spreadRadius: 5,
                           blurRadius: 15,
                           offset: const Offset(0, 5),
@@ -89,8 +89,8 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  const Color(0xFF4CAF50).withOpacity(0.1),
-                                  const Color(0xFF2196F3).withOpacity(0.1),
+                                  const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                                  const Color(0xFF2196F3).withValues(alpha: 0.1),
                                 ],
                               ),
                             ),
@@ -123,7 +123,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2196F3).withOpacity(0.8),
+                              color: const Color(0xFF2196F3).withValues(alpha: 0.8),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -214,7 +214,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF4CAF50).withOpacity(0.6),
+                              color: const Color(0xFF4CAF50).withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -227,7 +227,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2196F3).withOpacity(0.6),
+                              color: const Color(0xFF2196F3).withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -279,7 +279,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                         backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
                         elevation: 2,
-                        shadowColor: const Color(0xFF2E7D32).withOpacity(0.3),
+                        shadowColor: const Color(0xFF2E7D32).withValues(alpha: 0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -313,7 +313,7 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
                         backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
                         elevation: 2,
-                        shadowColor: const Color(0xFF2E7D32).withOpacity(0.3),
+                        shadowColor: const Color(0xFF2E7D32).withValues(alpha: 0.3),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

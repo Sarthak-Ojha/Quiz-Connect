@@ -14,6 +14,9 @@ import '../models/question.dart';
 import '../models/quiz_result.dart';
 import '../widgets/daily_challenge_card.dart';
 import '../services/user_profile_service.dart';
+import '../services/leaderboard_service.dart';
+import '../services/firebase_analytics_service.dart';
+import '../models/leaderboard_entry.dart';
 import 'streak_screen.dart';
 import 'ai_mode_screen.dart';
 import 'quiz_screen.dart';
@@ -69,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const LeaderboardPage(),
     ];
     _loadDisplayName();
+    _syncCurrentUser();
     
     // Listen for display name changes
     UserProfileService.displayNameNotifier.addListener(_onDisplayNameChanged);
@@ -91,6 +95,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onDisplayNameChanged() {
     _loadDisplayName();
+  }
+
+  Future<void> _syncCurrentUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await DatabaseService().syncFirebaseUser(
+          user.uid,
+          user.email ?? '',
+          user.displayName,
+          user.photoURL,
+          user.emailVerified,
+        );
+      } catch (e) {
+        debugPrint('Error syncing user: $e');
+      }
+    }
   }
 
   void _onItemTapped(int index) {
@@ -202,32 +223,24 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        leading: user?.photoURL != null
-            ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CircleAvatar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: user?.photoURL != null
+              ? CircleAvatar(
                   backgroundImage: NetworkImage(user!.photoURL!),
                   onBackgroundImageError: (exception, stackTrace) {
-                    // Handle network errors silently
+                    // This will be caught by the outer catch block
                   },
+                )
+              : CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.2),
                   child: const Icon(
                     Icons.person,
                     color: Colors.white,
-                    size: 20,
+                    size: 24,
                   ),
                 ),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CircleAvatar(
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
+        ),
         title: Text(_displayName),
         centerTitle: true,
         backgroundColor: const Color(0xFF1976D2),
@@ -555,7 +568,6 @@ class _CategoryPageState extends State<CategoryPage>
               ),
               const Text('• Random questions'),
               const Text('• No time limit'),
-              const Text('• Earn coins and points'),
             ],
           ),
           actions: [
@@ -828,22 +840,43 @@ class _CategoryPageState extends State<CategoryPage>
           ],
         ),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: _modes.map((mode) {
             final isSelected = mode == _selectedMode;
-            return ChoiceChip(
-              label: Text(mode),
-              selected: isSelected,
-              selectedColor: const Color(0xFF1976D2),
-              onSelected: (_) => setState(() => _selectedMode = mode),
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF1976D2),
-                fontWeight: FontWeight.bold,
+            return Flexible(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                child: ChoiceChip(
+                  label: Text(
+                    mode.replaceAll(' Mode', ''), // Show just "Category", "Quick", "AI"
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : const Color(0xFF1976D2),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: const Color(0xFF1976D2),
+                  onSelected: (_) => setState(() => _selectedMode = mode),
+                  backgroundColor: isSelected 
+                      ? const Color(0xFF1976D2) 
+                      : Colors.white,
+                  side: BorderSide(
+                    color: const Color(0xFF1976D2),
+                    width: isSelected ? 2 : 1.5,
+                  ),
+                  elevation: isSelected ? 4 : 1,
+                  shadowColor: isSelected 
+                      ? const Color(0xFF1976D2).withOpacity(0.5)
+                      : const Color(0xFF1976D2).withOpacity(0.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  showCheckmark: false, // Remove the tick/checkmark
+                ),
               ),
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFF1976D2)),
-              elevation: isSelected ? 2 : 0,
             );
           }).toList(),
         ),
@@ -1185,45 +1218,45 @@ class _CategoryPageState extends State<CategoryPage>
                   color: const Color(0xFF6B73FF).withValues(alpha: 0.2),
                 ),
               ),
-              child: Column(
+              child: Text(
+                '10 AI-generated questions powered by Google Gemini AI',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Disclaimer
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.auto_awesome, 
-                        color: Color(0xFF6B73FF), size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Features:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[700],
-                        ),
+                  const Icon(
+                    Icons.warning_amber,
+                    color: Colors.orange,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Note: AI-generated questions and answers might not be reliable. Use for practice purposes only.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.w500,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                      SizedBox(width: 8),
-                      Text('10 AI-generated questions'),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                      SizedBox(width: 8),
-                      Text('Custom topics of your choice'),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                      SizedBox(width: 8),
-                      Text('Powered by Google Gemini AI'),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -1972,27 +2005,6 @@ class _ScoresPageState extends State<ScoresPage>
             ],
           ),
         ),
-        const SizedBox(height: 20),
-        // Action Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              // Navigate to home and take the same type of quiz again
-              final homeScreenState = context
-                  .findAncestorStateOfType<_HomeScreenState>();
-              homeScreenState?._onItemTapped(0);
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Take Similar Quiz'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: categoryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -2039,56 +2051,368 @@ class _ScoresPageState extends State<ScoresPage>
 /* ============================== LEADERBOARD PAGE ============================== */
 /* =============================================================================== */
 
-class LeaderboardPage extends StatelessWidget {
+class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
 
   @override
+  State<LeaderboardPage> createState() => _LeaderboardPageState();
+}
+
+class _LeaderboardPageState extends State<LeaderboardPage> {
+  final LeaderboardService _leaderboardService = LeaderboardService();
+  LeaderboardType _selectedType = LeaderboardType.totalScore;
+  String? _currentUserId;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentUser();
+    _loadLeaderboard();
+    
+    // Track leaderboard view
+    FirebaseAnalyticsService.trackLeaderboardViewed(
+      filterType: _selectedType.name,
+    );
+  }
+
+  void _getCurrentUser() {
+    final user = FirebaseAuth.instance.currentUser;
+    _currentUserId = user?.uid;
+  }
+
+  Future<void> _loadLeaderboard() async {
+    await _leaderboardService.loadLeaderboard(
+      type: _selectedType,
+      currentUserId: _currentUserId,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Card(
-        margin: const EdgeInsets.all(24),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.leaderboard, size: 80, color: Colors.grey.shade400),
-              const SizedBox(height: 16),
-              Text(
-                'Leaderboard',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
-                ),
+    return Scaffold(
+      body: Column(
+        children: [
+          // Header with type selector
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Compete with other players',
-                style: TextStyle(color: Colors.grey.shade500),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Row(
-                        children: [
-                          Icon(Icons.info, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text('Leaderboard feature coming soon!'),
-                        ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.leaderboard,
+                      color: Theme.of(context).primaryColor,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Leaderboard',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh'),
-              ),
-            ],
+                    const Spacer(),
+                    IconButton(
+                      onPressed: _loadLeaderboard,
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Refresh',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Type selector
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: LeaderboardType.values.map((type) {
+                      final isSelected = type == _selectedType;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          selected: isSelected,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(type.icon),
+                              const SizedBox(width: 4),
+                              Text(type.displayName),
+                            ],
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedType = type;
+                              });
+                              _loadLeaderboard();
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
           ),
+          
+          // Current user position (if available)
+          ListenableBuilder(
+            listenable: _leaderboardService,
+            builder: (context, child) {
+              final currentUser = _leaderboardService.currentUserEntry;
+              if (currentUser != null && _currentUserId != null) {
+                return Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Your Rank: ${currentUser.rankDisplay}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _getScoreText(currentUser),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+
+          // Leaderboard list
+          Expanded(
+            child: ListenableBuilder(
+              listenable: _leaderboardService,
+              builder: (context, child) {
+                if (_leaderboardService.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (_leaderboardService.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Failed to load leaderboard',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _leaderboardService.error!,
+                          style: TextStyle(color: Colors.grey.shade600),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _loadLeaderboard,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final entries = _leaderboardService.leaderboardEntries;
+                if (entries.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.emoji_events_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No rankings yet',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Complete some quizzes to see rankings!',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: entries.length,
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    final isCurrentUser = entry.userId == _currentUserId;
+                    
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      elevation: isCurrentUser ? 4 : 1,
+                      color: isCurrentUser 
+                          ? Theme.of(context).primaryColor.withOpacity(0.1)
+                          : null,
+                      child: ListTile(
+                        leading: _buildRankWidget(entry.rank),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entry.displayName,
+                                style: TextStyle(
+                                  fontWeight: isCurrentUser 
+                                      ? FontWeight.bold 
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (isCurrentUser)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text(
+                                  'You',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        subtitle: Text(_getScoreText(entry)),
+                        trailing: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              _selectedType == LeaderboardType.totalScore
+                                  ? '${entry.totalQuizzes} quizzes'
+                                  : '${entry.totalScore} points',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              entry.activityDisplay,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankWidget(int rank) {
+    if (rank <= 3) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: rank == 1
+                ? [Colors.amber.shade300, Colors.amber.shade600]
+                : rank == 2
+                    ? [Colors.grey.shade300, Colors.grey.shade500]
+                    : [Colors.brown.shade300, Colors.brown.shade500],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            rank == 1 ? '🥇' : rank == 2 ? '🥈' : '🥉',
+            style: const TextStyle(fontSize: 20),
+          ),
+        ),
+      );
+    }
+    
+    return CircleAvatar(
+      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      child: Text(
+        '#$rank',
+        style: TextStyle(
+          color: Theme.of(context).primaryColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
         ),
       ),
     );
+  }
+
+  String _getScoreText(LeaderboardEntry entry) {
+    switch (_selectedType) {
+      case LeaderboardType.totalScore:
+        return '${entry.totalScore} points';
+      case LeaderboardType.totalQuizzes:
+        return '${entry.totalQuizzes} quizzes completed';
+    }
+  }
+
+  @override
+  void dispose() {
+    _leaderboardService.dispose();
+    super.dispose();
   }
 }
 
@@ -2184,7 +2508,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         ),
                       ),
                       Text(
-                        'Fast-paced quiz with timer',
+                        'Fast-paced quiz with timer - 15 seconds per question',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -2195,59 +2519,6 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 24),
-            
-            // Timer info card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.orange.shade50, Colors.orange.shade100],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.shade200),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.timer,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Timer Challenge',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade800,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          '15 seconds per question',
-                          style: TextStyle(
-                            color: Colors.orange.shade700,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
             const SizedBox(height: 24),
             
@@ -2630,9 +2901,9 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ),
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.play_arrow, size: 24),
-                label: Text(
-                  'Start Quick Quiz ($_questionCount Questions)',
-                  style: const TextStyle(
+                label: const Text(
+                  'Start Quick Quiz',
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

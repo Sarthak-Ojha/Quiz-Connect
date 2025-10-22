@@ -50,8 +50,8 @@ class NotificationService {
       // Create notification channels
       await createNotificationChannels();
 
-      // Skip permission requests during initialization to avoid blocking app startup
-      // Permissions will be requested when user first interacts with notifications
+      // Request notification permissions for Android 13+
+      await requestNotificationPermissions();
 
       final localTime = tz.TZDateTime.now(tz.local);
       debugPrint('📱 Notification service initialized (Android-only)');
@@ -59,6 +59,29 @@ class NotificationService {
       debugPrint('📱 Current local time: ${localTime.toString()}');
     } catch (e) {
       debugPrint('❌ Error initializing notification service: $e');
+    }
+  }
+
+  /// Request notification permissions (Android 13+)
+  Future<void> requestNotificationPermissions() async {
+    if (!Platform.isAndroid) return;
+
+    final androidPlugin = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    if (androidPlugin == null) return;
+
+    try {
+      final bool? granted = await androidPlugin.requestNotificationsPermission();
+      if (granted == true) {
+        debugPrint('📱 Notification permissions granted');
+      } else {
+        debugPrint('⚠️ Notification permissions denied');
+      }
+    } catch (e) {
+      debugPrint('❌ Error requesting notification permissions: $e');
     }
   }
 
@@ -84,20 +107,6 @@ class NotificationService {
         enableVibration: false,
         showBadge: true,
         enableLights: false,
-      ),
-    );
-
-    // Achievement channel (with sound)
-    await androidPlugin.createNotificationChannel(
-      const AndroidNotificationChannel(
-        'achievements',
-        'Achievements',
-        description: 'Quiz achievement notifications',
-        importance: Importance.high,
-        playSound: true,
-        enableVibration: true,
-        showBadge: true,
-        enableLights: true,
       ),
     );
 
@@ -402,41 +411,6 @@ class NotificationService {
   }
 
 
-  /// Show daily challenge completion notification
-  Future<void> showChallengeCompletion({
-    required int pointsEarned,
-    required String difficulty,
-  }) async {
-    try {
-      final title = '🎯 Daily Challenge Complete!';
-      final body = 'Well done! You earned $pointsEarned points on the $difficulty challenge.';
-
-      await _notifications.show(
-        Random().nextInt(1 << 31),
-        title,
-        body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'achievements',
-            'Achievements',
-            channelDescription: 'Quiz achievement notifications',
-            importance: Importance.high,
-            priority: Priority.high,
-            enableVibration: true,
-            playSound: true,
-            icon: '@mipmap/ic_launcher',
-            color: Color(0xFF1976D2),
-            largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-          ),
-        ),
-        payload: 'challenge_complete_$pointsEarned',
-      );
-
-      debugPrint('🎯 Challenge completion notification shown: $pointsEarned points');
-    } catch (e) {
-      debugPrint('❌ Error showing challenge completion: $e');
-    }
-  }
 
 
 

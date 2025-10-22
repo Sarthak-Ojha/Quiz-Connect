@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/question.dart';
 import '../models/quiz_result.dart';
@@ -420,6 +422,32 @@ class DatabaseService {
     );
   }
 
+  // Sync Firebase user with local database
+  Future<void> syncFirebaseUser(String uid, String email, String? displayName, String? photoURL, bool emailVerified) async {
+    // Check if user already exists
+    final existingUser = await getUserByUid(uid);
+    
+    final userData = {
+      'uid': uid,
+      'email': email,
+      'displayName': displayName ?? 'Quiz Master',
+      'photoURL': photoURL,
+      'emailVerified': emailVerified ? 1 : 0,
+      'lastSignIn': DateTime.now().toIso8601String(),
+    };
+    
+    if (existingUser == null) {
+      // Insert new user
+      userData['createdAt'] = DateTime.now().toIso8601String();
+      await insertUser(userData);
+      debugPrint('✅ New user synced to database: $uid');
+    } else {
+      // Update existing user
+      await updateUser(uid, userData);
+      debugPrint('🔄 Existing user updated in database: $uid');
+    }
+  }
+
   Future<Map<String, Object?>?> getUserByUid(String uid) async {
     final db = await database;
     final List<Map<String, Object?>> maps = await db.query(
@@ -607,6 +635,15 @@ class DatabaseService {
     return await db.insert(_dailyChallengesTable, challenge.toMap());
   }
 
+  Future<int> deleteDailyChallenge(String challengeId) async {
+    final db = await database;
+    return await db.delete(
+      _dailyChallengesTable,
+      where: 'challengeId = ?',
+      whereArgs: [challengeId],
+    );
+  }
+
   Future<DailyChallenge> generateDailyChallenge() async {
     final today = DateTime.now();
     final existing = await getDailyChallengeByDate(today);
@@ -732,6 +769,166 @@ class DatabaseService {
       orderBy: 'completedAt DESC',
     );
     return maps.map((map) => UserChallengeProgress.fromMap(map)).toList();
+  }
+
+  // Leaderboard Methods
+  Future<List<Map<String, dynamic>>> getLeaderboardData({
+    String orderBy = 'totalScore',
+    int limit = 50,
+  }) async {
+    final db = await database;
+    
+    // Get aggregated user stats with user info
+    final List<Map<String, Object?>> maps = await db.rawQuery(
+      '''
+      SELECT 
+        u.uid as userId,
+        u.displayName,
+        u.photoUrl,
+        COALESCE(SUM(qr.totalScore), 0) as totalScore,
+        COUNT(qr.id) as totalQuizzes,
+        COALESCE(AVG(qr.totalScore), 0.0) as averageScore,
+        COALESCE(us.streakCount, 0) as currentStreak,
+        COALESCE(us.maxStreak, 0) as maxStreak,
+        COALESCE(MAX(qr.completedAt), u.createdAt) as lastActivity
+      FROM $_usersTable u
+      LEFT JOIN $_quizResultsTable qr ON u.uid = qr.userId
+      LEFT JOIN $_userStreaksTable us ON u.uid = us.userId
+      WHERE u.uid IS NOT NULL
+      GROUP BY u.uid, u.displayName, u.photoUrl, us.streakCount, us.maxStreak
+      HAVING totalQuizzes > 0
+      ORDER BY $orderBy DESC
+      LIMIT ?
+      ''',
+      [limit],
+    );
+    
+    // Add rank to each entry
+    final List<Map<String, dynamic>> rankedResults = [];
+    for (int i = 0; i < maps.length; i++) {
+      final map = Map<String, dynamic>.from(maps[i]);
+      map['rank'] = i + 1;
+      rankedResults.add(map);
+    }
+    
+    return rankedResults;
+  }
+
+  Future<Map<String, dynamic>?> getUserLeaderboardPosition(
+    String userId, {
+    String orderBy = 'totalScore',
+  }) async {
+    final db = await database;
+    
+    // Get user's stats
+    final userStats = await db.rawQuery(
+      '''
+      SELECT 
+        u.uid as userId,
+        u.displayName,
+        u.photoUrl,
+        COALESCE(SUM(qr.totalScore), 0) as totalScore,
+        COUNT(qr.id) as totalQuizzes,
+        COALESCE(AVG(qr.totalScore), 0.0) as averageScore,
+        COALESCE(us.streakCount, 0) as currentStreak,
+        COALESCE(us.maxStreak, 0) as maxStreak,
+        COALESCE(MAX(qr.completedAt), u.createdAt) as lastActivity
+      FROM $_usersTable u
+      LEFT JOIN $_quizResultsTable qr ON u.uid = qr.userId
+      LEFT JOIN $_userStreaksTable us ON u.uid = us.userId
+      WHERE u.uid = ?
+      GROUP BY u.uid, u.displayName, u.photoUrl, us.streakCount, us.maxStreak
+      ''',
+      [userId],
+    );
+    
+    if (userStats.isEmpty) return null;
+    
+    final userScore = userStats.first[orderBy] ?? 0;
+    
+    // Get user's rank
+    final rankResult = await db.rawQuery(
+      '''
+      SELECT COUNT(*) + 1 as rank
+      FROM (
+        SELECT 
+          u.uid,
+          COALESCE(SUM(qr.totalScore), 0) as totalScore,
+          COUNT(qr.id) as totalQuizzes,
+          COALESCE(AVG(qr.totalScore), 0.0) as averageScore,
+          COALESCE(us.streakCount, 0) as currentStreak,
+          COALESCE(us.maxStreak, 0) as maxStreak
+        FROM $_usersTable u
+        LEFT JOIN $_quizResultsTable qr ON u.uid = qr.userId
+        LEFT JOIN $_userStreaksTable us ON u.uid = us.userId
+        WHERE u.uid != ?
+        GROUP BY u.uid, us.streakCount, us.maxStreak
+        HAVING totalQuizzes > 0 AND $orderBy > ?
+      )
+      ''',
+      [userId, userScore],
+    );
+    
+    final result = Map<String, dynamic>.from(userStats.first);
+    result['rank'] = rankResult.first['rank'];
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getTopPerformers({
+    int limit = 10,
+    int minQuizzes = 5,
+  }) async {
+    final db = await database;
+    
+    return await db.rawQuery(
+      '''
+      SELECT 
+        u.uid as userId,
+        u.displayName,
+        u.photoUrl,
+        COALESCE(SUM(qr.totalScore), 0) as totalScore,
+        COUNT(qr.id) as totalQuizzes,
+        COALESCE(AVG(qr.percentage), 0.0) as averagePercentage,
+        COALESCE(us.streakCount, 0) as currentStreak,
+        COALESCE(us.maxStreak, 0) as maxStreak
+      FROM $_usersTable u
+      LEFT JOIN $_quizResultsTable qr ON u.uid = qr.userId
+      LEFT JOIN $_userStreaksTable us ON u.uid = us.userId
+      WHERE u.uid IS NOT NULL
+      GROUP BY u.uid, u.displayName, u.photoUrl, us.streakCount, us.maxStreak
+      HAVING totalQuizzes >= ?
+      ORDER BY averagePercentage DESC, totalScore DESC
+      LIMIT ?
+      ''',
+      [minQuizzes, limit],
+    );
+  }
+
+  // Debug: Export database to Downloads folder for DB Browser inspection
+  Future<String?> exportDatabaseForInspection() async {
+    try {
+      final dbPath = join(await getDatabasesPath(), _databaseName);
+      
+      // For Android - copy to Downloads folder
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final externalDir = '/storage/emulated/0/Download';
+        final exportPath = '$externalDir/quiz_app_database_export.db';
+        
+        final dbFile = File(dbPath);
+        if (await dbFile.exists()) {
+          await dbFile.copy(exportPath);
+          debugPrint('✅ Database exported to: $exportPath');
+          debugPrint('📱 You can now access it from Downloads folder');
+          return exportPath;
+        }
+      }
+      
+      debugPrint('📍 Database location: $dbPath');
+      return dbPath;
+    } catch (e) {
+      debugPrint('❌ Error exporting database: $e');
+      return null;
+    }
   }
 
   // Utilities

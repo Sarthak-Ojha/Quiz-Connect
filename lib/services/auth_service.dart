@@ -2,9 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'database_service.dart';
+import 'firebase_analytics_service.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseService _databaseService = DatabaseService();
 
   // Current Firebase user
   User? get currentUser => _auth.currentUser;
@@ -31,6 +34,27 @@ class AuthService with ChangeNotifier {
       }
 
       debugPrint('✅ User account created: ${user?.uid}');
+      
+      // Sync user to local database
+      if (user != null) {
+        await _databaseService.syncFirebaseUser(
+          user.uid,
+          user.email ?? '',
+          user.displayName,
+          user.photoURL,
+          user.emailVerified,
+        );
+        
+        // Track user sign up in analytics
+        await FirebaseAnalyticsService.trackUserSignUp('email');
+        await FirebaseAnalyticsService.setUserProperties(
+          userId: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          emailVerified: user.emailVerified,
+        );
+      }
+      
       notifyListeners();
       return user;
     } on FirebaseAuthException catch (e) {
@@ -59,6 +83,20 @@ class AuthService with ChangeNotifier {
         debugPrint('📧 Email verified: ${refreshedUser?.emailVerified}');
       }
 
+      // Sync user to local database
+      if (user != null) {
+        await _databaseService.syncFirebaseUser(
+          user.uid,
+          user.email ?? '',
+          user.displayName,
+          user.photoURL,
+          user.emailVerified,
+        );
+        
+        // Track user sign in in analytics
+        await FirebaseAnalyticsService.trackUserSignIn('email');
+      }
+      
       debugPrint('🔄 Notifying listeners of auth state change');
       notifyListeners();
       return user;
@@ -68,31 +106,38 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Google Sign-In - FIXED FOR google_sign_in ^7.1.1
+  // Google Sign-In - FIXED FOR google_sign_in ^7.2.0
   Future<User?> signInWithGoogle() async {
     try {
       debugPrint('🔐 Starting Google sign-in...');
 
-      // Initialize Google Sign In with your Web Client ID
+      // Initialize Google Sign In with web client ID for Firebase authentication
       await GoogleSignIn.instance.initialize(
-        serverClientId:
-            '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
+        serverClientId: '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
       );
 
-      // Authenticate the user (replaces signIn() method)
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
+      debugPrint('🔐 Triggering Google authentication...');
+      
+      // Use authenticate method - this should work with the current package version
+      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
+      
+      // Handle user cancellation gracefully
+      if (googleUser == null) {
+        debugPrint('ℹ️ Google sign-in cancelled by user');
+        return null;
+      }
+      
       debugPrint('✅ Google user obtained: ${googleUser.email}');
 
-      // Get the authentication details (synchronous, not async)
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      // Get the authentication details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      
+      debugPrint('✅ Google authentication obtained');
+      debugPrint('🔑 ID Token available: ${googleAuth.idToken != null}');
 
-      // 🔧 FIXED: Use only idToken for Firebase authentication
-      // The accessToken is no longer directly available on GoogleSignInAuthentication
+      // Create a new credential using the ID token
       final credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
-        // Note: accessToken is not directly available in v7.1.1
-        // If you need it, use authorizeScopes() method separately
       );
 
       // Sign in to Firebase with the credential
@@ -101,10 +146,31 @@ class AuthService with ChangeNotifier {
 
       debugPrint('✅ Firebase credential sign-in successful: ${user?.uid}');
       debugPrint('📧 Google user email verified: ${user?.emailVerified}');
+      debugPrint('🔄 Current Firebase user: ${_auth.currentUser?.uid}');
+      debugPrint('🔄 Provider data: ${user?.providerData.map((p) => p.providerId).toList()}');
+
+      // Sync user to local database
+      if (user != null) {
+        await _databaseService.syncFirebaseUser(
+          user.uid,
+          user.email ?? '',
+          user.displayName,
+          user.photoURL,
+          user.emailVerified,
+        );
+        
+        // Track Google sign in in analytics
+        await FirebaseAnalyticsService.trackUserSignIn('google');
+      }
 
       notifyListeners();
       return user;
     } on GoogleSignInException catch (e) {
+      // Handle specific Google Sign-In exceptions
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        debugPrint('ℹ️ Google sign-in cancelled by user');
+        return null;
+      }
       debugPrint('❌ Google sign-in error: ${e.code.name} - ${e.description}');
       throw Exception('Google sign-in failed: ${e.description}');
     } on FirebaseAuthException catch (e) {

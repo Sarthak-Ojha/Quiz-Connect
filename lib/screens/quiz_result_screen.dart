@@ -140,14 +140,6 @@ class _QuizResultScreenState extends State<QuizResultScreen>
     }
   }
 
-  String get _performanceMessage {
-    if (percentage >= 90) return 'Outstanding! 🏆';
-    if (percentage >= 80) return 'Excellent! 🌟';
-    if (percentage >= 70) return 'Great Job! 👏';
-    if (percentage >= 60) return 'Good Work! 👍';
-    if (percentage >= 50) return 'Keep Trying! 💪';
-    return 'Practice More! 📚';
-  }
 
   Color get _performanceColor {
     if (percentage >= 80) return Colors.green;
@@ -167,80 +159,12 @@ class _QuizResultScreenState extends State<QuizResultScreen>
               opacity: _fadeAnimation.value,
               child: Transform.scale(
                 scale: _scaleAnimation.value,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // Header Card
-                      Card(
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                _performanceColor.withValues(alpha: 0.1),
-                                _performanceColor.withValues(alpha: 0.05),
-                              ],
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              // Performance Icon
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: _performanceColor.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  percentage >= 80 ? Icons.emoji_events :
-                                  percentage >= 60 ? Icons.thumb_up :
-                                  Icons.trending_up,
-                                  size: 40,
-                                  color: _performanceColor,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              
-                              // Performance Message
-                              Text(
-                                _performanceMessage,
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: _performanceColor,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              
-                              // Category Name
-                              Text(
-                                isTimerMode
-                                    ? 'Quick Mode Results'
-                                    : '${widget.category?.name ?? 'Quiz'} Results',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
 
                       // Score Card
                       Card(
@@ -458,6 +382,7 @@ class _QuizResultScreenState extends State<QuizResultScreen>
                           ),
                         ),
                     ],
+                    ),
                   ),
                 ),
               ),

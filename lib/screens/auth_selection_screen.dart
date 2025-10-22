@@ -372,16 +372,32 @@ class _AuthSelectionScreenState extends State<AuthSelectionScreen>
 
   Future<void> _signInWithGoogle() async {
     try {
+      debugPrint('🔐 UI: Starting Google sign-in process...');
       final AuthService authService = AuthService();
       final User? user = await authService.signInWithGoogle();
 
+      debugPrint('🔐 UI: Google sign-in completed. User: ${user?.uid}');
+
       if (user != null && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          (route) => false,
-        );
+        debugPrint('🧭 UI: User authenticated successfully, waiting for Firebase state...');
+        
+        // Give Firebase a moment to update the auth state
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          debugPrint('🧭 UI: Navigating to AuthWrapper...');
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const AuthWrapper()),
+            (route) => false,
+          );
+        }
+      } else if (user == null) {
+        debugPrint('ℹ️ UI: User is null - sign-in was cancelled');
       }
+      // If user is null, it means the user cancelled the sign-in
+      // No error message should be shown in this case
     } catch (e) {
+      debugPrint('❌ UI: Google sign-in error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

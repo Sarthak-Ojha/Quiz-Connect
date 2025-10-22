@@ -22,10 +22,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
       // 🔧 CRITICAL: Use the proper stream type
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Removed debug prints to improve performance
+        debugPrint('🔄 AuthWrapper: Connection state: ${snapshot.connectionState}');
+        debugPrint('🔄 AuthWrapper: Has data: ${snapshot.hasData}');
+        debugPrint('🔄 AuthWrapper: User: ${snapshot.data?.uid}');
 
         // Only show splash screen on the very first load
         if (snapshot.connectionState == ConnectionState.waiting && _isInitialLoad) {
+          debugPrint('🔄 AuthWrapper: Showing splash screen');
           return const SplashScreen();
         }
 
@@ -56,17 +59,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (snapshot.hasData && snapshot.data != null) {
           final user = snapshot.data!;
+          debugPrint('🔄 AuthWrapper: User found - ${user.email}');
 
           final isGoogleUser = user.providerData.any(
             (p) => p.providerId == 'google.com',
           );
+          debugPrint('🔄 AuthWrapper: Is Google user: $isGoogleUser');
+          debugPrint('🔄 AuthWrapper: Email verified: ${user.emailVerified}');
 
           if (user.emailVerified || isGoogleUser) {
+            debugPrint('🏠 AuthWrapper: Navigating to HomeScreen');
             return const HomeScreen();
           } else {
+            debugPrint('📧 AuthWrapper: Navigating to VerifyEmailScreen');
             return const VerifyEmailScreen();
           }
         }
+        debugPrint('🔐 AuthWrapper: No user found, showing AuthSelectionScreen');
         return const AuthSelectionScreen();
       },
     );

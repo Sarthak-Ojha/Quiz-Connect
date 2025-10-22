@@ -13,9 +13,15 @@ import 'widgets/exit_confirmation_wrapper.dart';
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
 import 'services/theme_service.dart';
+import 'services/firebase_analytics_service.dart';
 
 import 'utils/seed_questions.dart';
 
+// Debug function to export database for inspection
+Future<void> exportDatabaseForInspection() async {
+  final db = DatabaseService();
+  await db.exportDatabaseForInspection();
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -27,6 +33,18 @@ void main() async {
   try {
     await Firebase.initializeApp();
     debugPrint('✅ Firebase initialized successfully');
+
+    // Initialize Firebase Analytics
+    await FirebaseAnalyticsService.enableDebugMode();
+    await FirebaseAnalyticsService.trackSessionStart();
+    
+    // Test analytics with a custom event
+    await FirebaseAnalyticsService.trackAchievement(
+      achievementType: 'app_launch',
+      achievementName: 'First Launch',
+      value: 1,
+    );
+    debugPrint('📊 Firebase Analytics initialized successfully');
 
     await ThemeService().initialize();
     debugPrint('🎨 Theme service initialized successfully');

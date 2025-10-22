@@ -197,29 +197,88 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
     required VoidCallback? onTap,
     required Color color,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isUsed ? Colors.grey.shade300 : color.withValues(alpha: 0.1),
-          border: Border.all(color: isUsed ? Colors.grey : color, width: 2),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: isUsed ? Colors.grey : color, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isUsed ? Colors.grey : color,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: isUsed 
+                  ? LinearGradient(
+                      colors: [Colors.grey.shade300, Colors.grey.shade400],
+                    )
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        color.withValues(alpha: 0.8),
+                        color.withValues(alpha: 1.0),
+                      ],
+                    ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: isUsed 
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+              border: isUsed 
+                  ? Border.all(color: Colors.grey.shade500, width: 1)
+                  : null,
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isUsed 
+                        ? Colors.grey.shade200
+                        : Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon, 
+                    color: isUsed ? Colors.grey.shade600 : Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isUsed ? Colors.grey.shade600 : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+                if (isUsed)
+                  Container(
+                    margin: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade500,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'USED',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -476,23 +535,23 @@ class _TimerQuizScreenState extends State<TimerQuizScreen>
                   children: [
                     // 50-50 Power-up
                     _buildPowerUpButton(
-                      icon: Icons.filter_2,
+                      icon: Icons.remove_circle_outline,
                       label: '50-50',
                       isUsed: _fiftyFiftyUsed,
                       onTap: _fiftyFiftyUsed ? null : _useFiftyFifty,
-                      color: Colors.blue,
+                      color: const Color(0xFF2196F3),
                     ),
                     // Skip Power-up
                     _buildPowerUpButton(
-                      icon: Icons.skip_next_rounded,
+                      icon: Icons.fast_forward_rounded,
                       label: 'Skip',
                       isUsed: _skipUsed,
                       onTap: _skipUsed ? null : _useSkip,
-                      color: Colors.purple,
+                      color: const Color(0xFF9C27B0),
                     ),
                     // Extra Time Power-up
                     _buildPowerUpButton(
-                      icon: Icons.timer_10,
+                      icon: Icons.access_time_filled,
                       label: '+10s',
                       isUsed: _extraTimeUsed,
                       onTap: _extraTimeUsed ? null : _useExtraTime,

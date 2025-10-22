@@ -265,30 +265,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Quiz Settings Section
-                Text(
-                  'Quiz Settings',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1976D2),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.help_outline,
-                      color: Color(0xFF1976D2),
-                    ),
-                    title: const Text('Quiz Rules'),
-                    subtitle: const Text(
-                      'Learn how to play and scoring system',
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: _showQuizRulesDialog,
-                  ),
-                ),
-                const SizedBox(height: 24),
                 // Account Section
                 Text(
                   'Account',
@@ -317,34 +293,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Developer Section
-                Text(
-                  'Developer Tools',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1976D2),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  child: ListTile(
-                    leading: _isReseeding
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh, color: Color(0xFF1976D2)),
-                    title: Text(_isReseeding ? 'Reseeding Database...' : 'Reseed Questions'),
-                    subtitle: Text(
-                      _isReseeding
-                          ? 'Please wait while questions are reloaded'
-                          : 'Force reload all quiz questions from assets',
-                    ),
-                    onTap: _isReseeding ? null : _forceReseedQuestions,
-                  ),
-                ),
-                const SizedBox(height: 24),
                 // About Section
                 Text(
                   'About',
@@ -355,39 +303,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Card(
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(
-                          Icons.info,
-                          color: Color(0xFF1976D2),
-                        ),
-                        title: const Text('About Quiz Master'),
-                        subtitle: const Text('Version 1.0.0'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: _showAboutDialog,
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.privacy_tip,
-                          color: Color(0xFF1976D2),
-                        ),
-                        title: const Text('Privacy Policy'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: _showPrivacyPolicyDialog,
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.description,
-                          color: Color(0xFF1976D2),
-                        ),
-                        title: const Text('Terms of Service'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: _showTermsOfServiceDialog,
-                      ),
-                    ],
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.info,
+                      color: Color(0xFF1976D2),
+                    ),
+                    title: const Text('Version 1.0.0'),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -501,7 +422,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               SizedBox(height: 8),
-              Text('• Each correct answer = 10 points'),
               Text('• No penalty for wrong answers'),
               Text('• Quick Mode: 15 seconds per question'),
               Text('• Category Mode: No time limit'),

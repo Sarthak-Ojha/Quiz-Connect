@@ -45,7 +45,22 @@ class StreakService {
   // Daily Challenge Management
   Future<DailyChallenge> getTodaysChallenge() async {
     final existing = await _dbService.getTodaysDailyChallenge();
-    if (existing != null) return existing;
+    if (existing != null) {
+      // Validate that the challenge has valid questions
+      final allQuestions = await _dbService.getAllQuestions();
+      final validQuestionIds = existing.questionIds.where(
+        (id) => allQuestions.any((q) => q.id == id)
+      ).toList();
+      
+      // If less than half the questions are valid, regenerate the challenge
+      if (validQuestionIds.length < (existing.questionIds.length / 2)) {
+        print('Daily challenge has too many invalid questions, regenerating...');
+        await _dbService.deleteDailyChallenge(existing.challengeId);
+        return await _dbService.generateDailyChallenge();
+      }
+      
+      return existing;
+    }
     
     return await _dbService.generateDailyChallenge();
   }
@@ -55,11 +70,36 @@ class StreakService {
     final challengeQuestions = <Question>[];
     
     for (final questionId in challenge.questionIds) {
-      final question = allQuestions.firstWhere(
-        (q) => q.id == questionId,
-        orElse: () => throw Exception('Question not found: $questionId'),
-      );
-      challengeQuestions.add(question);
+      try {
+        final question = allQuestions.firstWhere(
+          (q) => q.id == questionId,
+        );
+        challengeQuestions.add(question);
+      } catch (e) {
+        // Question not found, skip it and continue
+        print('Warning: Question with ID $questionId not found, skipping...');
+        continue;
+      }
+    }
+    
+    // If we don't have enough questions, fill with random ones
+    if (challengeQuestions.length < challenge.questionIds.length) {
+      final missingCount = challenge.questionIds.length - challengeQuestions.length;
+      final availableQuestions = allQuestions.where(
+        (q) => !challengeQuestions.any((cq) => cq.id == q.id)
+      ).toList();
+      
+      if (availableQuestions.isNotEmpty) {
+        availableQuestions.shuffle();
+        final additionalQuestions = availableQuestions.take(missingCount).toList();
+        challengeQuestions.addAll(additionalQuestions);
+        print('Added ${additionalQuestions.length} replacement questions for daily challenge');
+      }
+    }
+    
+    // If we still don't have any questions, throw an error
+    if (challengeQuestions.isEmpty) {
+      throw Exception('No questions available for daily challenge');
     }
     
     return challengeQuestions;
@@ -95,12 +135,6 @@ class StreakService {
       } else if (percentage >= 80) {
         pointsEarned = (pointsEarned * 1.2).round();
       }
-      
-      // Show challenge completion notification
-      await _notificationService.showChallengeCompletion(
-        pointsEarned: pointsEarned,
-        difficulty: challenge.difficulty,
-      );
     }
 
     return await _dbService.updateChallengeProgress(

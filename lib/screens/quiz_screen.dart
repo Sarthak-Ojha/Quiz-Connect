@@ -7,6 +7,7 @@ import '../models/quiz_category.dart';
 import '../models/quiz_result.dart';
 import '../services/database_service.dart';
 import '../services/streak_service.dart';
+import '../services/leaderboard_service.dart';
 import 'quiz_result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
@@ -84,6 +85,7 @@ class _QuizScreenState extends State<QuizScreen> {
         
         // Create and save quiz result
         final percentage = (_score / widget.questions.length) * 100;
+        final totalScore = _score * 20; // 20 points per correct answer
         final quizResult = QuizResult(
           userId: user.uid,
           categoryName: widget.isAIMode ? widget.aiTopic ?? 'AI Quiz' : widget.category?.name ?? 'Quiz',
@@ -91,7 +93,7 @@ class _QuizScreenState extends State<QuizScreen> {
           totalQuestions: widget.questions.length,
           correctAnswers: _score,
           wrongAnswers: widget.questions.length - _score,
-          totalScore: _score * 20, // 20 points per correct answer
+          totalScore: totalScore,
           percentage: percentage,
           isTimerMode: false,
           completedAt: DateTime.now(),
@@ -99,7 +101,23 @@ class _QuizScreenState extends State<QuizScreen> {
           questions: widget.questions.map((q) => q.question).toList(),
         );
 
+        // Save quiz result to local database
         await _dbService.saveQuizResult(quizResult);
+        
+        // Update leaderboard
+        try {
+          await LeaderboardService.updateUserStats(
+            userId: user.uid,
+            displayName: user.displayName ?? 'Anonymous',
+            photoUrl: user.photoURL,
+            scoreToAdd: totalScore,
+            quizzesToAdd: 1,
+            currentStreak: updatedStreak.streakCount,
+            maxStreak: updatedStreak.maxStreak,
+          );
+        } catch (e) {
+          debugPrint('Error updating leaderboard: $e');
+        }
 
         if (mounted) {
           Navigator.pushReplacement(

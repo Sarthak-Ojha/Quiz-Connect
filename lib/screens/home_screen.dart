@@ -7,7 +7,6 @@ import '../models/quiz_category.dart';
 import '../models/daily_challenge.dart';
 import '../models/user_challenge_progress.dart';
 import '../models/user_streak.dart';
-import '../services/auth_service.dart';
 import '../services/streak_service.dart';
 import '../services/database_service.dart';
 import '../models/question.dart';
@@ -56,9 +55,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
-  final AuthService _authService = AuthService();
   final StreakService _streakService = StreakService();
-  bool _isSigningOut = false;
   late final List<Widget> _pages;
   String _displayName = 'User';
 
@@ -139,29 +136,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return null;
   }
 
-  Future<void> _signOut() async {
-    setState(() => _isSigningOut = true);
-    try {
-      await _authService.signOut();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error signing out: $e')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSigningOut = false);
-    }
-  }
 
   void _showExitConfirmationDialog() {
     showDialog(
@@ -233,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 )
               : CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   child: const Icon(
                     Icons.person,
                     color: Colors.white,
@@ -350,7 +324,6 @@ class _CategoryPageState extends State<CategoryPage>
   final List<String> _modes = ['Category Mode', 'Quick Mode', 'AI Mode'];
   String _selectedMode = 'Category Mode';
   final StreakService _streakService = StreakService();
-  UserStreak? _userStreak;
   
   DailyChallenge? _dailyChallenge;
   UserChallengeProgress? _challengeProgress;
@@ -443,7 +416,7 @@ class _CategoryPageState extends State<CategoryPage>
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final streak = await _streakService.getUserStreak(user.uid);
+        await _streakService.getUserStreak(user.uid);
         final challenge = await _streakService.getTodaysChallenge();
         UserChallengeProgress? progress;
         
@@ -454,13 +427,13 @@ class _CategoryPageState extends State<CategoryPage>
               
         if (mounted) {
           setState(() {
-            _userStreak = streak;
+            // Removed unused _userStreak assignment
             _dailyChallenge = challenge;
             _challengeProgress = progress;
           });
         }
       } catch (e) {
-        print('Error loading streak and challenge data: $e');
+        debugPrint('Error loading streak and challenge data: $e');
       }
     }
   }
@@ -536,7 +509,7 @@ class _CategoryPageState extends State<CategoryPage>
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
-                  showValueIndicator: ShowValueIndicator.always,
+                  showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: Slider(
                   value: chosenQuestionCount.toDouble(),
@@ -868,8 +841,8 @@ class _CategoryPageState extends State<CategoryPage>
                   ),
                   elevation: isSelected ? 4 : 1,
                   shadowColor: isSelected 
-                      ? const Color(0xFF1976D2).withOpacity(0.5)
-                      : const Color(0xFF1976D2).withOpacity(0.2),
+                      ? const Color(0xFF1976D2).withValues(alpha: 0.5)
+                      : const Color(0xFF1976D2).withValues(alpha: 0.2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
@@ -1029,28 +1002,6 @@ class _CategoryPageState extends State<CategoryPage>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStreakSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.local_fire_department, color: Color(0xFFFF6B35), size: 28),
-            const SizedBox(width: 8),
-            Text(
-              'Your Streak',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFFFF6B35),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-      ],
     );
   }
 
@@ -2067,12 +2018,33 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   void initState() {
     super.initState();
     _getCurrentUser();
-    _loadLeaderboard();
-    
-    // Track leaderboard view
-    FirebaseAnalyticsService.trackLeaderboardViewed(
-      filterType: _selectedType.name,
-    );
+    _initLeaderboard();
+  }
+
+  Future<void> _initLeaderboard() async {
+    try {
+      // Track leaderboard view
+      FirebaseAnalyticsService.trackLeaderboardViewed(
+        filterType: _selectedType.name,
+      );
+      
+      // Load leaderboard
+      await _loadLeaderboard();
+      
+      // No popup will be shown when leaderboard is empty
+      // The empty state is handled by the UI
+    } catch (e) {
+      debugPrint('Error initializing leaderboard: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading leaderboard: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   void _getCurrentUser() {
@@ -2081,10 +2053,22 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   }
 
   Future<void> _loadLeaderboard() async {
-    await _leaderboardService.loadLeaderboard(
-      type: _selectedType,
-      currentUserId: _currentUserId,
-    );
+    try {
+      await _leaderboardService.initializeLeaderboard(
+        type: _selectedType,
+        limit: 10, // Show only top 10 users
+        currentUserId: _currentUserId,
+      );
+      
+      if (mounted) {
+        setState(() {
+          // Trigger UI update
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading leaderboard: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -2096,7 +2080,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -2173,10 +2157,10 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -2293,7 +2277,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                       margin: const EdgeInsets.only(bottom: 8),
                       elevation: isCurrentUser ? 4 : 1,
                       color: isCurrentUser 
-                          ? Theme.of(context).primaryColor.withOpacity(0.1)
+                          ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                           : null,
                       child: ListTile(
                         leading: _buildRankWidget(entry.rank),
@@ -2388,7 +2372,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     }
     
     return CircleAvatar(
-      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       child: Text(
         '#$rank',
         style: TextStyle(
@@ -2605,7 +2589,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      showValueIndicator: ShowValueIndicator.always,
+                      showValueIndicator: ShowValueIndicator.onDrag,
                     ),
                     child: Slider(
                       value: _questionCount.toDouble(),

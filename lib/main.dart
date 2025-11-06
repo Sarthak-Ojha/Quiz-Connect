@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/signin_screen.dart';
@@ -19,72 +22,295 @@ import 'utils/seed_questions.dart';
 
 // Debug function to export database for inspection
 Future<void> exportDatabaseForInspection() async {
-  final db = DatabaseService();
-  await db.exportDatabaseForInspection();
+  try {
+    final db = DatabaseService();
+    await db.exportDatabaseForInspection();
+  } catch (e, stackTrace) {
+    debugPrint('❌ Error exporting database: $e');
+    debugPrint('Stack trace: $stackTrace');
+  }
 }
+
 void main() async {
+  // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Set up error handling
   FlutterError.onError = (FlutterErrorDetails details) {
-    debugPrint('Flutter Error: ${details.exception}');
     FlutterError.presentError(details);
+    _reportError(details.exception, details.stack ?? StackTrace.current);
   };
 
-  try {
-    await Firebase.initializeApp();
-    debugPrint('✅ Firebase initialized successfully');
+  // Add error handling for platform channels
+  PlatformDispatcher.instance.onError = (error, stack) {
+    _reportError(error, stack);
+    return true; // Prevent error from propagating
+  };
 
-    // Initialize Firebase Analytics
+  // Run the app in a zone to catch all unhandled exceptions and microtasks
+  runZonedGuarded<Future<void>>(
+    () async {
+      try {
+        // Initialize services
+        await _initializeServices();
+        
+        // Run the app
+        runApp(
+          MaterialApp(
+            builder: (context, child) => ErrorWidgetBuilder(child: QuizApp()),
+          ),
+        );
+      } catch (e, stackTrace) {
+        _handleStartupError(e, stackTrace);
+      }
+    },
+    (error, stackTrace) => _handleZoneError(error, stackTrace),
+  );
+}
+
+Future<void> _initializeServices() async {
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  debugPrint('✅ Firebase initialized successfully');
+
+  // Initialize other services
+  await Future.wait([
+    _initAnalytics(),
+    _initTheme(),
+    _initNotifications(),
+    _initDatabase(),
+  ]);
+}
+
+Future<void> _initAnalytics() async {
+  try {
     await FirebaseAnalyticsService.enableDebugMode();
     await FirebaseAnalyticsService.trackSessionStart();
-    
-    // Test analytics with a custom event
     await FirebaseAnalyticsService.trackAchievement(
       achievementType: 'app_launch',
-      achievementName: 'First Launch',
+      achievementName: 'App Started',
       value: 1,
     );
     debugPrint('📊 Firebase Analytics initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('⚠️ Error initializing analytics: $e');
+    debugPrint('Stack trace: $stackTrace');
+  }
+}
 
+Future<void> _initTheme() async {
+  try {
     await ThemeService().initialize();
     debugPrint('🎨 Theme service initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('⚠️ Error initializing theme: $e');
+    debugPrint('Stack trace: $stackTrace');
+  }
+}
 
-    await NotificationService().initialize();
+Future<void> _initNotifications() async {
+  try {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    await notificationService.enableDailyChallengeNotifications();
     debugPrint('📱 Notification service initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('⚠️ Error initializing notifications: $e');
+    debugPrint('Stack trace: $stackTrace');
+  }
+}
 
-    // Enable daily challenge notifications at 8AM, 2PM, and 5PM
-    await NotificationService().enableDailyChallengeNotifications();
-    debugPrint('📅 Daily challenge notifications enabled');
-
+Future<void> _initDatabase() async {
+  try {
     final dbService = DatabaseService();
     await dbService.initializeDatabase();
-    debugPrint('✅ Database initialized successfully');
-
+    
     final seeded = await dbService.getSetting('questionsSeeded');
     if (seeded != 'true') {
       await seedQuestionsFromAsset();
       await dbService.insertSetting('questionsSeeded', 'true');
       debugPrint('✅ Questions seeded successfully');
     }
-
-    runApp(const MyApp());
-  } catch (e) {
-    debugPrint('❌ Initialization error: $e');
-    runApp(ErrorApp(error: e.toString()));
+    
+    debugPrint('💾 Database initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('❌ Error initializing database: $e');
+    debugPrint('Stack trace: $stackTrace');
+    rethrow; // Rethrow to be caught by the zone
   }
+}
+
+void _handleStartupError(dynamic error, StackTrace stackTrace) {
+  debugPrint('❌ Fatal error during app startup: $error');
+  debugPrint('Stack trace: $stackTrace');
+  
+  // Run the error app in a new zone to prevent recursive errors
+  runZonedGuarded(
+    () => runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Error: $error'),
+          ),
+        ),
+      ),
+    ),
+    (error, stackTrace) => _handleZoneError(error, stackTrace),
+  );
+}
+
+void _handleZoneError(dynamic error, StackTrace stackTrace) {
+  debugPrint('⚠️ Uncaught error in zone: $error');
+  debugPrint('Stack trace: $stackTrace');
+  _reportError(error, stackTrace);
+  
+  // In debug mode, show error in console
+  if (kDebugMode) {
+    debugPrint('Uncaught error: $error');
+    debugPrint('Stack trace: $stackTrace');
+  }
+}
+
+void _reportError(dynamic error, StackTrace stackTrace) {
+  // Log the error with timestamp
+  final timestamp = DateTime.now().toIso8601String();
+  debugPrint('🚨 [$timestamp] Error reported: $error');
+  
+  // Print a more detailed stack trace in debug mode
+  if (kDebugMode) {
+    debugPrint('Stack trace: $stackTrace');
+  }
+  
+  // Log the error type for better categorization
+  debugPrint('Error type: ${error.runtimeType}');
+  
+  // Check if it's a common error type and provide more context
+  if (error is FlutterError) {
+    debugPrint('FlutterError details: ${error.diagnostics}');
+  } else if (error is PlatformException) {
+    debugPrint('PlatformException details: ${error.message}');
+    debugPrint('Error code: ${error.code}');
+    debugPrint('Error details: ${error.details}');
+  }
+  
+  // Example: Send to Firebase Crashlytics if you have it set up
+  // try {
+  //   await FirebaseCrashlytics.instance.recordError(
+  //     error,
+  //     stackTrace,
+  //     reason: 'a non-fatal error',
+  //     information: ['Error occurred in microtask'],
+  //   );
+  // } catch (e) {
+  //   debugPrint('Failed to report error to Crashlytics: $e');
+  // }
 }
 
 /* Removed duplicate main() function to resolve 'main is already defined' error. 
    NotificationService().initialize() and enableSilentNotifications() are already called in the first main(). */
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class ErrorWidgetBuilder extends StatelessWidget {
+  final Widget child;
+
+  const ErrorWidgetBuilder({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Set up the error widget builder
+    ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+      return Material(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('An error occurred'),
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Something went wrong!',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                if (kDebugMode) ...[
+                  Text(
+                    'Error: ${errorDetails.exception}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Stack trace:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    errorDetails.stack.toString(),
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+                ] else
+                  const Text(
+                    'The app encountered an error. Please restart the app and try again.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                const SizedBox(height: 24),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Try to recover by popping the error screen
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else {
+                        // If we can't pop, try to restart the app
+                        runApp(const QuizApp());
+                      }
+                    },
+                    child: const Text('Go Back'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    };
+
+    // The actual widget tree
+    return child;
+  }
+}
+
+class QuizApp extends StatelessWidget {
+  const QuizApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Quiz Master',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        // Add error boundary for widget tree
+        ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: Center(
+              child: Text('An error occurred: ${errorDetails.exception}'),
+            ),
+          );
+        };
+        
+        return child!;
+      },
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -117,7 +343,7 @@ class MyApp extends StatelessWidget {
             backgroundColor: const Color(0xFF1976D2),
             foregroundColor: Colors.white,
             elevation: 2,
-            shadowColor: const Color(0xFF1976D2).withOpacity(0.3),
+            shadowColor: const Color(0xFF1976D2).withAlpha(77),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),

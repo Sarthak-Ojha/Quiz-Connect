@@ -4,8 +4,9 @@ import '../models/daily_challenge.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
 import '../models/user_challenge_progress.dart';
-import '../services/streak_service.dart';
 import '../services/database_service.dart';
+import '../services/streak_service.dart';
+import '../services/leaderboard_service.dart';
 import 'quiz_result_screen.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
@@ -157,6 +158,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
 
       // Save quiz result
       final percentage = (_correctAnswers / widget.questions.length) * 100;
+      final totalScore = _calculateScore();
       final quizResult = QuizResult(
         userId: user.uid,
         categoryName: 'Daily Challenge',
@@ -164,7 +166,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
         totalQuestions: widget.questions.length,
         correctAnswers: _correctAnswers,
         wrongAnswers: widget.questions.length - _correctAnswers,
-        totalScore: _calculateScore(),
+        totalScore: totalScore,
         percentage: percentage,
         isTimerMode: false,
         completedAt: DateTime.now(),
@@ -173,6 +175,21 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       );
 
       await _dbService.saveQuizResult(quizResult);
+      
+      // Update leaderboard
+      try {
+        await LeaderboardService.updateUserStats(
+          userId: user.uid,
+          displayName: user.displayName ?? 'Anonymous',
+          photoUrl: user.photoURL,
+          scoreToAdd: totalScore,
+          quizzesToAdd: 1,
+          currentStreak: updatedStreak.streakCount,
+          maxStreak: updatedStreak.maxStreak,
+        );
+      } catch (e) {
+        debugPrint('Error updating leaderboard: $e');
+      }
 
       if (mounted) {
         Navigator.pushReplacement(

@@ -7,7 +7,7 @@ void main() {
   testWidgets('App renders splash screen on startup', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const QuizApp());
 
     // SplashScreen should show first during Firebase auth init
     expect(find.byType(SplashScreen), findsOneWidget);

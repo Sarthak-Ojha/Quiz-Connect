@@ -24,6 +24,20 @@ class LeaderboardEntry {
   });
 
   factory LeaderboardEntry.fromMap(Map<String, dynamic> map) {
+    DateTime lastActivityDate;
+    
+    if (map['lastActivity'] != null) {
+      // Handle both Timestamp and String formats
+      if (map['lastActivity'] is String) {
+        lastActivityDate = DateTime.parse(map['lastActivity']);
+      } else {
+        // Assume it's a Firestore Timestamp
+        lastActivityDate = (map['lastActivity'] as dynamic).toDate();
+      }
+    } else {
+      lastActivityDate = DateTime.now();
+    }
+    
     return LeaderboardEntry(
       userId: map['userId'] ?? '',
       displayName: map['displayName'] ?? 'Anonymous',
@@ -33,9 +47,7 @@ class LeaderboardEntry {
       averageScore: (map['averageScore'] ?? 0.0).toDouble(),
       currentStreak: map['currentStreak'] ?? 0,
       maxStreak: map['maxStreak'] ?? 0,
-      lastActivity: map['lastActivity'] != null 
-          ? DateTime.parse(map['lastActivity'])
-          : DateTime.now(),
+      lastActivity: lastActivityDate,
       rank: map['rank'] ?? 0,
     );
   }

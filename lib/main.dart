@@ -14,7 +14,6 @@ import 'screens/home_screen.dart';
 import 'widgets/exit_confirmation_wrapper.dart';
 
 import 'services/database_service.dart';
-import 'services/notification_service.dart';
 import 'services/theme_service.dart';
 import 'services/firebase_analytics_service.dart';
 
@@ -54,12 +53,8 @@ void main() async {
         // Initialize services
         await _initializeServices();
         
-        // Run the app
-        runApp(
-          MaterialApp(
-            builder: (context, child) => ErrorWidgetBuilder(child: QuizApp()),
-          ),
-        );
+        // Run the app with ErrorWidgetBuilder
+        runApp(ErrorWidgetBuilder(child: QuizApp()));
       } catch (e, stackTrace) {
         _handleStartupError(e, stackTrace);
       }
@@ -83,7 +78,6 @@ Future<void> _initializeServices() async {
   await Future.wait([
     _initAnalytics(),
     _initTheme(),
-    _initNotifications(),
     _initDatabase(),
   ]);
 }
@@ -114,17 +108,6 @@ Future<void> _initTheme() async {
   }
 }
 
-Future<void> _initNotifications() async {
-  try {
-    final notificationService = NotificationService();
-    await notificationService.initialize();
-    await notificationService.enableDailyChallengeNotifications();
-    debugPrint('📱 Notification service initialized successfully');
-  } catch (e, stackTrace) {
-    debugPrint('⚠️ Error initializing notifications: $e');
-    debugPrint('Stack trace: $stackTrace');
-  }
-}
 
 Future<void> _initDatabase() async {
   try {
@@ -212,8 +195,7 @@ void _reportError(dynamic error, StackTrace stackTrace) {
   // }
 }
 
-/* Removed duplicate main() function to resolve 'main is already defined' error. 
-   NotificationService().initialize() and enableSilentNotifications() are already called in the first main(). */
+/* Removed duplicate main() function to resolve 'main is already defined' error. */
 
 class ErrorWidgetBuilder extends StatelessWidget {
   final Widget child;

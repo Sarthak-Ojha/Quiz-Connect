@@ -2,12 +2,10 @@ import '../models/user_streak.dart';
 import '../models/daily_challenge.dart';
 import '../models/question.dart';
 import '../models/user_challenge_progress.dart';
-import '../services/database_service.dart';
-import 'notification_service.dart';
+import 'database_service.dart';
 
 class StreakService {
   final DatabaseService _dbService = DatabaseService();
-  final NotificationService _notificationService = NotificationService();
   
   static final StreakService _instance = StreakService._internal();
   factory StreakService() => _instance;
@@ -15,11 +13,7 @@ class StreakService {
 
   // Streak Management
   Future<UserStreak> updateUserStreak(String userId) async {
-    final updatedStreak = await _dbService.updateStreakOnActivity(userId);
-    
-    // Streak notifications disabled - no notifications for streak achievements
-    
-    return updatedStreak;
+    return await _dbService.updateStreakOnActivity(userId);
   }
 
   Future<UserStreak?> getUserStreak(String userId) async {
@@ -266,7 +260,7 @@ class StreakService {
     }
   }
 
-  // Notification and Reminder Logic
+  // Streak reminder logic (notifications removed)
   Future<bool> shouldShowStreakReminder(String userId) async {
     final streak = await getUserStreak(userId);
     if (streak == null) return true; // First time user

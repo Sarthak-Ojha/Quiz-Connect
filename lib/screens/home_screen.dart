@@ -577,10 +577,18 @@ class _CategoryPageState extends State<CategoryPage>
     int questionCount,
   ) async {
     try {
-      final allQuestions = await DatabaseService().getRandomQuestionsByCategory(
-        category.name,
-        limit: 100,
-      );
+      // If this is an age category, we don't have age-based labels in the DB.
+      // Fallback to pulling from all questions instead of filtering by category name.
+      final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+      List<Question> allQuestions;
+      if (isAgeCategory) {
+        allQuestions = await DatabaseService().getAllQuestions();
+      } else {
+        allQuestions = await DatabaseService().getRandomQuestionsByCategory(
+          category.name,
+          limit: 100,
+        );
+      }
       if (!mounted) return;
       if (allQuestions.isEmpty) {
         if (mounted) {
@@ -642,24 +650,43 @@ class _CategoryPageState extends State<CategoryPage>
     try {
       final dbService = DatabaseService();
       final List<Question> allQuestions = [];
+      bool addedAllForAge = false;
 
       if (isRandom) {
         // Include both subject and age categories for random mode
         final allCategories = [..._subjectCategories, ..._ageCategories];
         for (final category in allCategories) {
-          final questions = await dbService.getRandomQuestionsByCategory(
-            category.name,
-            limit: 50,
-          );
-          allQuestions.addAll(questions);
+          final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+          if (isAgeCategory) {
+            if (!addedAllForAge) {
+              final questions = await dbService.getAllQuestions();
+              allQuestions.addAll(questions);
+              addedAllForAge = true;
+            }
+          } else {
+            final questions = await dbService.getRandomQuestionsByCategory(
+              category.name,
+              limit: 50,
+            );
+            allQuestions.addAll(questions);
+          }
         }
       } else {
         for (final category in selectedCategories) {
-          final questions = await dbService.getRandomQuestionsByCategory(
-            category.name,
-            limit: 50,
-          );
-          allQuestions.addAll(questions);
+          final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+          if (isAgeCategory) {
+            if (!addedAllForAge) {
+              final questions = await dbService.getAllQuestions();
+              allQuestions.addAll(questions);
+              addedAllForAge = true;
+            }
+          } else {
+            final questions = await dbService.getRandomQuestionsByCategory(
+              category.name,
+              limit: 50,
+            );
+            allQuestions.addAll(questions);
+          }
         }
       }
 

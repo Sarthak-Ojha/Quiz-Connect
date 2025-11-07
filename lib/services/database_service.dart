@@ -141,7 +141,6 @@ class DatabaseService {
     ''');
 
     await db.insert(_settingsTable, {'key': 'theme', 'value': 'light'});
-    await db.insert(_settingsTable, {'key': 'notifications', 'value': 'true'});
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {

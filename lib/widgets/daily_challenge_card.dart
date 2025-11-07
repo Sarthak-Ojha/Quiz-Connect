@@ -66,29 +66,40 @@ class DailyChallengeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          'Daily Challenge',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: _getDifficultyColor(),
+                        Flexible(
+                          child: Text(
+                            'Daily Challenge',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _getDifficultyColor(),
+                              fontSize: 15, // Slightly smaller font
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6), // Reduced spacing
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                            horizontal: 5,
+                            vertical: 1,
                           ),
                           decoration: BoxDecoration(
                             color: _getDifficultyColor().withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(
-                            challenge.difficultyText.toUpperCase(),
-                            style: TextStyle(
-                              color: _getDifficultyColor(),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
+                          constraints: const BoxConstraints(
+                            minWidth: 40, // Ensure minimum width for badge
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              challenge.difficultyText.toUpperCase(),
+                              style: TextStyle(
+                                color: _getDifficultyColor(),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
                             ),
                           ),
                         ),

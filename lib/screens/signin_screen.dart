@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/auth_wrapper.dart';
 import 'signup_screen.dart';
+import 'email_verification_screen.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -31,7 +32,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final user = await _authService.signInWithEmailAndPassword(
+      final result = await _authService.signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );
@@ -40,13 +41,32 @@ class _SigninScreenState extends State<SigninScreen> {
         await _authService.setRememberMe(true);
       }
 
-      // 🔧 CRITICAL FIX: Force navigation after successful sign-in
-      if (mounted && user != null) {
-        debugPrint('🧭 Sign-in successful, forcing navigation to AuthWrapper');
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AuthWrapper()),
-          (route) => false, // Remove all previous routes
-        );
+      final user = result['user'];
+      final emailVerified = result['emailVerified'] as bool;
+      final message = result['message'] as String;
+
+      if (user != null) {
+        if (emailVerified) {
+          debugPrint('✅ Email verified, proceeding to app');
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const AuthWrapper()),
+              (route) => false, // Remove all previous routes
+            );
+          }
+        } else {
+          debugPrint('⚠️ Email not verified, showing verification screen');
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EmailVerificationScreen(
+                  email: _emailController.text.trim(),
+                ),
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);

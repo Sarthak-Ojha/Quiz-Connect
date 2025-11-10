@@ -64,7 +64,7 @@ class AuthService with ChangeNotifier {
   }
 
   // Sign in with Email/Password
-  Future<User?> signInWithEmailAndPassword(
+  Future<Map<String, dynamic>> signInWithEmailAndPassword(
     String email,
     String password,
   ) async {
@@ -79,8 +79,18 @@ class AuthService with ChangeNotifier {
       debugPrint('✅ Firebase sign-in successful: ${user?.uid}');
       if (user != null) {
         await user.reload();
-        final refreshedUser = _auth.currentUser;
-        debugPrint('📧 Email verified: ${refreshedUser?.emailVerified}');
+        final refreshedUser = _auth.currentUser!;
+        debugPrint('📧 Email verified: ${refreshedUser.emailVerified}');
+        
+        // Check if email is verified
+        if (!refreshedUser.emailVerified) {
+          debugPrint('⚠️ Email not verified');
+          return {
+            'user': refreshedUser,
+            'emailVerified': false,
+            'message': 'Please verify your email address before signing in.'
+          };
+        }
       }
 
       // Sync user to local database
@@ -99,7 +109,11 @@ class AuthService with ChangeNotifier {
       
       debugPrint('🔄 Notifying listeners of auth state change');
       notifyListeners();
-      return user;
+      return {
+        'user': user,
+        'emailVerified': user?.emailVerified ?? false,
+        'message': 'Signed in successfully!'
+      };
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ Sign in error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
@@ -195,13 +209,36 @@ class AuthService with ChangeNotifier {
   }
 
   // Send email verification
-  Future<void> sendEmailVerification() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null && !user.emailVerified) {
-      // You can implement custom email service here if needed
-      // For now, using Firebase default
+  Future<Map<String, dynamic>> sendEmailVerification() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return {
+          'success': false,
+          'message': 'No user is currently signed in.'
+        };
+      }
+      
+      if (user.emailVerified) {
+        return {
+          'success': true,
+          'message': 'Email is already verified.'
+        };
+      }
+      
       await user.sendEmailVerification();
       debugPrint('📧 Email verification sent to: ${user.email}');
+      
+      return {
+        'success': true,
+        'message': 'Verification email sent to ${user.email}. Please check your inbox.'
+      };
+    } catch (e) {
+      debugPrint('❌ Error sending verification email: $e');
+      return {
+        'success': false,
+        'message': 'Failed to send verification email. Please try again.'
+      };
     }
   }
 

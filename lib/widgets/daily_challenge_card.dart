@@ -19,8 +19,6 @@ class DailyChallengeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progressPercentage = progress?.progressPercentage ?? 0.0;
-    final questionsRemaining =
-        progress?.questionsRemaining ?? challenge.questionIds.length;
     final canAttempt = !isCompleted && !challenge.isExpired;
 
     return Card(

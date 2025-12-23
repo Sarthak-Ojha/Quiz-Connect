@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/quiz_category.dart';
 import '../models/daily_challenge.dart';
 import '../models/user_challenge_progress.dart';
@@ -22,6 +23,8 @@ import 'quiz_screen.dart';
 import 'settings_screen.dart';
 import 'timer_quiz_screen.dart';
 import 'daily_challenge_screen.dart';
+import 'qr_code_screen.dart';
+import 'friends_screen.dart';
 
 /* -------------------------------- USER DATA MODEL -------------------------------- */
 
@@ -53,7 +56,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late int _selectedIndex;
   final StreakService _streakService = StreakService();
   late final List<Widget> _pages;
@@ -70,15 +73,62 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     _loadDisplayName();
     _syncCurrentUser();
+    _setUserOnline();
+    _loadQuestions();
+    _listenForGameInvites();
     
     // Listen for display name changes
     UserProfileService.displayNameNotifier.addListener(_onDisplayNameChanged);
+    
+    // Listen for app lifecycle changes
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  Future<void> _loadQuestions() async {
+    await DatabaseService().loadQuestionsFromJson();
   }
 
   @override
   void dispose() {
+    _setUserOffline();
+    WidgetsBinding.instance.removeObserver(this);
     UserProfileService.displayNameNotifier.removeListener(_onDisplayNameChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App is in foreground
+        _setUserOnline();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        // App is in background or closed
+        _setUserOffline();
+        break;
+    }
+  }
+
+  Future<void> _setUserOnline() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await DatabaseService().setUserOnline(user.uid);
+    }
+  }
+
+  Future<void> _setUserOffline() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await DatabaseService().setUserOffline(user.uid);
+    }
   }
 
   Future<void> _loadDisplayName() async {
@@ -92,6 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onDisplayNameChanged() {
     _loadDisplayName();
+  }
+
+  void _listenForGameInvites() {
+    // Game invites are now shown in the Friends screen with badge notification
+    // No popup needed - user clicks Friends icon to see challenges
   }
 
   Future<void> _syncCurrentUser() async {
@@ -221,6 +276,78 @@ class _HomeScreenState extends State<HomeScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Friends button with notification badge (friend requests + game invites)
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('friend_requests')
+                .where('to', isEqualTo: user?.uid ?? '')
+                .where('status', isEqualTo: 'pending')
+                .snapshots(),
+            builder: (context, requestSnapshot) {
+              final requestCount = requestSnapshot.data?.docs.length ?? 0;
+              
+              return StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('game_invites')
+                    .where('to', isEqualTo: user?.uid ?? '')
+                    .snapshots(),
+                builder: (context, inviteSnapshot) {
+                  final inviteCount = inviteSnapshot.data?.docs.length ?? 0;
+                  final totalCount = requestCount + inviteCount;
+                  
+                  return Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.people),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const FriendsScreen()),
+                          );
+                        },
+                        tooltip: 'Friends',
+                      ),
+                      if (totalCount > 0)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              totalCount > 9 ? '9+' : '$totalCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+          // QR Code button
+          IconButton(
+            icon: const Icon(Icons.qr_code),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QRCodeScreen()),
+              );
+            },
+            tooltip: 'My QR Code',
+          ),
           // Streak icon with number
           FutureBuilder<UserStreak?>(
             future: _getStreakData(),
@@ -240,18 +367,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   if (streakCount > 0)
                     Positioned(
-                      right: 6,
-                      top: 6,
+                      right: 8,
+                      top: 8,
                       child: Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.orange,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white, width: 1),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
+                          minWidth: 16,
+                          minHeight: 16,
                         ),
                         child: Text(
                           '$streakCount',
@@ -403,7 +537,7 @@ class _CategoryPageState extends State<CategoryPage>
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) throw Exception('No user logged in');
     return UserData(
-      displayName: currentUser.displayName ?? 'Quiz Master',
+      displayName: currentUser.displayName ?? 'Quiz Connect',
       email: currentUser.email ?? '',
       rank: 12,
       score: 5800,
@@ -2659,7 +2793,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
             
             // Category Selection Section
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -2675,22 +2809,27 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Category Selection',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Color(0xFF1976D2),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(
+                      'Category Selection',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  // Category selection buttons
                   Row(
                     children: [
                       Expanded(
                         child: GestureDetector(
                           onTap: () => setState(() => _isRandom = true),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                            margin: const EdgeInsets.only(right: 6),
                             decoration: BoxDecoration(
                               gradient: _isRandom
                                   ? LinearGradient(
@@ -2732,7 +2871,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: _isRandom ? Colors.white : Colors.grey.shade700,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
@@ -2745,7 +2884,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         child: GestureDetector(
                           onTap: () => setState(() => _isRandom = false),
                           child: Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                            margin: const EdgeInsets.only(left: 6),
                             decoration: BoxDecoration(
                               gradient: !_isRandom
                                   ? LinearGradient(
@@ -2787,7 +2927,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: !_isRandom ? Colors.white : Colors.grey.shade700,
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],

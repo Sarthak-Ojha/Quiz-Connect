@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_service.dart';
 import 'firebase_analytics_service.dart';
+import 'firestore_service.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,6 +20,7 @@ class AuthService with ChangeNotifier {
   Future<User?> signUpWithEmailAndPassword(
     String email,
     String password,
+    String name,
   ) async {
     try {
       debugPrint('🔐 Creating user account...');
@@ -27,6 +29,13 @@ class AuthService with ChangeNotifier {
         password: password,
       );
       final user = result.user;
+      
+      // Update the user's display name in Firebase Auth
+      if (user != null && name.isNotEmpty) {
+        await user.updateDisplayName(name);
+        await user.reload();
+        debugPrint('👤 Updated display name to: $name');
+      }
 
       if (user != null && !user.emailVerified) {
         await user.sendEmailVerification();
@@ -120,22 +129,19 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Google Sign-In - FIXED FOR google_sign_in ^7.2.0
+  // Google Sign-In
   Future<User?> signInWithGoogle() async {
     try {
       debugPrint('🔐 Starting Google sign-in...');
 
-      // Initialize Google Sign In with web client ID for Firebase authentication
+      // Initialize Google Sign-In with server client ID
       await GoogleSignIn.instance.initialize(
         serverClientId: '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
       );
 
-      debugPrint('🔐 Triggering Google authentication...');
-      
-      // Use authenticate method - this should work with the current package version
+      // Authenticate the user
       final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
       
-      // Handle user cancellation gracefully
       if (googleUser == null) {
         debugPrint('ℹ️ Google sign-in cancelled by user');
         return null;
@@ -143,29 +149,37 @@ class AuthService with ChangeNotifier {
       
       debugPrint('✅ Google user obtained: ${googleUser.email}');
 
-      // Get the authentication details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      // Get the authentication details
+      final GoogleSignInClientAuthorization? authorization = 
+          await googleUser.authorizationClient.authorizationForScopes([
+            'email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+          ]);
+      
+      if (authorization == null) {
+        debugPrint('❌ Failed to get authorization');
+        return null;
+      }
       
       debugPrint('✅ Google authentication obtained');
-      debugPrint('🔑 ID Token available: ${googleAuth.idToken != null}');
+      debugPrint('🔑 Access Token: ${authorization.accessToken}');
 
-      // Create a new credential using the ID token
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
+      // Create a new credential
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: authorization.accessToken,
       );
 
-      // Sign in to Firebase with the credential
-      final result = await _auth.signInWithCredential(credential);
-      final user = result.user;
-
-      debugPrint('✅ Firebase credential sign-in successful: ${user?.uid}');
-      debugPrint('📧 Google user email verified: ${user?.emailVerified}');
-      debugPrint('🔄 Current Firebase user: ${_auth.currentUser?.uid}');
-      debugPrint('🔄 Provider data: ${user?.providerData.map((p) => p.providerId).toList()}');
-
-      // Sync user to local database
+      debugPrint('🔑 Signing in with Google credential...');
+      
+      // Sign in to Firebase
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
+      
       if (user != null) {
-        await _databaseService.syncFirebaseUser(
+        debugPrint('✅ Successfully signed in with Google: ${user.uid}');
+        
+        // Sync user data with Firestore
+        await DatabaseService().syncFirebaseUser(
           user.uid,
           user.email ?? '',
           user.displayName,
@@ -173,20 +187,14 @@ class AuthService with ChangeNotifier {
           user.emailVerified,
         );
         
-        // Track Google sign in in analytics
+        // Track successful sign-in
         await FirebaseAnalyticsService.trackUserSignIn('google');
-      }
-
-      notifyListeners();
-      return user;
-    } on GoogleSignInException catch (e) {
-      // Handle specific Google Sign-In exceptions
-      if (e.code == GoogleSignInExceptionCode.canceled) {
-        debugPrint('ℹ️ Google sign-in cancelled by user');
+        
+        return user;
+      } else {
+        debugPrint('❌ Failed to sign in with Google');
         return null;
       }
-      debugPrint('❌ Google sign-in error: ${e.code.name} - ${e.description}');
-      throw Exception('Google sign-in failed: ${e.description}');
     } on FirebaseAuthException catch (e) {
       debugPrint('❌ Firebase auth error: ${e.code} - ${e.message}');
       throw Exception(_handleAuthException(e));
@@ -270,7 +278,7 @@ class AuthService with ChangeNotifier {
 
       // Sign out from Google
       try {
-        await GoogleSignIn.instance.signOut();
+        await GoogleSignIn.instance.disconnect();
         debugPrint('✅ Google sign-out successful');
       } catch (e) {
         debugPrint('⚠️ Google sign-out error (non-critical): $e');
@@ -284,6 +292,84 @@ class AuthService with ChangeNotifier {
     } catch (e) {
       debugPrint('❌ Sign out error: $e');
       rethrow;
+    }
+  }
+
+  // Delete user account and associated data
+  Future<Map<String, dynamic>> deleteAccount() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return {
+          'success': false,
+          'message': 'No user is currently signed in.'
+        };
+      }
+
+      final userId = user.uid;
+      debugPrint('🗑️ Starting account deletion for user: $userId');
+
+      // 1. Delete user from Firebase Authentication
+      try {
+        await user.delete();
+        debugPrint('✅ User authentication account deleted');
+      } on FirebaseAuthException catch (e) {
+        // If user needs to re-authenticate, we'll handle that in the UI
+        if (e.code == 'requires-recent-login') {
+          debugPrint('⚠️ Re-authentication required for account deletion');
+          return {
+            'success': false,
+            'requiresReauth': true,
+            'message': 'Please sign in again to confirm account deletion.'
+          };
+        }
+        rethrow;
+      }
+
+      // 2. Delete user data from leaderboard
+      try {
+        await FirestoreService.deleteUserFromLeaderboard(userId);
+      } catch (e) {
+        // Log the error but don't fail the entire operation
+        debugPrint('⚠️ Error deleting user from leaderboard: $e');
+      }
+
+      // 3. Delete user profile / requests / invites from Firestore
+      try {
+        await FirestoreService.deleteUserData(userId);
+      } catch (e) {
+        debugPrint('⚠️ Error deleting user data from Firestore: $e');
+      }
+
+      // 4. Delete user data from local database
+      try {
+        await _databaseService.deleteUser(userId);
+        debugPrint('✅ User data deleted from local database');
+      } catch (e) {
+        // Log the error but don't fail the entire operation
+        debugPrint('⚠️ Error deleting user from local database: $e');
+      }
+
+      // 5. Sign out to clear any remaining state
+      await signOut();
+
+      debugPrint('✅ Account and all associated data deleted successfully');
+      return {
+        'success': true,
+        'message': 'Your account and all associated data have been deleted.'
+      };
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ Account deletion error: ${e.code} - ${e.message}');
+      return {
+        'success': false,
+        'message': _handleAuthException(e),
+      };
+    } catch (e) {
+      debugPrint('❌ Unexpected error during account deletion: $e');
+      return {
+        'success': false,
+        'message': 'An unexpected error occurred. Please try again.',
+      };
     }
   }
 

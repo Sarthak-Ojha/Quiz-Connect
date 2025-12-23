@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/question.dart';
 import '../models/quiz_result.dart';
@@ -339,6 +343,35 @@ class DatabaseService {
     };
   }
 
+  /// Save a set of AI-generated questions into Firestore under the user's saved_questions subcollection.
+  /// Each doc contains all questions for a topic to keep categories separated.
+  Future<void> saveAIQuestionSet(String topic, List<Question> questions) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final userSavedRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('saved_questions')
+        .doc(); // auto-id per generated set
+
+    final payload = {
+      'topic': topic,
+      'category': 'AI - $topic',
+      'source': 'ai',
+      'createdAt': FieldValue.serverTimestamp(),
+      'questions': questions
+          .map((q) => {
+                'question': q.question,
+                'options': q.options,
+                'correctIndex': q.correctIndex,
+              })
+          .toList(),
+    };
+
+    await userSavedRef.set(payload);
+  }
+
   Future<List<QuizResult>> getRecentQuizResults(
     String userId, {
     int limit = 10,
@@ -543,7 +576,6 @@ class DatabaseService {
   }
 
   Future<UserStreak> updateStreakOnActivity(String userId) async {
-    final db = await database;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     
@@ -910,8 +942,8 @@ class DatabaseService {
       
       // For Android - copy to Downloads folder
       if (defaultTargetPlatform == TargetPlatform.android) {
-        final externalDir = '/storage/emulated/0/Download';
-        final exportPath = '$externalDir/quiz_app_database_export.db';
+        const externalDir = '/storage/emulated/0/Download';
+        const exportPath = '$externalDir/quiz_app_database_export.db';
         
         final dbFile = File(dbPath);
         if (await dbFile.exists()) {
@@ -940,6 +972,434 @@ class DatabaseService {
     await db.delete(_userStreaksTable);
     await db.delete(_dailyChallengesTable);
     await db.delete(_userChallengeProgressTable);
+  }
+
+  // Friend Requests Management
+  
+  /// Get stream of pending friend requests for current user
+  Stream<QuerySnapshot> getFriendRequests() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return const Stream.empty();
+    }
+
+    return FirebaseFirestore.instance
+        .collection('friend_requests')
+        .where('to', isEqualTo: currentUser.uid)
+        .where('status', isEqualTo: 'pending')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  /// Accept a friend request
+  Future<bool> acceptFriendRequest(String requestId, String friendId) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return false;
+
+      final batch = FirebaseFirestore.instance.batch();
+
+      // Update request status
+      final requestRef = FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId);
+      
+      batch.update(requestRef, {
+        'status': 'accepted',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Add each other as friends
+      final userFriendsRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('friends')
+          .doc(friendId);
+      
+      final friendFriendsRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(friendId)
+          .collection('friends')
+          .doc(currentUser.uid);
+
+      batch.set(userFriendsRef, {
+        'since': FieldValue.serverTimestamp(),
+      });
+
+      batch.set(friendFriendsRef, {
+        'since': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+      return true;
+    } catch (e) {
+      debugPrint('Error accepting friend request: $e');
+      return false;
+    }
+  }
+
+  /// Reject a friend request
+  Future<bool> rejectFriendRequest(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId)
+          .update({
+            'status': 'rejected',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+      return true;
+    } catch (e) {
+      debugPrint('Error rejecting friend request: $e');
+      return false;
+    }
+  }
+
+  /// Send a friend request
+  Future<bool> sendFriendRequest(String toUserId) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Send friend request failed: No current user');
+        return false;
+      }
+
+      // Prevent sending a request to yourself
+      if (toUserId == currentUser.uid) {
+        debugPrint('❌ Send friend request failed: Cannot send request to yourself');
+        return false;
+      }
+
+      debugPrint('📤 Attempting to send friend request from ${currentUser.uid} to $toUserId');
+
+      // Check if already friends
+      final friendDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('friends')
+          .doc(toUserId)
+          .get();
+
+      if (friendDoc.exists) {
+        debugPrint('❌ Send friend request failed: Already friends');
+        return false; // Already friends
+      }
+
+      // If the other user already sent a pending request, auto-accept it instead of creating a duplicate
+      final reverseRequestRef = FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc('${toUserId}_${currentUser.uid}');
+      final reverseRequestDoc = await reverseRequestRef.get();
+      if (reverseRequestDoc.exists) {
+        final reverseStatus = reverseRequestDoc.data()?['status'];
+        if (reverseStatus == 'pending') {
+          debugPrint('🤝 Reverse pending request found. Auto-accepting instead of sending a new one.');
+          return await acceptFriendRequest(reverseRequestRef.id, toUserId);
+        } else if (reverseStatus == 'accepted') {
+          debugPrint('❌ Send friend request failed: Already accepted via reverse request');
+          return false;
+        }
+      }
+
+      // Check if request already exists
+      final requestDoc = await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc('${currentUser.uid}_$toUserId')
+          .get();
+
+      if (requestDoc.exists) {
+        final status = requestDoc.data()?['status'];
+        if (status == 'pending') {
+          debugPrint('❌ Send friend request failed: Pending request already exists');
+          return false; // Request already sent and pending
+        }
+        // If status is 'rejected' or 'accepted', we can overwrite it
+        debugPrint('📝 Overwriting previous request with status: $status');
+      }
+
+      // Create or update friend request
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc('${currentUser.uid}_$toUserId')
+          .set({
+        'from': currentUser.uid,
+        'to': toUserId,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('✅ Friend request sent successfully!');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error sending friend request: $e');
+      return false;
+    }
+  }
+
+  /// Get user's friends
+  Stream<QuerySnapshot> getUserFriends(String userId) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('friends')
+        .orderBy('since', descending: true)
+        .snapshots();
+  }
+
+  /// Check if two users are friends
+  Future<bool> areFriends(String userId1, String userId2) async {
+    final friendDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId1)
+        .collection('friends')
+        .doc(userId2)
+        .get();
+    
+    return friendDoc.exists;
+  }
+
+  /// Update user online status with automatic offline on disconnect
+  Future<void> setUserOnline(String userId) async {
+    try {
+      final authUser = FirebaseAuth.instance.currentUser;
+      if (authUser == null) return;
+
+      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+      final userSnapshot = await userRef.get();
+
+      final data = <String, dynamic>{
+        'displayName': authUser.displayName,
+        'email': authUser.email,
+        'photoURL': authUser.photoURL,
+        'emailVerified': authUser.emailVerified,
+        'isOnline': true,
+        'lastSeen': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      // Only set createdAt the first time the document is written
+      if (!userSnapshot.exists) {
+        data['createdAt'] = FieldValue.serverTimestamp();
+      }
+
+      await userRef.set(data, SetOptions(merge: true));
+      
+      // Set up automatic offline status when user disconnects
+      // This uses Firestore's onDisconnect feature via a Cloud Function trigger
+      // For now, we'll rely on the app lifecycle to set offline
+      debugPrint('✅ User status set to online');
+    } catch (e) {
+      debugPrint('❌ Error setting user online: $e');
+    }
+  }
+
+  /// Update user offline status
+  Future<void> setUserOffline(String userId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({
+        'isOnline': false,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+      debugPrint('✅ User status set to offline');
+    } catch (e) {
+      debugPrint('❌ Error setting user offline: $e');
+    }
+  }
+
+  /// Get questions by their IDs (for multiplayer games)
+  Future<List<Question>> getQuestionsByIds(List<String> questionIds) async {
+    try {
+      final db = await database;
+      final List<Question> questions = [];
+      
+      for (final id in questionIds) {
+        final result = await db.query(
+          _questionsTable,
+          where: 'id = ?',
+          whereArgs: [int.parse(id)],
+        );
+        
+        if (result.isNotEmpty) {
+          questions.add(Question.fromMap(result.first));
+        }
+      }
+      
+      return questions;
+    } catch (e) {
+      debugPrint('❌ Error getting questions by IDs: $e');
+      return [];
+    }
+  }
+
+  /// Get all available categories from database
+  Future<List<String>> getAvailableCategories() async {
+    try {
+      final db = await database;
+      final result = await db.rawQuery(
+        'SELECT DISTINCT category FROM $_questionsTable ORDER BY category'
+      );
+      
+      final categories = result
+          .map((row) => row['category'] as String)
+          .where((cat) => cat.isNotEmpty)
+          .toList();
+      
+      debugPrint('📚 Available categories: $categories');
+      return categories;
+    } catch (e) {
+      debugPrint('❌ Error getting categories: $e');
+      return [];
+    }
+  }
+
+  /// Load questions from JSON file into database
+  Future<void> loadQuestionsFromJson() async {
+    try {
+      final db = await database;
+      
+      // Check if questions already loaded
+      final count = Sqflite.firstIntValue(
+        await db.rawQuery('SELECT COUNT(*) FROM $_questionsTable')
+      );
+      
+      if (count != null && count > 0) {
+        debugPrint('✅ Questions already loaded ($count questions)');
+        return;
+      }
+      
+      debugPrint('📥 Loading questions from JSON...');
+      
+      // Load JSON file
+      final String jsonString = await rootBundle.loadString('assets/questions.json');
+      final List<dynamic> jsonData = json.decode(jsonString);
+      
+      // Insert questions into database
+      final batch = db.batch();
+      for (var questionData in jsonData) {
+        batch.insert(_questionsTable, {
+          'category': questionData['category'],
+          'question': questionData['question'],
+          'options': json.encode(questionData['options']),
+          'correctIndex': questionData['correctIndex'],
+        });
+      }
+      
+      await batch.commit(noResult: true);
+      debugPrint('✅ Loaded ${jsonData.length} questions from JSON');
+    } catch (e) {
+      debugPrint('❌ Error loading questions from JSON: $e');
+    }
+  }
+
+  /// Create a multiplayer game
+  Future<String?> createMultiplayerGame({
+    required String hostId,
+    required String category,
+    required int questionCount,
+  }) async {
+    try {
+      debugPrint('🎮 Creating multiplayer game with random questions from ALL categories');
+      
+      // Get random questions from ALL categories (ignore category parameter)
+      final db = await database;
+      
+      // First check total questions available
+      final totalQuestions = await db.query(_questionsTable);
+      
+      debugPrint('📊 Total questions available: ${totalQuestions.length}');
+      
+      if (totalQuestions.isEmpty) {
+        debugPrint('❌ No questions found in database');
+        return null;
+      }
+      
+      // Get random questions from ALL categories
+      final questions = await db.query(
+        _questionsTable,
+        orderBy: 'RANDOM()',
+        limit: questionCount,
+      );
+
+      debugPrint('✅ Selected ${questions.length} random questions from all categories');
+      
+      final questionIds = questions.map((q) => q['id'].toString()).toList();
+      debugPrint('📝 Question IDs: $questionIds');
+
+      // Create game in Firestore
+      debugPrint('🔥 Creating game in Firestore...');
+      final gameRef = await FirebaseFirestore.instance
+          .collection('multiplayer_games')
+          .add({
+        'hostId': hostId,
+        'guestId': null,
+        'category': category,
+        'questionCount': questionCount,
+        'status': 'waiting',
+        'scores': {
+          hostId: {
+            'correctAnswers': 0,
+            'totalAnswered': 0,
+            'answers': [],
+          },
+        },
+        'questionIds': questionIds,
+        'currentQuestionIndex': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+        'startedAt': null,
+        'completedAt': null,
+      });
+
+      debugPrint('✅ Multiplayer game created successfully: ${gameRef.id}');
+      return gameRef.id;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error creating multiplayer game: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Join a multiplayer game
+  Future<bool> joinMultiplayerGame(String gameId, String userId) async {
+    try {
+      final gameDoc = await FirebaseFirestore.instance
+          .collection('multiplayer_games')
+          .doc(gameId)
+          .get();
+
+      if (!gameDoc.exists) {
+        debugPrint('❌ Game not found: $gameId');
+        return false;
+      }
+
+      final gameData = gameDoc.data()!;
+      if (gameData['guestId'] != null) {
+        debugPrint('❌ Game already has a guest');
+        return false;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('multiplayer_games')
+          .doc(gameId)
+          .update({
+        'guestId': userId,
+        'status': 'ready',
+        'scores.$userId': {
+          'correctAnswers': 0,
+          'totalAnswered': 0,
+          'answers': [],
+        },
+      });
+
+      debugPrint('✅ Joined multiplayer game: $gameId');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error joining multiplayer game: $e');
+      return false;
+    }
   }
 
   Future<void> closeDatabase() async {

@@ -9,10 +9,10 @@ class UserProfileService {
   static final ValueNotifier<String?> _displayNameNotifier = ValueNotifier<String?>(null);
 
   /// Get the display name for the current user
-  /// Priority: Custom name > Firebase displayName > 'Quiz Master'
+  /// Priority: Custom name > Firebase displayName > 'Quiz Connect'
   static Future<String> getDisplayName() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return 'Quiz Master';
+    if (user == null) return 'Quiz Connect';
 
     final prefs = await SharedPreferences.getInstance();
     final customName = prefs.getString('$_customNamePrefix${user.uid}');

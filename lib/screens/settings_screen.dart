@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_profile_service.dart';
 import '../widgets/auth_wrapper.dart';
-import '../utils/seed_questions.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final AuthService _authService = AuthService();
   bool _isSigningOut = false;
-  bool _isReseeding = false;
+  bool _isDeletingAccount = false;
   String? _customDisplayName;
 
   @override
@@ -33,6 +33,96 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Delete Account?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'This will permanently delete your account, friend requests, game invites, and profile data. This action cannot be undone.',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performDeleteAccount();
+            },
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performDeleteAccount() async {
+    if (_isDeletingAccount) return;
+
+    setState(() => _isDeletingAccount = true);
+    try {
+      final result = await _authService.deleteAccount();
+      if (!mounted) return;
+
+      if (result['requiresReauth'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please sign in again to confirm deletion.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Account deleted.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AuthWrapper()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Failed to delete account.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeletingAccount = false);
+      }
+    }
+  }
+
   Future<void> _saveCustomDisplayName(String name) async {
     await UserProfileService.saveCustomDisplayName(name);
     setState(() {
@@ -45,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_customDisplayName != null && _customDisplayName!.isNotEmpty) {
       return _customDisplayName!;
     }
-    return user?.displayName ?? 'Quiz Master';
+    return user?.displayName ?? 'Quiz Connect';
   }
 
 
@@ -142,45 +232,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _forceReseedQuestions() async {
-    setState(() => _isReseeding = true);
-    
-    try {
-      await forceReseedQuestions();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Questions reseeded successfully! Age categories should now work.'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
+  Future<void> _showExitConfirmationDialog() async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2C),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Exit?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 20,
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error reseeding questions: $e')),
-              ],
-            ),
-            backgroundColor: Colors.red,
+        ),
+        content: const Text(
+          'Are you sure you want to exit?',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 16,
           ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isReseeding = false);
-      }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('ok'),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            style: TextButton.styleFrom(
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldExit == true && mounted) {
+      // Exit the app
+      SystemNavigator.pop();
     }
   }
 
@@ -275,21 +381,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Card(
-                  child: ListTile(
-                    leading: _isSigningOut
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.logout, color: Colors.red),
-                    title: Text(_isSigningOut ? 'Signing out...' : 'Sign Out'),
-                    subtitle: Text(
-                      _isSigningOut
-                          ? 'Please wait...'
-                          : 'Sign out of your account',
-                    ),
-                    onTap: _isSigningOut ? null : _showSignOutDialog,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: _isSigningOut
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.logout, color: Colors.red),
+                        title: Text(_isSigningOut ? 'Signing out...' : 'Sign Out'),
+                        subtitle: Text(
+                          _isSigningOut
+                              ? 'Please wait...'
+                              : 'Sign out of your account',
+                        ),
+                        onTap: _isSigningOut ? null : _showSignOutDialog,
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: _isDeletingAccount
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.delete_forever, color: Colors.red),
+                        title: Text(_isDeletingAccount ? 'Deleting account...' : 'Delete Account'),
+                        subtitle: const Text('Permanently remove your account and data'),
+                        onTap: _isDeletingAccount ? null : _showDeleteAccountDialog,
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.exit_to_app, color: Colors.orange),
+                        title: const Text('Exit App'),
+                        subtitle: const Text('Close the application'),
+                        onTap: _showExitConfirmationDialog,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -386,170 +516,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               foregroundColor: Colors.white,
             ),
             child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showQuizRulesDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.quiz, color: Color(0xFF1976D2)),
-            SizedBox(width: 8),
-            Text('Quiz Rules'),
-          ],
-        ),
-        content: const SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '📚 How to Play:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Text('• Choose Category Mode for focused learning'),
-              Text('• Pick Quick Mode for timed challenges'),
-              SizedBox(height: 12),
-              Text(
-                '🏆 Scoring System:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Text('• No penalty for wrong answers'),
-              Text('• Quick Mode: 15 seconds per question'),
-              Text('• Category Mode: No time limit'),
-              SizedBox(height: 12),
-              Text(
-                '📊 Progress Tracking:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 8),
-              Text('• All scores are automatically saved'),
-              Text('• View detailed history in My Scores'),
-              Text('• Track performance across categories'),
-              Text('• Challenge yourself to beat your best!'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it!'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAboutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.quiz, color: Color(0xFF1976D2)),
-            SizedBox(width: 8),
-            Text('About Quiz Master'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quiz Master v1.0.0',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'A comprehensive quiz application designed to make learning fun and engaging. Test your knowledge across various categories and track your progress over time.',
-            ),
-            SizedBox(height: 12),
-            Text('✨ Features:'),
-            Text('• Multiple quiz categories'),
-            Text('• Timed and untimed modes'),
-            Text('• Progress tracking'),
-            Text('• Detailed score history'),
-            Text('• Dark/Light theme support'),
-            SizedBox(height: 12),
-            Text('Built with Flutter & Firebase'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyPolicyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Privacy Policy'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'We respect your privacy and are committed to protecting your personal data. '
-            'Quiz Master collects only the necessary information to provide you with the best learning experience.\n\n'
-            'Information we collect:\n'
-            '• Account information (email, name)\n'
-            '• Quiz scores and progress data\n'
-            '• App preferences and settings\n\n'
-            'How we use your information:\n'
-            '• To provide personalized quiz experiences\n'
-            '• To track and display your progress\n'
-            '• To improve app functionality\n\n'
-            'Your data is stored securely and is never shared with third parties without your consent.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTermsOfServiceDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Terms of Service'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'By using Quiz Master, you agree to these terms of service.\n\n'
-            'Acceptable Use:\n'
-            '• Use the app for educational and entertainment purposes\n'
-            '• Do not attempt to cheat or exploit the quiz system\n'
-            '• Respect other users and maintain appropriate conduct\n\n'
-            'Account Responsibilities:\n'
-            '• Keep your login credentials secure\n'
-            '• Provide accurate information during registration\n'
-            '• Notify us of any unauthorized account access\n\n'
-            'The app is provided "as is" for educational and entertainment purposes. '
-            'We strive to ensure accuracy of quiz content but cannot guarantee 100% accuracy. '
-            'Please use the app responsibly and enjoy learning!',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
           ),
         ],
       ),

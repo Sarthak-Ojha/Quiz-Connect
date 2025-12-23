@@ -14,13 +14,31 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isInitialLoad = true;
+  String? _lastCheckedUserId;
+
+  Future<void> _verifyCurrentUser(User user) async {
+    try {
+      await user.reload();
+      debugPrint('🔄 AuthWrapper: User reload successful for ${user.uid}');
+    } on FirebaseAuthException catch (e) {
+      // If the user was deleted or disabled server-side, sign out locally
+      if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+        debugPrint('🚫 AuthWrapper: User invalid (${e.code}). Signing out.');
+        await FirebaseAuth.instance.signOut();
+      } else {
+        debugPrint('⚠️ AuthWrapper: Reload error ${e.code} - ${e.message}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ AuthWrapper: Unexpected reload error $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
 
     return StreamBuilder<User?>(
-      // 🔧 CRITICAL: Use the proper stream type
-      stream: FirebaseAuth.instance.authStateChanges(),
+      // 🔧 Use userChanges so profile updates (like emailVerified after reload) emit
+      stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
         debugPrint('🔄 AuthWrapper: Connection state: ${snapshot.connectionState}');
         debugPrint('🔄 AuthWrapper: Has data: ${snapshot.hasData}');
@@ -66,6 +84,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
           );
           debugPrint('🔄 AuthWrapper: Is Google user: $isGoogleUser');
           debugPrint('🔄 AuthWrapper: Email verified: ${user.emailVerified}');
+
+          // Verify the user still exists in Firebase (handles server-side deletion)
+          if (_lastCheckedUserId != user.uid) {
+            _lastCheckedUserId = user.uid;
+            // Fire and forget; authStateChanges will emit if signOut happens
+            _verifyCurrentUser(user);
+          }
 
           if (user.emailVerified || isGoogleUser) {
             debugPrint('🏠 AuthWrapper: Navigating to HomeScreen');

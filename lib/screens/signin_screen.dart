@@ -43,7 +43,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
       final user = result['user'];
       final emailVerified = result['emailVerified'] as bool;
-      final message = result['message'] as String;
+      // Successfully signed in
 
       if (user != null) {
         if (emailVerified) {

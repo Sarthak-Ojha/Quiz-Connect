@@ -3,11 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/daily_challenge.dart';
 import '../models/question.dart';
 import '../models/quiz_result.dart';
-import '../models/user_challenge_progress.dart';
 import '../services/database_service.dart';
 import '../services/streak_service.dart';
 import '../services/leaderboard_service.dart';
-import 'quiz_result_screen.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
   final DailyChallenge challenge;
@@ -37,7 +35,6 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
   int _correctAnswers = 0;
   bool _isAnswered = false;
   bool _isLoading = false;
-  UserChallengeProgress? _progress;
 
   @override
   void initState() {
@@ -79,16 +76,12 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
 
       if (progress == null) {
         // Start new challenge
-        final newProgress = await _streakService.startChallenge(
+        await _streakService.startChallenge(
           user.uid,
           widget.challenge,
         );
-        setState(() {
-          _progress = newProgress;
-        });
       } else {
         setState(() {
-          _progress = progress;
           _currentQuestionIndex = progress.questionsCompleted;
         });
       }
@@ -192,22 +185,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       }
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => QuizResultScreen(
-              result: quizResult,
-              questions: widget.questions,
-              isChallenge: true,
-              streakInfo: {
-                'currentStreak': updatedStreak.streakCount,
-                'isNewRecord':
-                    updatedStreak.streakCount == updatedStreak.maxStreak,
-                'pointsEarned': _calculateChallengePoints(),
-              },
-            ),
-          ),
-        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -227,19 +205,6 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
 
   int _calculateScore() {
     return _correctAnswers * 20; // Base score per correct answer
-  }
-
-  int _calculateChallengePoints() {
-    final percentage = (_correctAnswers / widget.questions.length) * 100;
-    int points = widget.challenge.rewardPoints;
-
-    if (percentage == 100) {
-      points = (points * 1.5).round(); // Perfect bonus
-    } else if (percentage >= 80) {
-      points = (points * 1.2).round(); // Good performance bonus
-    }
-
-    return points;
   }
 
   Color _getDifficultyColor() {
@@ -273,14 +238,17 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: _getDifficultyColor(),
         foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'Daily Challenge ${widget.challenge.difficultyEmoji}',
+          'Daily Challenge',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -362,6 +330,7 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen>
           ),
         ],
       ),
+    ),
     );
   }
 

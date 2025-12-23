@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
+import '../screens/home_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({super.key});
@@ -18,6 +19,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
   bool _isSigningOut = false;
   bool _canResend = true;
   int _resendCooldown = 0;
+  bool _hasRedirected = false;
   Timer? _timer;
   Timer? _cooldownTimer;
   late AnimationController _animationController;
@@ -30,6 +32,33 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
     _setupAnimations();
     _sendVerificationEmail();
     _startEmailVerificationCheck();
+  }
+
+  void _redirectToApp() {
+    if (_hasRedirected || !mounted) return;
+    _hasRedirected = true;
+    _timer?.cancel();
+    _cooldownTimer?.cancel();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Email verified successfully! Redirecting...'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Navigate directly to Home; the auth wrapper will also land on Home on rebuild
+    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
   }
 
   void _setupAnimations() {
@@ -67,22 +96,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
             _cooldownTimer?.cancel();
 
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Email verified successfully! Redirecting...'),
-                    ],
-                  ),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-
-              // The AuthWrapper will automatically detect the change and navigate
-              // No manual navigation needed
+              _redirectToApp();
             }
           }
         }
@@ -108,21 +122,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen>
         final refreshedUser = FirebaseAuth.instance.currentUser;
         
         if (refreshedUser?.emailVerified ?? false) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Email verified successfully! Redirecting...'),
-                  ],
-                ),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
+          if (mounted) _redirectToApp();
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

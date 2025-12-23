@@ -145,11 +145,11 @@ class _SplashScreenState extends State<SplashScreen>
                                 width: 120,
                                 height: 120,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       blurRadius: 20,
                                       offset: const Offset(0, 10),
                                     ),
@@ -174,7 +174,7 @@ class _SplashScreenState extends State<SplashScreen>
                         
                         // App Title
                         const Text(
-                          'Quiz Master',
+                          'Quiz Connect',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -188,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen>
                         Text(
                           'Test Your Knowledge',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 18,
                             fontWeight: FontWeight.w300,
                             letterSpacing: 0.5,
@@ -200,7 +200,7 @@ class _SplashScreenState extends State<SplashScreen>
                           Text(
                             'Loading...',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 16,
                               fontWeight: FontWeight.w300,
                             ),
@@ -230,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF1976D2),
                                 elevation: 8,
-                                shadowColor: Colors.black.withOpacity(0.3),
+                                shadowColor: Colors.black.withValues(alpha: 0.3),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),

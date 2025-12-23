@@ -9,7 +9,7 @@ class ExitConfirmationWrapper extends StatefulWidget {
 
   const ExitConfirmationWrapper({
     required this.child,
-    this.title = 'Exit Quiz Master',
+    this.title = 'Exit Quiz Connect',
     this.message = 'Are you sure you want to exit the app?',
     this.enableDoubleBackToExit = false,
     super.key,

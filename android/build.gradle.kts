@@ -29,6 +29,31 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Configure Kotlin compilation for all subprojects
+subprojects {
+    plugins.withType<org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin>().configureEach {
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+                freeCompilerArgs = freeCompilerArgs + listOf(
+                    "-Xjvm-default=all",
+                    "-Xlambdas=indy",
+                    "-Xskip-prerelease-check",
+                    "-Xsuppress-version-warnings"
+                )
+            }
+        }
+    }
+    
+    // Suppress Java 8 compatibility warnings
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.addAll(listOf(
+            "-Xlint:deprecation",
+            "-Xlint:unchecked"
+        ))
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

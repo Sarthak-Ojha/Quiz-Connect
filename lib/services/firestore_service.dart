@@ -101,27 +101,83 @@ class FirestoreService {
     required String orderBy,
   }) async {
     try {
-      // Get user's score
-      final userDoc = await _leaderboardDoc(userId).get();
-      if (!userDoc.exists) return null;
+      final doc = await _leaderboardDoc(userId).get();
+      if (!doc.exists) return null;
       
-      final userData = userDoc.data()!;
-      final userScore = userData[orderBy] ?? 0;
+      final data = doc.data();
+      if (data == null) return null;
       
-      // Get user's rank
-      final countQuery = await _firestore
+      // Get user's rank by counting users with higher scores
+      final higherScores = await _firestore
           .collection(_leaderboardCollection)
-          .where(orderBy, isGreaterThan: userScore)
+          .where(orderBy, isGreaterThan: data[orderBy] ?? 0)
           .count()
           .get();
-      
+          
       return {
-        ...userData,
-        'rank': (countQuery.count ?? 0) + 1,
+        ...data,
+        'rank': (higherScores.count ?? 0) + 1,
       };
     } catch (e) {
       debugPrint('Error getting leaderboard position: $e');
       return null;
+    }
+  }
+  
+  // Delete user data from leaderboard
+  static Future<void> deleteUserFromLeaderboard(String userId) async {
+    try {
+      await _leaderboardDoc(userId).delete();
+      debugPrint('✅ Deleted user $userId from leaderboard');
+    } catch (e) {
+      debugPrint('❌ Error deleting user from leaderboard: $e');
+      rethrow;
+    }
+  }
+
+  // Delete user profile and related edge documents (friend requests, game invites)
+  static Future<void> deleteUserData(String userId) async {
+    try {
+      // Delete user profile document
+      await _userDoc(userId).delete();
+      debugPrint('✅ Deleted user profile for $userId');
+
+      // Helper to delete query results in small batches
+      Future<void> _deleteQuery(Query query) async {
+        final snapshot = await query.get();
+        for (final doc in snapshot.docs) {
+          await doc.reference.delete();
+        }
+      }
+
+      // Delete friend requests to/from this user
+      await _deleteQuery(
+        _firestore
+            .collection('friend_requests')
+            .where('to', isEqualTo: userId),
+      );
+      await _deleteQuery(
+        _firestore
+            .collection('friend_requests')
+            .where('from', isEqualTo: userId),
+      );
+      debugPrint('✅ Deleted friend requests for $userId');
+
+      // Delete game invites to/from this user
+      await _deleteQuery(
+        _firestore
+            .collection('game_invites')
+            .where('to', isEqualTo: userId),
+      );
+      await _deleteQuery(
+        _firestore
+            .collection('game_invites')
+            .where('from', isEqualTo: userId),
+      );
+      debugPrint('✅ Deleted game invites for $userId');
+    } catch (e) {
+      debugPrint('❌ Error deleting user data: $e');
+      rethrow;
     }
   }
 

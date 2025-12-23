@@ -291,14 +291,6 @@ class LeaderboardService with ChangeNotifier {
     }
   }
 
-  // Get rank emoji (kept for backward compatibility but not used)
-  String _getRankEmoji(int rank) {
-    if (rank == 1) return '🥇';
-    if (rank == 2) return '🥈';
-    if (rank == 3) return '🥉';
-    return '${rank}.';
-  }
-
   // Clear data
   void clearData() {
     _leaderboardSubscription?.cancel();

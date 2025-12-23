@@ -402,7 +402,7 @@ class _StreakScreenState extends State<StreakScreen> {
     // Implement share functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('🔥 I have a $currentStreak day streak on Quiz Master!'),
+        content: Text('🔥 I have a $currentStreak day streak on Quiz Connect!'),
         backgroundColor: Colors.orange,
       ),
     );

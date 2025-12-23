@@ -7,8 +7,8 @@ import '../models/question.dart';
 
 class AIService {
   static const String _apiKey = 'AIzaSyBIww_VLDxEgcxVUI5PGug1q6PHf1hj8E8';
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-  
+static const String _baseUrl =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';  
   static final AIService _instance = AIService._internal();
   factory AIService() => _instance;
   AIService._internal();
@@ -103,14 +103,16 @@ Generate 10 questions now:''';
       if (line.startsWith('Q') && line.contains(':')) {
         // Save previous question if exists
         if (currentQuestion != null && currentOptions.length == 4) {
-          questions.add(Question(
+          questions.add(_shuffleOptions(
+          Question(
             id: currentQuestion.id,
             question: currentQuestion.question,
             options: List.from(currentOptions),
             correctIndex: correctIndex,
             category: topic,
-          ));
-        }
+          ),
+        ));
+      }
         
         // Start new question
         final questionText = line.substring(line.indexOf(':') + 1).trim();
@@ -152,12 +154,14 @@ Generate 10 questions now:''';
     
     // Add the last question
     if (currentQuestion != null && currentOptions.length == 4) {
-      questions.add(Question(
-        id: currentQuestion.id,
-        question: currentQuestion.question,
-        options: List.from(currentOptions),
-        correctIndex: correctIndex,
-        category: topic,
+      questions.add(_shuffleOptions(
+        Question(
+          id: currentQuestion.id,
+          question: currentQuestion.question,
+          options: List.from(currentOptions),
+          correctIndex: correctIndex,
+          category: topic,
+        ),
       ));
     }
     
@@ -169,11 +173,19 @@ Generate 10 questions now:''';
     return questions.take(10).toList();
   }
 
-  /// Determine difficulty level based on question position
-  String _getDifficultyLevel(int questionIndex) {
-    if (questionIndex < 3) return 'Easy';
-    if (questionIndex < 7) return 'Medium';
-    return 'Hard';
+  /// Shuffle options to avoid correct answers clustering in the same position
+  Question _shuffleOptions(Question q) {
+    final options = List<String>.from(q.options);
+    final correctAnswer = options[q.correctIndex];
+    options.shuffle();
+    final newCorrectIndex = options.indexOf(correctAnswer);
+    return Question(
+      id: q.id,
+      category: q.category,
+      question: q.question,
+      options: options,
+      correctIndex: newCorrectIndex,
+    );
   }
 
   /// Validate topic input

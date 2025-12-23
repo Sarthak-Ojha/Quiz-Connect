@@ -8,6 +8,16 @@ plugins {
     id("com.google.gms.google-services") // Google Services plugin
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(
+        listOf(
+            "-Xlint:deprecation",
+            "-Xlint:unchecked",
+            "-Xlint:-options"
+        )
+    )
+}
+
 // Load keystore properties from key.properties (optional for testing)
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
@@ -18,19 +28,32 @@ if (keystorePropertiesFile.exists()) {
 fun requireKeystoreProperty(key: String): String =
     requireNotNull(keystoreProperties[key] as String?) { "Missing '$key' in key.properties file." }
 
+// Helper function to read string properties
+fun getStringProperty(propertyName: String, defaultValue: String): String {
+    return project.findProperty(propertyName)?.toString() ?: defaultValue
+}
+
 android {
     namespace = "com.sarthak.quiz"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
-
+    
+    // Configure Java compilation
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true // ✅ FIXED: Added "is" prefix
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Configure Kotlin compilation
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xjvm-default=all",
+            "-Xlambdas=indy",
+            "-Xskip-prerelease-check",
+            "-Xsuppress-version-warnings"
+        )
     }
 
     defaultConfig {
@@ -83,7 +106,5 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    implementation("androidx.window:window:1.0.0")
-    implementation("androidx.window:window-java:1.0.0")
     // Add any additional dependencies here if needed
 }

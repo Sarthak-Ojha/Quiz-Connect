@@ -12,7 +12,7 @@ class TestDataGenerator {
       final testUsers = [
         {
           'userId': 'test_user_1',
-          'displayName': 'Quiz Master',
+          'displayName': 'Quiz Connect',
           'totalScore': 1500,
           'totalQuizzes': 15,
           'averageScore': 100,

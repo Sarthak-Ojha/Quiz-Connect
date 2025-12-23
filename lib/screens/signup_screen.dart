@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../services/auth_service.dart';
-import '../widgets/auth_wrapper.dart';
 import 'signin_screen.dart';
 import 'email_verification_screen.dart';
 
@@ -16,6 +15,7 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -25,6 +25,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -147,9 +148,22 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      final name = _nameController.text.trim();
+      if (name.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter your name'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final user = await _authService.signUpWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
+        name,
       );
       
       if (mounted && user != null) {
@@ -209,7 +223,7 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Center(
             child: Card(
               elevation: 12,
-              shadowColor: Colors.black.withOpacity(0.1),
+              shadowColor: Colors.black.withValues(alpha: 0.1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
@@ -225,7 +239,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         width: 80,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          color: const Color(0xFF1976D2).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -246,12 +260,27 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Sign up to get started with Quiz Master',
+                        'Sign up to get started with Quiz Connect',
                         style: Theme.of(context).textTheme.bodyMedium
                             ?.copyWith(color: Colors.grey.shade600),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,

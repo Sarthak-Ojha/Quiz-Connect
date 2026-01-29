@@ -6,7 +6,7 @@ import 'multiplayer_quiz_screen.dart';
 import '../services/database_service.dart';
 
 class FriendsScreen extends StatefulWidget {
-  const FriendsScreen({Key? key}) : super(key: key);
+  const FriendsScreen({super.key});
 
   @override
   _FriendsScreenState createState() => _FriendsScreenState();
@@ -36,8 +36,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
             MaterialPageRoute(builder: (context) => const QRCodeScreen()),
           );
         },
-        child: const Icon(Icons.qr_code_scanner),
         tooltip: 'Scan QR Code',
+        child: const Icon(Icons.qr_code_scanner),
       ),
     );
   }
@@ -81,12 +81,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         return const SizedBox.shrink();
                       }
 
-                      final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-                      final challengerName = userData?['displayName'] ?? 'Someone';
+                      final userData =
+                          userSnapshot.data!.data() as Map<String, dynamic>?;
+                      final challengerName =
+                          userData?['displayName'] ?? 'Someone';
                       final photoUrl = userData?['photoURL'];
 
                       return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.orange.shade50,
                           borderRadius: BorderRadius.circular(12),
@@ -94,8 +97,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                            child: photoUrl == null ? const Icon(Icons.person) : null,
+                            backgroundImage: photoUrl != null
+                                ? NetworkImage(photoUrl)
+                                : null,
+                            child: photoUrl == null
+                                ? const Icon(Icons.person)
+                                : null,
                           ),
                           title: Text(
                             '$challengerName challenged you!',
@@ -108,19 +115,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                               ElevatedButton(
                                 onPressed: () async {
                                   try {
-                                    final currentUser = FirebaseAuth.instance.currentUser;
+                                    final currentUser =
+                                        FirebaseAuth.instance.currentUser;
                                     if (currentUser == null) {
                                       debugPrint('❌ No current user');
                                       return;
                                     }
-                                    
-                                    debugPrint('🎮 Accepting challenge for game: $gameId');
-                                    
+
+                                    debugPrint(
+                                        '🎮 Accepting challenge for game: $gameId');
+
                                     // Capture the Navigator before any async operations
                                     final navigator = Navigator.of(context);
-                                    
+
                                     // Join the game by updating Firestore
-                                    debugPrint('🔄 Updating game $gameId with guestId: ${currentUser.uid}');
+                                    debugPrint(
+                                        '🔄 Updating game $gameId with guestId: ${currentUser.uid}');
                                     await FirebaseFirestore.instance
                                         .collection('multiplayer_games')
                                         .doc(gameId)
@@ -133,19 +143,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                         'answers': [],
                                       },
                                     });
-                                    
-                                    debugPrint('✅ Game joined successfully - status set to ready');
-                                    
+
+                                    debugPrint(
+                                        '✅ Game joined successfully - status set to ready');
+
                                     // Delete the invite
                                     await invite.reference.delete();
                                     debugPrint('✅ Invite deleted');
-                                    
-                                    debugPrint('🎮 Navigating guest to game screen...');
-                                    
+
+                                    debugPrint(
+                                        '🎮 Navigating guest to game screen...');
+
                                     // Navigate immediately using the captured navigator
                                     navigator.pushReplacement(
                                       MaterialPageRoute(
-                                        builder: (context) => MultiplayerQuizScreen(
+                                        builder: (context) =>
+                                            MultiplayerQuizScreen(
                                           gameId: gameId,
                                           isHost: false,
                                         ),
@@ -153,17 +166,22 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     );
                                     debugPrint('✅ Guest navigation initiated');
                                   } catch (e) {
-                                    debugPrint('❌ Error accepting challenge: $e');
+                                    debugPrint(
+                                        '❌ Error accepting challenge: $e');
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error accepting challenge: $e')),
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'Error accepting challenge: $e')),
                                       );
                                     }
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12),
                                 ),
                                 child: const Text('Accept'),
                               ),
@@ -180,13 +198,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       );
                     },
                   );
-                }).toList(),
+                }),
                 const Divider(height: 32),
               ],
             );
           },
         ),
-        
+
         // Friend Requests Section
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
@@ -195,7 +213,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
               .where('status', isEqualTo: 'pending')
               .snapshots(),
           builder: (context, requestSnapshot) {
-            if (!requestSnapshot.hasData || requestSnapshot.data!.docs.isEmpty) {
+            if (!requestSnapshot.hasData ||
+                requestSnapshot.data!.docs.isEmpty) {
               return const SizedBox.shrink();
             }
 
@@ -213,7 +232,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   final requestData = request.data() as Map<String, dynamic>;
                   final fromUserId = requestData['from'] as String;
                   final fromNameFallback = requestData['fromName'] as String?;
-                  final fromPhotoFallback = requestData['fromPhotoURL'] as String?;
+                  final fromPhotoFallback =
+                      requestData['fromPhotoURL'] as String?;
 
                   return FutureBuilder<DocumentSnapshot>(
                     future: FirebaseFirestore.instance
@@ -221,16 +241,26 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         .doc(fromUserId)
                         .get(),
                     builder: (context, userSnapshot) {
-                      final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
-                      final displayName = userData?['displayName'] ?? fromNameFallback ?? 'Unknown User';
-                      final photoUrl = userData?['photoURL'] ?? userData?['photoUrl'] ?? fromPhotoFallback;
+                      final userData =
+                          userSnapshot.data?.data() as Map<String, dynamic>?;
+                      final displayName = userData?['displayName'] ??
+                          fromNameFallback ??
+                          'Unknown User';
+                      final photoUrl = userData?['photoURL'] ??
+                          userData?['photoUrl'] ??
+                          fromPhotoFallback;
 
                       return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                            child: photoUrl == null ? const Icon(Icons.person) : null,
+                            backgroundImage: photoUrl != null
+                                ? NetworkImage(photoUrl)
+                                : null,
+                            child: photoUrl == null
+                                ? const Icon(Icons.person)
+                                : null,
                           ),
                           title: Text(displayName),
                           subtitle: const Text('wants to be your friend'),
@@ -238,13 +268,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.check, color: Colors.green),
+                                icon: const Icon(Icons.check,
+                                    color: Colors.green),
                                 onPressed: () async {
-                                  await _acceptFriendRequest(request.id, fromUserId, currentUserId);
+                                  await _acceptFriendRequest(
+                                      request.id, fromUserId, currentUserId);
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
                                 onPressed: () async {
                                   // Update status to rejected (receiver cannot delete per rules)
                                   await request.reference.update({
@@ -259,13 +292,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       );
                     },
                   );
-                }).toList(),
+                }),
                 const Divider(height: 32),
               ],
             );
           },
         ),
-        
+
         // Friends List Section
         const Padding(
           padding: EdgeInsets.all(16.0),
@@ -317,21 +350,43 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       return const SizedBox.shrink();
                     }
 
-                    final userData = userSnapshot.data?.data() as Map<String, dynamic>?;
-                    final nameFromUserDoc = (userData?['displayName'] as String?)?.trim();
-                    final displayName = (nameFromUserDoc != null && nameFromUserDoc.isNotEmpty)
-                        ? nameFromUserDoc
-                        : 'User ${friendId.substring(0, 6)}';
-                    final photoUrl = userData?['photoURL'] ?? userData?['photoUrl'];
-                    final isOnline = userData?['isOnline'] ?? false;
+                    final userData =
+                        userSnapshot.data?.data() as Map<String, dynamic>?;
+                    final nameFromUserDoc =
+                        (userData?['displayName'] as String?)?.trim();
+                    final displayName =
+                        (nameFromUserDoc != null && nameFromUserDoc.isNotEmpty)
+                            ? nameFromUserDoc
+                            : 'User ${friendId.substring(0, 6)}';
+                    final photoUrl =
+                        userData?['photoURL'] ?? userData?['photoUrl'];
+
+                    final bool firestoreOnlineFlag =
+                        userData?['isOnline'] ?? false;
+                    final lastSeenTimestamp = userData?['lastSeen'];
+                    DateTime? lastSeen;
+                    if (lastSeenTimestamp is Timestamp) {
+                      lastSeen = lastSeenTimestamp.toDate();
+                    } else if (lastSeenTimestamp is DateTime) {
+                      lastSeen = lastSeenTimestamp;
+                    }
+
+                    final bool isRecentlyActive = lastSeen == null
+                        ? false
+                        : DateTime.now().difference(lastSeen).inMinutes < 3;
+                    final bool isOnline =
+                        firestoreOnlineFlag && isRecentlyActive;
 
                     return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isOnline ? Colors.green.shade300 : Colors.grey.shade300,
+                          color: isOnline
+                              ? Colors.green.shade300
+                              : Colors.grey.shade300,
                           width: 2,
                         ),
                         boxShadow: [
@@ -343,7 +398,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                         ],
                       ),
                       child: InkWell(
-                        onLongPress: () => _showRemoveFriendDialog(friendId, displayName, currentUserId),
+                        onLongPress: () => _showRemoveFriendDialog(
+                            friendId, displayName, currentUserId),
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(
                           padding: const EdgeInsets.all(12),
@@ -356,14 +412,20 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: isOnline ? Colors.green : Colors.grey.shade400,
+                                        color: isOnline
+                                            ? Colors.green
+                                            : Colors.grey.shade400,
                                         width: 3,
                                       ),
                                     ),
                                     child: CircleAvatar(
                                       radius: 28,
-                                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                                      child: photoUrl == null ? const Icon(Icons.person, size: 32) : null,
+                                      backgroundImage: photoUrl != null
+                                          ? NetworkImage(photoUrl)
+                                          : null,
+                                      child: photoUrl == null
+                                          ? const Icon(Icons.person, size: 32)
+                                          : null,
                                     ),
                                   ),
                                   if (isOnline)
@@ -376,14 +438,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                         decoration: BoxDecoration(
                                           color: Colors.green,
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2),
+                                          border: Border.all(
+                                              color: Colors.white, width: 2),
                                         ),
                                       ),
                                     ),
                                 ],
                               ),
                               const SizedBox(width: 12),
-                              
+
                               // Name and status
                               Expanded(
                                 child: Column(
@@ -402,24 +465,34 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                       isOnline ? 'Online!' : 'Offline',
                                       style: TextStyle(
                                         fontSize: 13,
-                                        color: isOnline ? Colors.green.shade700 : Colors.grey.shade600,
-                                        fontWeight: isOnline ? FontWeight.w600 : FontWeight.normal,
+                                        color: isOnline
+                                            ? Colors.green.shade700
+                                            : Colors.grey.shade600,
+                                        fontWeight: isOnline
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              
+
                               // Challenge button
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isOnline ? Colors.orange : Colors.grey.shade300,
+                                  color: isOnline
+                                      ? Colors.orange
+                                      : Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(Icons.sports_esports, color: Colors.white),
+                                  icon: const Icon(Icons.sports_esports,
+                                      color: Colors.white),
                                   tooltip: 'Challenge',
-                                  onPressed: isOnline ? () => _challengeFriend(friendId, displayName) : null,
+                                  onPressed: isOnline
+                                      ? () => _challengeFriend(
+                                          friendId, displayName)
+                                      : null,
                                 ),
                               ),
                             ],
@@ -437,7 +510,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-  Future<void> _acceptFriendRequest(String requestId, String fromUserId, String currentUserId) async {
+  Future<void> _acceptFriendRequest(
+      String requestId, String fromUserId, String currentUserId) async {
     try {
       final batch = FirebaseFirestore.instance.batch();
 
@@ -472,15 +546,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
-
-
   Future<void> _challengeFriend(String friendId, String friendName) async {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Challenge $friendName'),
-        content: const Text('Start a 1v1 quiz battle with random questions from all categories?'),
+        content: const Text(
+            'Start a 1v1 quiz battle with random questions from all categories?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -553,13 +626,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
     );
   }
 
-
-  Future<void> _showRemoveFriendDialog(String friendId, String friendName, String currentUserId) async {
+  Future<void> _showRemoveFriendDialog(
+      String friendId, String friendName, String currentUserId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove Friend'),
-        content: Text('Are you sure you want to remove $friendName from your friends list?'),
+        content: Text(
+            'Are you sure you want to remove $friendName from your friends list?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -609,7 +683,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$friendName has been removed from your friends list'),
+              content:
+                  Text('$friendName has been removed from your friends list'),
               backgroundColor: Colors.green,
             ),
           );
@@ -626,5 +701,4 @@ class _FriendsScreenState extends State<FriendsScreen> {
       }
     }
   }
-
 }

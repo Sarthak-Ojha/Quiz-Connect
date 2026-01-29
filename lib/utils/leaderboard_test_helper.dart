@@ -138,8 +138,9 @@ class LeaderboardTestHelper {
         final quizzes = entry['totalQuizzes'];
         
         String medal = '';
-        if (rank == 1) medal = '🥇';
-        else if (rank == 2) medal = '🥈';
+        if (rank == 1) {
+          medal = '🥇';
+        } else if (rank == 2) medal = '🥈';
         else if (rank == 3) medal = '🥉';
         
         print('$medal #$rank - $name');

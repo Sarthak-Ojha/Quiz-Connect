@@ -5,7 +5,7 @@ buildscript {
         gradlePluginPortal()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.0")
+        classpath("com.android.tools.build:gradle:8.1.0")
         classpath("com.google.gms:google-services:4.4.2")
     }
 }
@@ -34,19 +34,21 @@ subprojects {
     plugins.withType<org.jetbrains.kotlin.gradle.plugin.KotlinBasePlugin>().configureEach {
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
             kotlinOptions {
-                jvmTarget = "17"
+                jvmTarget = "21"
                 freeCompilerArgs = freeCompilerArgs + listOf(
                     "-Xjvm-default=all",
                     "-Xlambdas=indy",
-                    "-Xskip-prerelease-check",
+                    "-Xskip-prereference-check",
                     "-Xsuppress-version-warnings"
                 )
             }
         }
     }
     
-    // Suppress Java 8 compatibility warnings
+    // Configure Java compilation for all subprojects
     tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
         options.compilerArgs.addAll(listOf(
             "-Xlint:deprecation",
             "-Xlint:unchecked"

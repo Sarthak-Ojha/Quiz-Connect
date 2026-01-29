@@ -13,10 +13,10 @@ class MultiplayerQuizScreen extends StatefulWidget {
   final bool isHost;
 
   const MultiplayerQuizScreen({
-    Key? key,
+    super.key,
     required this.gameId,
     required this.isHost,
-  }) : super(key: key);
+  });
 
   @override
   State<MultiplayerQuizScreen> createState() => _MultiplayerQuizScreenState();

@@ -215,8 +215,9 @@ class FirebaseAnalyticsService {
   /// Update user level based on total quizzes completed
   static Future<void> updateUserLevel(int totalQuizzes) async {
     String level = 'beginner';
-    if (totalQuizzes >= 50) level = 'expert';
-    else if (totalQuizzes >= 20) level = 'advanced';
+    if (totalQuizzes >= 50) {
+      level = 'expert';
+    } else if (totalQuizzes >= 20) level = 'advanced';
     else if (totalQuizzes >= 5) level = 'intermediate';
     
     await _analytics.setUserProperty(name: 'user_level', value: level);

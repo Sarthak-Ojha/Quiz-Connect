@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/database_service.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
-  const FriendRequestsScreen({Key? key}) : super(key: key);
+  const FriendRequestsScreen({super.key});
 
   @override
   _FriendRequestsScreenState createState() => _FriendRequestsScreenState();

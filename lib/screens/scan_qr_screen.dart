@@ -5,7 +5,7 @@ import 'dart:async';
 import '../services/database_service.dart';
 
 class ScanQRCodeScreen extends StatefulWidget {
-  const ScanQRCodeScreen({Key? key}) : super(key: key);
+  const ScanQRCodeScreen({super.key});
 
   @override
   _ScanQRCodeScreenState createState() => _ScanQRCodeScreenState();

@@ -3,12 +3,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/question.dart';
 
 class AIService {
-  static const String _apiKey = 'AIzaSyBIww_VLDxEgcxVUI5PGug1q6PHf1hj8E8';
-static const String _baseUrl =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';  
+  static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+  static const String _baseUrl =
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';  
   static final AIService _instance = AIService._internal();
   factory AIService() => _instance;
   AIService._internal();

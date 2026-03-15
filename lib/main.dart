@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Screens
 import 'screens/splash_screen.dart';
@@ -47,6 +48,9 @@ void main() async {
     () async {
       // Ensure Flutter binding is initialized INSIDE the zone
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Load environment variables
+      await dotenv.load(fileName: '.env');
 
       // Set up error handling
       FlutterError.onError = (FlutterErrorDetails details) {

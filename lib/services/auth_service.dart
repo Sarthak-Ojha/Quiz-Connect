@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'database_service.dart';
 import 'firebase_analytics_service.dart';
 import 'firestore_service.dart';
@@ -136,7 +137,7 @@ class AuthService with ChangeNotifier {
 
       // Initialize Google Sign-In with server client ID
       await GoogleSignIn.instance.initialize(
-        serverClientId: '308786259998-6av8vnh1qmu07r05ufremh14o2t1ivp4.apps.googleusercontent.com',
+        serverClientId: dotenv.env['GOOGLE_SERVER_CLIENT_ID'] ?? '',
       );
 
       // Authenticate the user

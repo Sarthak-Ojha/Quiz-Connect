@@ -143,7 +143,7 @@ class FirestoreService {
       debugPrint('✅ Deleted user profile for $userId');
 
       // Helper to delete query results in small batches
-      Future<void> _deleteQuery(Query query) async {
+      Future<void> deleteQuery(Query query) async {
         final snapshot = await query.get();
         for (final doc in snapshot.docs) {
           await doc.reference.delete();
@@ -151,12 +151,12 @@ class FirestoreService {
       }
 
       // Delete friend requests to/from this user
-      await _deleteQuery(
+      await deleteQuery(
         _firestore
             .collection('friend_requests')
             .where('to', isEqualTo: userId),
       );
-      await _deleteQuery(
+      await deleteQuery(
         _firestore
             .collection('friend_requests')
             .where('from', isEqualTo: userId),
@@ -164,12 +164,12 @@ class FirestoreService {
       debugPrint('✅ Deleted friend requests for $userId');
 
       // Delete game invites to/from this user
-      await _deleteQuery(
+      await deleteQuery(
         _firestore
             .collection('game_invites')
             .where('to', isEqualTo: userId),
       );
-      await _deleteQuery(
+      await deleteQuery(
         _firestore
             .collection('game_invites')
             .where('from', isEqualTo: userId),

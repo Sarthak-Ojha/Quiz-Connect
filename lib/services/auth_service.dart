@@ -30,7 +30,7 @@ class AuthService with ChangeNotifier {
         password: password,
       );
       final user = result.user;
-      
+
       // Update the user's display name in Firebase Auth
       if (user != null && name.isNotEmpty) {
         await user.updateDisplayName(name);
@@ -44,7 +44,7 @@ class AuthService with ChangeNotifier {
       }
 
       debugPrint('✅ User account created: ${user?.uid}');
-      
+
       // Sync user to local database
       if (user != null) {
         await _databaseService.syncFirebaseUser(
@@ -54,7 +54,7 @@ class AuthService with ChangeNotifier {
           user.photoURL,
           user.emailVerified,
         );
-        
+
         // Track user sign up in analytics
         await FirebaseAnalyticsService.trackUserSignUp('email');
         await FirebaseAnalyticsService.setUserProperties(
@@ -64,7 +64,7 @@ class AuthService with ChangeNotifier {
           emailVerified: user.emailVerified,
         );
       }
-      
+
       notifyListeners();
       return user;
     } on FirebaseAuthException catch (e) {
@@ -91,7 +91,7 @@ class AuthService with ChangeNotifier {
         await user.reload();
         final refreshedUser = _auth.currentUser!;
         debugPrint('📧 Email verified: ${refreshedUser.emailVerified}');
-        
+
         // Check if email is verified
         if (!refreshedUser.emailVerified) {
           debugPrint('⚠️ Email not verified');
@@ -112,11 +112,11 @@ class AuthService with ChangeNotifier {
           user.photoURL,
           user.emailVerified,
         );
-        
+
         // Track user sign in in analytics
         await FirebaseAnalyticsService.trackUserSignIn('email');
       }
-      
+
       debugPrint('🔄 Notifying listeners of auth state change');
       notifyListeners();
       return {
@@ -141,27 +141,23 @@ class AuthService with ChangeNotifier {
       );
 
       // Authenticate the user
-      final GoogleSignInAccount? googleUser = await GoogleSignIn.instance.authenticate();
-      
-      if (googleUser == null) {
-        debugPrint('ℹ️ Google sign-in cancelled by user');
-        return null;
-      }
-      
+      final GoogleSignInAccount googleUser =
+          await GoogleSignIn.instance.authenticate();
+
       debugPrint('✅ Google user obtained: ${googleUser.email}');
 
       // Get the authentication details
-      final GoogleSignInClientAuthorization? authorization = 
+      final GoogleSignInClientAuthorization? authorization =
           await googleUser.authorizationClient.authorizationForScopes([
-            'email',
-            'https://www.googleapis.com/auth/userinfo.profile',
-          ]);
-      
+        'email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+      ]);
+
       if (authorization == null) {
         debugPrint('❌ Failed to get authorization');
         return null;
       }
-      
+
       debugPrint('✅ Google authentication obtained');
       debugPrint('🔑 Access Token: ${authorization.accessToken}');
 
@@ -171,14 +167,15 @@ class AuthService with ChangeNotifier {
       );
 
       debugPrint('🔑 Signing in with Google credential...');
-      
+
       // Sign in to Firebase
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
       final User? user = userCredential.user;
-      
+
       if (user != null) {
         debugPrint('✅ Successfully signed in with Google: ${user.uid}');
-        
+
         // Sync user data with Firestore
         await DatabaseService().syncFirebaseUser(
           user.uid,
@@ -187,10 +184,10 @@ class AuthService with ChangeNotifier {
           user.photoURL,
           user.emailVerified,
         );
-        
+
         // Track successful sign-in
         await FirebaseAnalyticsService.trackUserSignIn('google');
-        
+
         return user;
       } else {
         debugPrint('❌ Failed to sign in with Google');
@@ -222,25 +219,20 @@ class AuthService with ChangeNotifier {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        return {
-          'success': false,
-          'message': 'No user is currently signed in.'
-        };
+        return {'success': false, 'message': 'No user is currently signed in.'};
       }
-      
+
       if (user.emailVerified) {
-        return {
-          'success': true,
-          'message': 'Email is already verified.'
-        };
+        return {'success': true, 'message': 'Email is already verified.'};
       }
-      
+
       await user.sendEmailVerification();
       debugPrint('📧 Email verification sent to: ${user.email}');
-      
+
       return {
         'success': true,
-        'message': 'Verification email sent to ${user.email}. Please check your inbox.'
+        'message':
+            'Verification email sent to ${user.email}. Please check your inbox.'
       };
     } catch (e) {
       debugPrint('❌ Error sending verification email: $e');
@@ -301,10 +293,7 @@ class AuthService with ChangeNotifier {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        return {
-          'success': false,
-          'message': 'No user is currently signed in.'
-        };
+        return {'success': false, 'message': 'No user is currently signed in.'};
       }
 
       final userId = user.uid;

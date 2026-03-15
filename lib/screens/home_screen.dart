@@ -76,10 +76,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _setUserOnline();
     _loadQuestions();
     _listenForGameInvites();
-    
+
     // Listen for display name changes
     UserProfileService.displayNameNotifier.addListener(_onDisplayNameChanged);
-    
+
     // Listen for app lifecycle changes
     WidgetsBinding.instance.addObserver(this);
   }
@@ -92,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     _setUserOffline();
     WidgetsBinding.instance.removeObserver(this);
-    UserProfileService.displayNameNotifier.removeListener(_onDisplayNameChanged);
+    UserProfileService.displayNameNotifier
+        .removeListener(_onDisplayNameChanged);
     super.dispose();
   }
 
@@ -177,7 +178,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<UserStreak?> _getStreakData() async {
     // Cache streak data for 30 seconds to reduce database calls
-    if (_cachedStreak != null && _lastStreakFetch != null &&
+    if (_cachedStreak != null &&
+        _lastStreakFetch != null &&
         DateTime.now().difference(_lastStreakFetch!).inSeconds < 30) {
       return _cachedStreak;
     }
@@ -190,7 +192,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     return null;
   }
-
 
   void _showExitConfirmationDialog() {
     showDialog(
@@ -250,193 +251,197 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         }
       },
       child: Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: user?.photoURL != null
-              ? CircleAvatar(
-                  backgroundImage: NetworkImage(user!.photoURL!),
-                  onBackgroundImageError: (exception, stackTrace) {
-                    // This will be caught by the outer catch block
-                  },
-                )
-              : CircleAvatar(
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-        ),
-        title: Text(_displayName),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF1976D2),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          // Friends button with notification badge (friend requests + game invites)
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('friend_requests')
-                .where('to', isEqualTo: user?.uid ?? '')
-                .where('status', isEqualTo: 'pending')
-                .snapshots(),
-            builder: (context, requestSnapshot) {
-              final requestCount = requestSnapshot.data?.docs.length ?? 0;
-              
-              return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('game_invites')
-                    .where('to', isEqualTo: user?.uid ?? '')
-                    .snapshots(),
-                builder: (context, inviteSnapshot) {
-                  final inviteCount = inviteSnapshot.data?.docs.length ?? 0;
-                  final totalCount = requestCount + inviteCount;
-                  
-                  return Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.people),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const FriendsScreen()),
-                          );
-                        },
-                        tooltip: 'Friends',
-                      ),
-                      if (totalCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              totalCount > 9 ? '9+' : '$totalCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-          // QR Code button
-          IconButton(
-            icon: const Icon(Icons.qr_code),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QRCodeScreen()),
-              );
-            },
-            tooltip: 'My QR Code',
-          ),
-          // Streak icon with number
-          FutureBuilder<UserStreak?>(
-            future: _getStreakData(),
-            builder: (context, snapshot) {
-              final streakCount = snapshot.data?.streakCount ?? 0;
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.local_fire_department),
-                    tooltip: 'Streak',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const StreakScreen()),
-                      );
+        backgroundColor: const Color(0xFFF5F7FA),
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: user?.photoURL != null
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(user!.photoURL!),
+                    onBackgroundImageError: (exception, stackTrace) {
+                      // This will be caught by the outer catch block
                     },
+                  )
+                : CircleAvatar(
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
-                  if (streakCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 2,
-                              offset: const Offset(0, 1),
+          ),
+          title: Text(_displayName),
+          centerTitle: true,
+          backgroundColor: const Color(0xFF1976D2),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            // Friends button with notification badge (friend requests + game invites)
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('friend_requests')
+                  .where('to', isEqualTo: user?.uid ?? '')
+                  .where('status', isEqualTo: 'pending')
+                  .snapshots(),
+              builder: (context, requestSnapshot) {
+                final requestCount = requestSnapshot.data?.docs.length ?? 0;
+
+                return StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('game_invites')
+                      .where('to', isEqualTo: user?.uid ?? '')
+                      .snapshots(),
+                  builder: (context, inviteSnapshot) {
+                    final inviteCount = inviteSnapshot.data?.docs.length ?? 0;
+                    final totalCount = requestCount + inviteCount;
+
+                    return Stack(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.people),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const FriendsScreen()),
+                            );
+                          },
+                          tooltip: 'Friends',
+                        ),
+                        if (totalCount > 0)
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                totalCount > 9 ? '9+' : '$totalCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                          ],
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '$streakCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
                           ),
-                          textAlign: TextAlign.center,
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            // QR Code button
+            IconButton(
+              icon: const Icon(Icons.qr_code),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const QRCodeScreen()),
+                );
+              },
+              tooltip: 'My QR Code',
+            ),
+            // Streak icon with number
+            FutureBuilder<UserStreak?>(
+              future: _getStreakData(),
+              builder: (context, snapshot) {
+                final streakCount = snapshot.data?.streakCount ?? 0;
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.local_fire_department),
+                      tooltip: 'Streak',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const StreakScreen()),
+                        );
+                      },
+                    ),
+                    if (streakCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$streakCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              );
-            },
-          ),
-          // Settings button
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
+                  ],
+                );
+              },
+            ),
+            // Settings button
+            IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+        body: IndexedStack(index: _selectedIndex, children: _pages),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFF1976D2),
+          unselectedItemColor: Colors.grey.shade600,
+          elevation: 8,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history),
+              label: 'My Scores',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.leaderboard),
+              label: 'Leaderboard',
+            ),
+          ],
+        ),
       ),
-      body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF1976D2),
-        unselectedItemColor: Colors.grey.shade600,
-        elevation: 8,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'My Scores',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-        ],
-      ),
-    ),
     );
   }
 }
@@ -458,7 +463,7 @@ class _CategoryPageState extends State<CategoryPage>
   final List<String> _modes = ['Category Mode', 'Quick Mode', 'AI Mode'];
   String _selectedMode = 'Category Mode';
   final StreakService _streakService = StreakService();
-  
+
   DailyChallenge? _dailyChallenge;
   UserChallengeProgress? _challengeProgress;
 
@@ -553,12 +558,12 @@ class _CategoryPageState extends State<CategoryPage>
         await _streakService.getUserStreak(user.uid);
         final challenge = await _streakService.getTodaysChallenge();
         UserChallengeProgress? progress;
-        
+
         progress = await _streakService.getUserChallengeProgress(
-          user.uid, 
+          user.uid,
           challenge.challengeId,
         );
-              
+
         if (mounted) {
           setState(() {
             // Removed unused _userStreak assignment
@@ -643,7 +648,7 @@ class _CategoryPageState extends State<CategoryPage>
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
-                  showValueIndicator: ShowValueIndicator.onDrag,
+                  showValueIndicator: ShowValueIndicator.always,
                 ),
                 child: Slider(
                   value: chosenQuestionCount.toDouble(),
@@ -713,7 +718,8 @@ class _CategoryPageState extends State<CategoryPage>
     try {
       // If this is an age category, we don't have age-based labels in the DB.
       // Fallback to pulling from all questions instead of filtering by category name.
-      final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+      final bool isAgeCategory =
+          _ageCategories.any((c) => c.name == category.name);
       List<Question> allQuestions;
       if (isAgeCategory) {
         allQuestions = await DatabaseService().getAllQuestions();
@@ -757,7 +763,7 @@ class _CategoryPageState extends State<CategoryPage>
                 QuizScreen(questions: selectedQuestions, category: category),
           ),
         );
-        
+
         // Refresh streak data after completing quiz
         if (result != null) {
           await _loadStreakAndChallengeData();
@@ -790,7 +796,8 @@ class _CategoryPageState extends State<CategoryPage>
         // Include both subject and age categories for random mode
         final allCategories = [..._subjectCategories, ..._ageCategories];
         for (final category in allCategories) {
-          final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+          final bool isAgeCategory =
+              _ageCategories.any((c) => c.name == category.name);
           if (isAgeCategory) {
             if (!addedAllForAge) {
               final questions = await dbService.getAllQuestions();
@@ -807,7 +814,8 @@ class _CategoryPageState extends State<CategoryPage>
         }
       } else {
         for (final category in selectedCategories) {
-          final bool isAgeCategory = _ageCategories.any((c) => c.name == category.name);
+          final bool isAgeCategory =
+              _ageCategories.any((c) => c.name == category.name);
           if (isAgeCategory) {
             if (!addedAllForAge) {
               final questions = await dbService.getAllQuestions();
@@ -955,7 +963,6 @@ class _CategoryPageState extends State<CategoryPage>
     );
   }
 
-
   Widget _buildModesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -967,9 +974,9 @@ class _CategoryPageState extends State<CategoryPage>
             Text(
               'Choose a Mode',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1976D2),
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1976D2),
+                  ),
             ),
           ],
         ),
@@ -983,9 +990,11 @@ class _CategoryPageState extends State<CategoryPage>
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 child: ChoiceChip(
                   label: Text(
-                    mode.replaceAll(' Mode', ''), // Show just "Category", "Quick", "AI"
+                    mode.replaceAll(
+                        ' Mode', ''), // Show just "Category", "Quick", "AI"
                     style: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF1976D2),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF1976D2),
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -993,21 +1002,21 @@ class _CategoryPageState extends State<CategoryPage>
                   selected: isSelected,
                   selectedColor: const Color(0xFF1976D2),
                   onSelected: (_) => setState(() => _selectedMode = mode),
-                  backgroundColor: isSelected 
-                      ? const Color(0xFF1976D2) 
-                      : Colors.white,
+                  backgroundColor:
+                      isSelected ? const Color(0xFF1976D2) : Colors.white,
                   side: BorderSide(
                     color: const Color(0xFF1976D2),
                     width: isSelected ? 2 : 1.5,
                   ),
                   elevation: isSelected ? 4 : 1,
-                  shadowColor: isSelected 
+                  shadowColor: isSelected
                       ? const Color(0xFF1976D2).withValues(alpha: 0.5)
                       : const Color(0xFF1976D2).withValues(alpha: 0.2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   showCheckmark: false, // Remove the tick/checkmark
                 ),
               ),
@@ -1032,9 +1041,9 @@ class _CategoryPageState extends State<CategoryPage>
               Text(
                 'Subject Categories',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1976D2),
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1976D2),
+                    ),
               ),
             ],
           ),
@@ -1061,9 +1070,9 @@ class _CategoryPageState extends State<CategoryPage>
             );
           },
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         // Age Categories Section
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -1074,9 +1083,9 @@ class _CategoryPageState extends State<CategoryPage>
               Text(
                 'Age Categories',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFFE91E63),
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFE91E63),
+                    ),
               ),
             ],
           ),
@@ -1177,9 +1186,9 @@ class _CategoryPageState extends State<CategoryPage>
             Text(
               'Daily Challenge',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1976D2),
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1976D2),
+                  ),
             ),
           ],
         ),
@@ -1197,13 +1206,14 @@ class _CategoryPageState extends State<CategoryPage>
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const Icon(Icons.hourglass_empty, size: 48, color: Colors.grey),
+                  const Icon(Icons.hourglass_empty,
+                      size: 48, color: Colors.grey),
                   const SizedBox(height: 16),
                   Text(
                     'Loading today\'s challenge...',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                          color: Colors.grey.shade600,
+                        ),
                   ),
                 ],
               ),
@@ -1220,17 +1230,19 @@ class _CategoryPageState extends State<CategoryPage>
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please sign in to start the challenge')),
+          const SnackBar(
+              content: Text('Please sign in to start the challenge')),
         );
         return;
       }
 
       // Update streak when starting challenge
       await _streakService.updateUserStreak(user.uid);
-      
+
       // Get challenge questions
-      final questions = await _streakService.getChallengeQuestions(_dailyChallenge!);
-      
+      final questions =
+          await _streakService.getChallengeQuestions(_dailyChallenge!);
+
       if (mounted) {
         final result = await Navigator.push(
           context,
@@ -1241,7 +1253,7 @@ class _CategoryPageState extends State<CategoryPage>
             ),
           ),
         );
-        
+
         // Refresh data after completing challenge
         if (result != null) {
           await _loadStreakAndChallengeData();
@@ -1305,15 +1317,15 @@ class _CategoryPageState extends State<CategoryPage>
                       Text(
                         'AI-Powered Quiz',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF6B73FF),
-                        ),
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF6B73FF),
+                            ),
                       ),
                       Text(
                         'Generate custom questions on any topic',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -1483,9 +1495,9 @@ class _ScoresPageState extends State<ScoresPage>
                   Text(
                     'Recent Quiz Results',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1976D2),
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1976D2),
+                        ),
                   ),
                 ],
               ),
@@ -1572,7 +1584,9 @@ class _ScoresPageState extends State<ScoresPage>
                             const SizedBox(height: 16),
                             Text(
                               'No Quiz Results Yet',
-                              style: Theme.of(context).textTheme.headlineSmall
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.grey.shade600,
@@ -1588,10 +1602,9 @@ class _ScoresPageState extends State<ScoresPage>
                             ElevatedButton.icon(
                               onPressed: () {
                                 // Navigate back to home tab
-                                final homeScreenState = context
-                                    .findAncestorStateOfType<
-                                      _HomeScreenState
-                                    >();
+                                final homeScreenState =
+                                    context.findAncestorStateOfType<
+                                        _HomeScreenState>();
                                 homeScreenState?._onItemTapped(0);
                               },
                               icon: const Icon(Icons.quiz),
@@ -1639,9 +1652,9 @@ class _ScoresPageState extends State<ScoresPage>
                 Text(
                   'Overall Statistics',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1976D2),
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1976D2),
+                      ),
                 ),
               ],
             ),
@@ -1699,9 +1712,9 @@ class _ScoresPageState extends State<ScoresPage>
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
         ),
         Text(
           label,
@@ -1752,15 +1765,17 @@ class _ScoresPageState extends State<ScoresPage>
                       children: [
                         Text(
                           result.categoryName,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: categoryColor,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: categoryColor,
+                                  ),
                         ),
                         Text(
                           _formatDate(result.completedAt),
-                          style: Theme.of(context).textTheme.bodySmall
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
                               ?.copyWith(color: Colors.grey.shade600),
                         ),
                       ],
@@ -1968,9 +1983,9 @@ class _ScoresPageState extends State<ScoresPage>
         Text(
           'Quiz Result Details',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: categoryColor,
-          ),
+                fontWeight: FontWeight.bold,
+                color: categoryColor,
+              ),
         ),
         const SizedBox(height: 20),
         // Category Info
@@ -1988,9 +2003,9 @@ class _ScoresPageState extends State<ScoresPage>
               Text(
                 result.categoryName,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: categoryColor,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: categoryColor,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -2096,17 +2111,17 @@ class _ScoresPageState extends State<ScoresPage>
               Text(
                 '${result.percentage.toStringAsFixed(1)}%',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: _getScoreColor(result.percentage),
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: _getScoreColor(result.percentage),
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Grade: ${result.grade}',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: _getScoreColor(result.percentage),
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: _getScoreColor(result.percentage),
+                    ),
               ),
               Text(
                 result.performance,
@@ -2142,9 +2157,9 @@ class _ScoresPageState extends State<ScoresPage>
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             label,
@@ -2188,10 +2203,10 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       FirebaseAnalyticsService.trackLeaderboardViewed(
         filterType: _selectedType.name,
       );
-      
+
       // Load leaderboard
       await _loadLeaderboard();
-      
+
       // No popup will be shown when leaderboard is empty
       // The empty state is handled by the UI
     } catch (e) {
@@ -2220,7 +2235,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         limit: 10, // Show only top 10 users
         currentUserId: _currentUserId,
       );
-      
+
       if (mounted) {
         setState(() {
           // Trigger UI update
@@ -2259,10 +2274,11 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                     const SizedBox(width: 12),
                     Text(
                       'Leaderboard',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
                     ),
                     const Spacer(),
                     IconButton(
@@ -2307,7 +2323,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
               ],
             ),
           ),
-          
+
           // Current user position (if available)
           ListenableBuilder(
             listenable: _leaderboardService,
@@ -2318,10 +2334,12 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color:
+                          Theme.of(context).primaryColor.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -2433,12 +2451,14 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                   itemBuilder: (context, index) {
                     final entry = entries[index];
                     final isCurrentUser = entry.userId == _currentUserId;
-                    
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       elevation: isCurrentUser ? 4 : 1,
-                      color: isCurrentUser 
-                          ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                      color: isCurrentUser
+                          ? Theme.of(context)
+                              .primaryColor
+                              .withValues(alpha: 0.1)
                           : null,
                       child: ListTile(
                         leading: _buildRankWidget(entry.rank),
@@ -2448,8 +2468,8 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                               child: Text(
                                 entry.displayName,
                                 style: TextStyle(
-                                  fontWeight: isCurrentUser 
-                                      ? FontWeight.bold 
+                                  fontWeight: isCurrentUser
+                                      ? FontWeight.bold
                                       : FontWeight.normal,
                                 ),
                               ),
@@ -2484,15 +2504,21 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
                               _selectedType == LeaderboardType.totalScore
                                   ? '${entry.totalQuizzes} quizzes'
                                   : '${entry.totalScore} points',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
                             Text(
                               entry.activityDisplay,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey.shade600,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
                             ),
                           ],
                         ),
@@ -2525,13 +2551,17 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         ),
         child: Center(
           child: Text(
-            rank == 1 ? '🥇' : rank == 2 ? '🥈' : '🥉',
+            rank == 1
+                ? '🥇'
+                : rank == 2
+                    ? '🥈'
+                    : '🥉',
             style: const TextStyle(fontSize: 20),
           ),
         ),
       );
     }
-    
+
     return CircleAvatar(
       backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       child: Text(
@@ -2571,8 +2601,7 @@ class _QuickModeOptions extends StatefulWidget {
     List<QuizCategory> selected,
     bool isRandom,
     int questionCount,
-  )
-  onStartQuiz;
+  ) onStartQuiz;
 
   const _QuickModeOptions({
     required this.categories,
@@ -2666,7 +2695,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Question Count Section
             Container(
               padding: const EdgeInsets.all(20),
@@ -2711,7 +2740,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                              color: const Color(0xFF1976D2)
+                                  .withValues(alpha: 0.3),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -2734,7 +2764,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                       activeTrackColor: const Color(0xFF1976D2),
                       inactiveTrackColor: Colors.grey.shade300,
                       thumbColor: const Color(0xFF1976D2),
-                      overlayColor: const Color(0xFF1976D2).withValues(alpha: 0.2),
+                      overlayColor:
+                          const Color(0xFF1976D2).withValues(alpha: 0.2),
                       thumbShape: const RoundSliderThumbShape(
                         enabledThumbRadius: 14.0,
                         pressedElevation: 8.0,
@@ -2743,14 +2774,15 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         overlayRadius: 28.0,
                       ),
                       trackHeight: 8.0,
-                      valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
+                      valueIndicatorShape:
+                          const PaddleSliderValueIndicatorShape(),
                       valueIndicatorColor: const Color(0xFF1976D2),
                       valueIndicatorTextStyle: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      showValueIndicator: ShowValueIndicator.onDrag,
+                      showValueIndicator: ShowValueIndicator.always,
                     ),
                     child: Slider(
                       value: _questionCount.toDouble(),
@@ -2790,7 +2822,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Category Selection Section
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -2828,14 +2860,16 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         child: GestureDetector(
                           onTap: () => setState(() => _isRandom = true),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 8),
                             margin: const EdgeInsets.only(right: 6),
                             decoration: BoxDecoration(
                               gradient: _isRandom
                                   ? LinearGradient(
                                       colors: [
                                         const Color(0xFF1976D2),
-                                        const Color(0xFF1976D2).withValues(alpha: 0.8),
+                                        const Color(0xFF1976D2)
+                                            .withValues(alpha: 0.8),
                                       ],
                                     )
                                   : null,
@@ -2850,7 +2884,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                               boxShadow: _isRandom
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                                        color: const Color(0xFF1976D2)
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -2862,7 +2897,9 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                               children: [
                                 Icon(
                                   Icons.shuffle,
-                                  color: _isRandom ? Colors.white : Colors.grey.shade600,
+                                  color: _isRandom
+                                      ? Colors.white
+                                      : Colors.grey.shade600,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -2870,7 +2907,9 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                                   'Random',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: _isRandom ? Colors.white : Colors.grey.shade700,
+                                    color: _isRandom
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -2884,14 +2923,16 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         child: GestureDetector(
                           onTap: () => setState(() => _isRandom = false),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 8),
                             margin: const EdgeInsets.only(left: 6),
                             decoration: BoxDecoration(
                               gradient: !_isRandom
                                   ? LinearGradient(
                                       colors: [
                                         const Color(0xFF1976D2),
-                                        const Color(0xFF1976D2).withValues(alpha: 0.8),
+                                        const Color(0xFF1976D2)
+                                            .withValues(alpha: 0.8),
                                       ],
                                     )
                                   : null,
@@ -2906,7 +2947,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                               boxShadow: !_isRandom
                                   ? [
                                       BoxShadow(
-                                        color: const Color(0xFF1976D2).withValues(alpha: 0.3),
+                                        color: const Color(0xFF1976D2)
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -2918,7 +2960,9 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                               children: [
                                 Icon(
                                   Icons.category,
-                                  color: !_isRandom ? Colors.white : Colors.grey.shade600,
+                                  color: !_isRandom
+                                      ? Colors.white
+                                      : Colors.grey.shade600,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -2926,7 +2970,9 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                                   'Choose',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: !_isRandom ? Colors.white : Colors.grey.shade700,
+                                    color: !_isRandom
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -2937,7 +2983,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                       ),
                     ],
                   ),
-                  
+
                   // Category selection chips
                   if (!_isRandom) ...[
                     const SizedBox(height: 20),
@@ -2983,7 +3029,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                               color: selected ? null : Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(25),
                               border: Border.all(
-                                color: selected ? cat.color : Colors.grey.shade300,
+                                color:
+                                    selected ? cat.color : Colors.grey.shade300,
                                 width: 2,
                               ),
                               boxShadow: selected
@@ -3032,7 +3079,7 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
               ),
             ),
             const SizedBox(height: 28),
-            
+
             // Start Quiz button
             Container(
               width: double.infinity,
@@ -3064,8 +3111,8 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
                         final selected = _isRandom
                             ? List<QuizCategory>.from(widget.categories)
                             : _selectedIndexes
-                                  .map((i) => widget.categories[i])
-                                  .toList();
+                                .map((i) => widget.categories[i])
+                                .toList();
                         widget.onStartQuiz(selected, _isRandom, _questionCount);
                       }
                     : null,
@@ -3084,5 +3131,4 @@ class _QuickModeOptionsState extends State<_QuickModeOptions> {
       ),
     );
   }
-
 }

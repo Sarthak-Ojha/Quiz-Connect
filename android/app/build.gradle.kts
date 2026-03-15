@@ -41,24 +41,24 @@ android {
     // Configure Java compilation
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     // Configure Kotlin compilation
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "21"
         freeCompilerArgs = freeCompilerArgs + listOf(
             "-Xjvm-default=all",
             "-Xlambdas=indy",
-            "-Xskip-prerelease-check",
+            "-Xskip-prereference-check",
             "-Xsuppress-version-warnings"
         )
     }
 
     defaultConfig {
         applicationId = "com.sarthak.quiz"
-        minSdk = flutter.minSdkVersion
+        minSdk = 24  // Required by flutter_secure_storage
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -1,17 +1,23 @@
-# quiz
+# 🎯 Quiz Connect
 
-A new Flutter project.
+A feature-rich Flutter quiz application with multiplayer, leaderboards, and AI-powered features.
 
-## Getting Started
+## ✨ Key Features
+- 🏆 **Leaderboard System** - Real-time rankings and streak tracking
+- 👥 **Multiplayer Quizzes** - Battle friends in real-time
+- 🤖 **AI Mode** - Smart quiz generation and assistance
+- 📱 **Cross-Platform** - Android, iOS, Web, Desktop
+- 🔐 **Secure Auth** - Email, Google, and phone authentication
+- 📊 **Analytics** - Firebase integration with crash reporting
 
-This project is a starting point for a Flutter application.
+## 🚀 Quick Start
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+# Clone and install
+git clone https://github.com/Sarthak-Ojha/6th_Sem_Project.git
+cd 6th_Sem_Project
+flutter pub get
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# 6th_Sem_Project
+# Setup Firebase and add .env file
+# Run the app
+flutter run
